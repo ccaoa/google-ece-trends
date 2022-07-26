@@ -1,0 +1,2 @@
+pytrends
+git+ssh://git@github.com/ccaoa/ccaoa-mapping.git#egg=ccaoa

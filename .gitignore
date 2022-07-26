@@ -3,3 +3,4 @@
 *.pyc
 *.httr-oauth
 __pycache__/
+venv/
