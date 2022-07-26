@@ -1,0 +1,5 @@
+*.idea/
+*.idea
+*.pyc
+*.httr-oauth
+__pycache__/
