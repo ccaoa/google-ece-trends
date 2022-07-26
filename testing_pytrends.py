@@ -79,11 +79,16 @@ ptrend.build_payload(
 # Geography
 score_column_name = topic_code_translation # primary_search_term
 region_df = ptrend.interest_by_region()
-region_df.head(10)  # alphabetical
-region_df.sort_values(score_column_name, ascending=False).head(10)  # See the leading 10
+region_df.head(9)  # alphabetical
+# # Rename the score column
+# region_df.columns=region_df.columns.str.replace("/","_")#.replace("/","_")
+region_df=region_df.rename(columns={score_column_name: "gtis"})#, inplace=True)
+score_column_name = 'gtis'
+# See the leading 10 entries
+region_df.sort_values(score_column_name, ascending=False).head(9)
 # # Testing notes
 # * The order of the items is the same as manually going to google trends online.
-#   However, the values are *slightly* off. By 1 usually.
+#   However, the values are *slightly* off. By only 1 usually.
 # * The original example above does indeed return a child care search term, not a topic.
 
 # Add the state index as a column to the df
@@ -96,7 +101,7 @@ region_df=region_df[colsreg]
 region_df = region_df.reset_index(drop=True)#, inplace=False)
 
 # Print the dataframe with a rank
-rank_df = pd.DataFrame(list(range(1,52)),columns=["Rank"])
+rank_df = pd.DataFrame(list(range(1,52)),columns=["rank"])
 pd.concat(
     # Sorted version of the GTrends Data
     [region_df.sort_values(score_column_name, ascending=False).reset_index(drop=True),
