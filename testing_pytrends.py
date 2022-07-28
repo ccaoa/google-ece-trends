@@ -78,7 +78,7 @@ ptrend.build_payload(
 
 # Geography
 score_column_name = topic_code_translation # primary_search_term
-region_df = ptrend.interest_by_region()
+region_df = ptrend.interest_by_region(resolution='REGION')#resolution='DMA', inc_low_vol=True, inc_geo_code=False)
 region_df.head(9)  # alphabetical
 # # Rename the score column
 # region_df.columns=region_df.columns.str.replace("/","_")#.replace("/","_")
@@ -110,3 +110,8 @@ pd.concat(
     ,axis=1
 ).head(10)
 
+
+# TEMPORAL TRENDS
+# Try a basic time command
+overtime = ptrend.interest_over_time()
+# Gives you weekly time data
