@@ -17,32 +17,32 @@ hottrenddf.head()
 
 # PAYLOAD TESTING
 
-# Build an initial payload for the search term of Child Care.
-primary_search_term = 'Child care'
-ptrend.build_payload(
-    # Keywords to search for
-    # # Can this list be blank?  # initial tests indicate no; must be filled with keyword.
-    kw_list=[primary_search_term],#[],#
-    # # Search Category; Defaults to no category
-    # # # Child Care is category #403 according to https://github.com/pat310/google-trends-api/wiki/Google-Trends-Categories
-    # # Initial test returned no results with this argument included as either string or integer
-    # cat='403',
-    # See time parameters https://github.com/GeneralMills/pytrends#:~:text=is%20%27360%27-,timeframe,-Date%20to%20start
-    timeframe='2019-01-01 2021-12-31',  # default: 'today 5-y',
-    # Geography; # Defaults to World;
-    # # More detail available for States/Provinces by specifying additional abbreviations.
-    # # # For example: Alabama would be 'US-AL'; For example United States is 'US'
-    geo='US',
-    # # Google Property to search
-    # # # Defaults to web searches, but it can also be images, news, youtube or froogle (for Google Shopping results)
-    # gprop='',
-)
-
-# Try a category payload
-# See if we can get a category from the API
-words_key = ptrend.suggestions(keyword=primary_search_term)
-keywords_df = pd.DataFrame(words_key).drop(columns='mid')
-# First record is the Child care topic
+# # Build an initial payload for the search term of Child Care.
+# primary_search_term = 'Child care'
+# ptrend.build_payload(
+#     # Keywords to search for
+#     # # Can this list be blank?  # initial tests indicate no; must be filled with keyword.
+#     kw_list=[primary_search_term],#[],#
+#     # # Search Category; Defaults to no category
+#     # # # Child Care is category #403 according to https://github.com/pat310/google-trends-api/wiki/Google-Trends-Categories
+#     # # Initial test returned no results with this argument included as either string or integer
+#     # cat='403',
+#     # See time parameters https://github.com/GeneralMills/pytrends#:~:text=is%20%27360%27-,timeframe,-Date%20to%20start
+#     timeframe='2019-01-01 2021-12-31',  # default: 'today 5-y',
+#     # Geography; # Defaults to World;
+#     # # More detail available for States/Provinces by specifying additional abbreviations.
+#     # # # For example: Alabama would be 'US-AL'; For example United States is 'US'
+#     geo='US',
+#     # # Google Property to search
+#     # # # Defaults to web searches, but it can also be images, news, youtube or froogle (for Google Shopping results)
+#     # gprop='',
+# )
+#
+# # Try a category payload
+# # See if we can get a category from the API
+# words_key = ptrend.suggestions(keyword=primary_search_term)
+# keywords_df = pd.DataFrame(words_key).drop(columns='mid')
+# # First record is the Child care topic
 
 # # Try getting topical results by following the advice in this issue.
 # # # https://github.com/GeneralMills/pytrends/issues/451
@@ -113,5 +113,6 @@ pd.concat(
 
 # TEMPORAL TRENDS
 # Try a basic time command
-overtime = ptrend.interest_over_time()
+overtime_df = ptrend.interest_over_time()
 # Gives you weekly time data
+overtime_df=overtime_df.rename(columns={topic_code_translation: "gtis"})
