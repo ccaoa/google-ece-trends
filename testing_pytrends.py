@@ -5,7 +5,8 @@
 
 # Methodology testing
 # # adpted from https://github.com/Tanu-N-Prabhu/Python/blob/master/Google_Trends_API.ipynb
-import pandas as pd
+import numpy as np, pandas as pd, json
+from ccaoa import quick, corefunctions as cf
 from pytrends.request import TrendReq
 # Connect to Google Trends; open the gateway.
 ptrend = TrendReq(
@@ -153,6 +154,29 @@ def gtis_df_formatter(payload_region_df, gtis_field, uoa):
 scored_dma_df = gtis_df_formatter(payload_region_df=dma_df, gtis_field=topic_code_translation, uoa=dma_uoa_label)
 scored_dma_df.head(10)
 
+# Make connections with the `county_dma_xwalk.xlsx`, `dma_code_dict.json`, & `state_dma_dict.json` files
+# to enhance parsing of geographic GTIS results
+# notes:
+# * The 'Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vernon IL' DMA from Google is listed in my shapefiles as 'Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vern', probably for a 50 length limit.
+#   * This was fixed  directly within the JSON dictionaries manually and shapefile with new `dmanameful` fields in both .shps.
+dmadict =r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\dma_code_dict.json"
+with open(dmadict, 'r') as load_file:
+    code_dma_normdict = json.load(load_file)
+dma_code_reversedict = quick.reverse_dict(code_dma_normdict)
+# Apply the DMA Code to the DMA GTIS DF.
+# # (Do I want a string here? Numeral? Play by ear and change the `astype()` arg as needed.
+scored_dma_df['dma_id'] = scored_dma_df['DMA'].apply(lambda d: dma_code_reversedict[d]).astype(str)
+scored_dma_df.head(10)
+# Now try subsetting the score dict by a state.
+# # Eventually make the targ_state var a variable in a function.
+targ_state = "NM"  # Just an example, but one with multiple split counties.
+targ_state = cf.st_upperformat(targ_state)
+statedmajson=r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\state_dma_dict.json"
+with open(statedmajson, 'r') as another_load_file:
+    state_dmacode_dict = json.load(another_load_file)
+state_subset_dict = state_dmacode_dict[targ_state]
+# Subset the GTIS dataframe
+state_gtis_dict = scored_dma_df.loc[scored_dma_df['dma_id'].isin(state_subset_dict)]#np.where(scored_dma_df.dma_id)
 
 # TEMPORAL TRENDS
 # Try a basic time command
