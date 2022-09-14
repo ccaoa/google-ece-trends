@@ -6,7 +6,7 @@ Virtual Environment Management utility
     venv clean
     venv setup
     venv [venv]
- 
+
 \b
 TODO:
     Add global config
@@ -24,17 +24,16 @@ from pathlib import Path
 from shutil import rmtree
 import subprocess
 from sys import executable
+import ensurepip
 
-
-VENV_PATH = Path("./venv")
+VENV_PATH = Path("./py_venv/venv")
 PYTHON = "python"
-
 
 '''
 def setup(package_name: str) -> None:
     """
     Setup package (venv, setup.py, git, tests)
- 
+
     Assumes directory structure:
       <PACKAGE>
       |-- <PACKAGE>/
@@ -52,14 +51,14 @@ def setup(package_name: str) -> None:
     """
     # TODO: use LICENSE templates
     # TODO: use README.md templates
- 
+
     path = Path.cwd()
- 
+
     if not (path / ".git").exists():
         run("git init", shell=True, check=True)
     if not (path / ".gitignore").exists():
         write_gitignore()
- 
+
     (path / package_name).mkdir(exist_ok=True)
     (path / package_name / "__init__.py").touch(exist_ok=True)
     (path / "tests").mkdir(exist_ok=True)
@@ -132,7 +131,7 @@ def main() -> None:
     Install modules in requirements.in
     Write installed modules to requirements.txt
     """
-    requirements_in_path = Path("./requirements.in")
+    requirements_in_path = Path("./py_venv/requirements.in")
     requirements_txt_path = Path("./requirements.txt")
 
     if not requirements_in_path.exists():
@@ -143,12 +142,32 @@ def main() -> None:
         return
 
     activate = activate_command()
-
     PYTHON = python_interpreter_path()
-
+    # print(PYTHON)
+    # # https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment
     # run(f"{PYTHON} -m venv {VENV_PATH}")
-    run(f'"{PYTHON}" -m venv {VENV_PATH}')
-    run(f"{activate} python -m pip install --upgrade pip setuptools wheel pip-tools")
+    try:
+        run(f'"{PYTHON}" -m venv {VENV_PATH}')
+        run(
+            f"{activate} python -m pip install --upgrade pip setuptools wheel pip-tools"
+        )
+    except subprocess.CalledProcessError:
+        # There is an issue establishing the venv.
+        # # With ArcGIS Pro base python interpreters, this often has to do with the ensurepip pip wheel.
+        # # Follow pieces of https://stackoverflow.com/questions/51720909/how-to-get-python-m-venv-to-directly-install-latest-pip-version/51721906#51721906 to fix.
+        print(
+            "Exception: Problem creating venv with default settings."
+            "\nUse custom workaround."
+        )
+        run(f'"{PYTHON}" -m venv {VENV_PATH} --without-pip')
+        whl = next(Path(ensurepip.__path__[0]).glob("_bundled/pip*.whl"))
+        # # Could also be
+        # whl = list(Path(ensurepip.__path__[0]).glob("_bundled/pip*.whl"))[0]
+        print("Your pip wheel file to use:", whl)
+        # All variables set; moving on to executing venv pip install.
+        run(
+            f'{activate} python "{whl}"/pip install --upgrade pip setuptools wheel pip-tools'
+        )
     run(f"{activate} python -m pip install -r {requirements_in_path}")
     run(f"{activate} python -m pip freeze > {requirements_txt_path}")
     # run(f"{activate} pip-compile {requirements_in_path} -o {requirements_txt_path}")
