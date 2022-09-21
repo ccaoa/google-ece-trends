@@ -41,10 +41,6 @@ def uncertainty_df_field(df, field, coverage_factor_k=2, observation_threshold=F
             .replace("N/A", np.nan)
             .replace("(BLANK)", np.nan)
             .replace("NAN", np.nan)
-            # .replace("0", np.nan)
-            # .replace("0.0", np.nan)
-            # .replace("1", np.nan)
-            # .replace("1.0", np.nan)
     ).astype(float)
     non_null_counts = df[field].count()
 
