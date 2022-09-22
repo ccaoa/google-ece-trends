@@ -29,8 +29,7 @@ def connect_to_gtrends(language='en-US'):
     return ptrend
 
 
-
-def payload_builder(timeframe=None, search_item=ece_topic_code,geography_broad='US', connection_item=None):
+def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_code, connection_item=None):
     """ The payload is the base parameter set that tells Google the broad picture of what you're trying to research:
     the 'What, Where, & When' of GTrends data pulls. 
     The 'When' is likely to be the most variable for CCAoA. Formatting this argument will likely take its own function. 
@@ -83,6 +82,7 @@ def extract_temporal_data(payload=None):
     """ Pass a connection item with a built payload into this function to extract meaningful time data from it. """
 
     if payload is None:
+        # Thinking defining the timeframe outside of this function will be wise. Too much nesting otherwise.
         payload=payload_builder()
 
     # Pull the time data for the payload parameters
@@ -90,6 +90,19 @@ def extract_temporal_data(payload=None):
     #
     # Format the new DF to make it easier to read
     time_df=time_df.rename(columns={ece_topic_code: "gtis"})
+
+    # The region item is set by default as a pandas DF index. We want it as an actual column.
+    date_column = 'date'
+    # Add the geog index as a column to the df
+    time_df[date_column] = time_df.index
+    # Move geog col as first column
+    timecolumns = time_df.columns.to_list()
+    timecolumns = timecolumns[-1:] + timecolumns[:-1]
+    time_df = time_df[timecolumns]
+    # Reset the index to be numerical.
+    time_df = time_df.reset_index(drop=True)
+    # Set the date column as the first in the df
+    time_df = time_df[[date_column] + [col for col in time_df.columns if col != date_column]]
 
     return time_df
 
@@ -110,16 +123,70 @@ def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
     # 'COUNTRY' returns country level data. In case you wanted one score for the whole US?
     uoa_resolutions =['COUNTRY','REGION','DMA','CITY']
     if subregion.upper().replace(" ","") not in uoa_resolutions:
-        print("Your entered geography value", subregion, "was not valid; defaulting to State analysis.")
-        subregion='REGION'
+        if subregion.lower().replace(" ","") in ['state','states','usstates']:
+            subregion = 'REGION'
+        elif subregion.lower().replace(" ","") in ['county','counties']:
+            print("Counties are not tracked by Google Trends. "
+                  "The closest you can get for sub-state data is media markets.\n"
+                  "Returning data for media markets.")
+            subregion = 'DMA'
+        else:
+            print("Your entered geography value", subregion, "was not valid; defaulting to State analysis.")
+            subregion='REGION'
 
     # Do we want to include geographies with low volumes of searches?
     # # Default is yes.
     low_volume = core.string_to_bool(low_volume)
 
-    # Pull the time data for the payload parameters
+    # ! Pull the trends data for the payload parameters
     geog_df = payload.interest_by_region(resolution=subregion, inc_low_vol=low_volume)
-    #
-    # Format the new DF to make it easier to read
-    geog_df=geog_df.rename(columns={ece_topic_code: "gtis"})
 
+    # Format the new DF to make it easier to read
+    score_column_name = 'gtis'
+    geog_df=geog_df.rename(columns={ece_topic_code: score_column_name})
+    # The region item is set by default as a pandas DF index. We want it as an actual column.
+    region_column = subregion.lower()
+    if region_column=='region':
+        region_column='state'
+    # Add the geog index as a column to the df
+    geog_df[region_column] = geog_df.index
+    # Move geog col as first column
+    colsreg = geog_df.columns.to_list()
+    colsreg = colsreg[-1:] + colsreg[:-1]
+    geog_df = geog_df[colsreg]
+    # Reset the index to be numerical.
+    geog_df = geog_df.reset_index(drop=True)
+    # We also want the regions in the df to have a rank
+    # # Generate a plain, functional DF with a ranking of 1 to n(columns in region DF)
+    rank_col = "rank"
+    rank_df = pd.DataFrame(list(range(1, len(geog_df))), columns=[rank_col])
+    geog_df = pd.concat(
+        # Sorted version of the GTrends Data
+        [geog_df.sort_values(score_column_name, ascending=False).reset_index(drop=True),
+         # Merged with a ranking
+         rank_df.astype(int)]
+        , axis=1
+    )
+    del rank_df  # Take the scratch rank dataframe out of memory.
+    # Set the date column as the first in the df
+    geog_df = geog_df[[rank_col] + [col for col in geog_df.columns if col != rank_col]]
+
+
+    return geog_df
+
+
+if __name__ == '__main__':
+    import time
+    start = time.time()
+
+    # Beware of timeout requests:
+    # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
+    # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
+    payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
+    states_df = extract_spatial_data(payload, subregion='states')
+    temporal_df = extract_temporal_data()
+
+    print(states_df.head(10))
+    print(temporal_df.head(10))
+
+    core.runtime(start)
