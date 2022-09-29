@@ -7,6 +7,7 @@ Pulls heavily from:
 
 import pandas as pd
 from ccaoa import core
+import pytrends
 from pytrends.request import TrendReq
 
 ece_topic_code = "%2Fm%2F022hpx".replace("%2F", r"/")
@@ -157,23 +158,35 @@ def extract_temporal_data(payload=None, time_uoa='date'):
     time_df = payload.interest_over_time()
     #
     # Format the new DF to make it easier to read
-    # time_df=time_df.rename(columns={ece_topic_code: "gtis"})
-    #
-    # # The date item is set by default as a pandas DF index. We want it as an actual column.
-    # date_column = 'date'
-    # # Add the geog index as a column to the df
-    # time_df[date_column] = time_df.index
-    # # Move geog col as first column
-    # timecolumns = time_df.columns.to_list()
-    # timecolumns = timecolumns[-1:] + timecolumns[:-1]
-    # time_df = time_df[timecolumns]
-    # # Reset the index to be numerical.
-    # time_df = time_df.reset_index(drop=True)
-    # # Set the date column as the first in the df
-    # time_df = time_df[[date_column] + [col for col in time_df.columns if col != date_column]]
     time_df = gtis_df_formatter(time_df, ece_topic_code, time_uoa, rank_sort=False)
 
     return time_df
+
+
+def subregion_identifier(subregion_input):
+    """ Figure out what sub-region of your broad geography you want to explore from the payload."""
+    # The default is "REGION", the international code for subnational UOAs (Admin Level 1).
+    # # For the US, this is States.
+    # However, useful also in the US are media markets, specifically Nielsen Designated Market Areas (DMAs).
+    # # This is the last continuous geography in the USA.
+    # Finally, there are cities. 'CITY' returns city level data
+    # 'COUNTRY' returns country level data. In case you wanted one score for the whole US?
+    uoa_resolutions = ['COUNTRY', 'REGION', 'DMA', 'CITY']
+    if subregion_input.upper().replace(" ", "") not in uoa_resolutions:
+        if subregion_input.lower().replace(" ", "") in ['state', 'states', 'usstates']:
+            subregion = 'REGION'
+        elif subregion_input.lower().replace(" ", "") in ['county', 'counties']:
+            print("Counties are not tracked by Google Trends. "
+                  "The closest you can get for sub-state data is media markets.\n"
+                  "Returning data for media markets.")
+            subregion = 'DMA'
+        else:
+            print("Your entered geography value", subregion_input, "was not valid; defaulting to State analysis.")
+            subregion = 'REGION'
+    else:
+        subregion = subregion_input
+
+    return subregion
 
 
 def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
@@ -184,24 +197,7 @@ def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
         payload=payload_builder()
 
     # Determine which subregion is to be examined.
-    # The default is "REGION", the international code for subnational UOAs (Admin Level 1).
-    # # For the US, this is States.
-    # However, useful also in the US are media markets, specifically Nielsen Designated Market Areas (DMAs).
-    # # This is the last continuous geography in the USA.
-    # Finally, there are cities. 'CITY' returns city level data
-    # 'COUNTRY' returns country level data. In case you wanted one score for the whole US?
-    uoa_resolutions =['COUNTRY','REGION','DMA','CITY']
-    if subregion.upper().replace(" ","") not in uoa_resolutions:
-        if subregion.lower().replace(" ","") in ['state','states','usstates']:
-            subregion = 'REGION'
-        elif subregion.lower().replace(" ","") in ['county','counties']:
-            print("Counties are not tracked by Google Trends. "
-                  "The closest you can get for sub-state data is media markets.\n"
-                  "Returning data for media markets.")
-            subregion = 'DMA'
-        else:
-            print("Your entered geography value", subregion, "was not valid; defaulting to State analysis.")
-            subregion='REGION'
+    subregion = subregion_identifier(subregion)
 
     # Do we want to include geographies with low volumes of searches?
     # # Default is yes.
@@ -211,37 +207,45 @@ def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
     geog_df = payload.interest_by_region(resolution=subregion, inc_low_vol=low_volume)
 
     # Format the new DF to make it easier to read
-    # score_column_name = 'gtis'
-    # geog_df=geog_df.rename(columns={ece_topic_code: score_column_name})
-    # The region item is set by default as a pandas DF index. Identify that name.
+    # # The region search item is set by default as a pandas DF index. Identify that name.
     region_column = subregion.lower()
     if region_column=='region':
         region_column='state'
-    # # Add the geog index as a column to the df
-    # geog_df[region_column] = geog_df.index
-    # # Move geog col as first column
-    # colsreg = geog_df.columns.to_list()
-    # colsreg = colsreg[-1:] + colsreg[:-1]
-    # geog_df = geog_df[colsreg]
-    # # Reset the index to be numerical.
-    # geog_df = geog_df.reset_index(drop=True)
-    # # We also want the regions in the df to have a rank
-    # # # Generate a plain, functional DF with a ranking of 1 to n(columns in region DF)
-    # rank_col = "rank"
-    # rank_df = pd.DataFrame(list(range(1, len(geog_df))), columns=[rank_col])
-    # geog_df = pd.concat(
-    #     # Sorted version of the GTrends Data
-    #     [geog_df.sort_values(score_column_name, ascending=False).reset_index(drop=True),
-    #      # Merged with a ranking
-    #      rank_df.astype(int)]
-    #     , axis=1
-    # )
-    # del rank_df  # Take the scratch rank dataframe out of memory.
-    # # Set the date column as the first in the df
-    # geog_df = geog_df[[rank_col] + [col for col in geog_df.columns if col != rank_col]]
     geog_df = gtis_df_formatter(geog_df, ece_topic_code, region_column, rank_sort=True)
 
     return geog_df
+
+
+# def dma__for_state(state):
+#     """ """
+
+
+def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True):
+    """ Extract any Google Trends data you want: any time, any place.
+        Note: You MUST provide a payload into this function.
+        It is not intended to continuously re-create a payload and will not function that way. """
+    if isinstance(payload_item, pytrends.request.TrendReq) is False:
+        print("You did not pass a valid payload item into this function. \n"
+              "You must create one to use for all you Google Trends extracting needs.\n"
+              "Save an item by executing the 'payload_builder()' function and pass it through this one again.")
+        return
+    if spatial_not_temporal is True:
+        # You have chose to examine spatial data this time with the payload and *not* temportal data.
+        # # Run this function again and select "False" for this variable to see temporal trends.
+
+        # Determine which subregion is to be examined.
+        region = subregion_identifier(region)
+        # Extract data
+        extracted_df = extract_spatial_data(payload_item, subregion=region, low_volume=low_volume)
+    else:
+        # You have chose to examine spatial data this time with the payload and *not* temportal data.
+        # # Run this function again and select "False" for this variable to see temporal trends.
+
+        # Extract data
+        extracted_df = extract_temporal_data(payload_item)
+
+    return extracted_df
+
 
 
 if __name__ == '__main__':
