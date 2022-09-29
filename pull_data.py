@@ -9,7 +9,8 @@ import pandas as pd
 from ccaoa import core
 from pytrends.request import TrendReq
 
-ece_topic_code = "%2Fm%2F022hpx".replace("%2F",r"/")
+ece_topic_code = "%2Fm%2F022hpx".replace("%2F", r"/")
+worker_topic_code = "%2Fg%2F11bc6xhvhf".replace("%2F", r"/")
 
 
 def connect_to_gtrends(language='en-US'):
@@ -58,8 +59,19 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
     # Set up framework here for if a user passes a state to transform it into the correct format for the payload build.
     usa_list = ["USA","US","UNITEDSTATES", 'AMERICA']
     if geography_broad.replace(" ",'').upper() not in usa_list:
-        geography_broad= core.st_upperformat(geography_broad)
+        statesearch = core.st_upperformat(geography_broad)
+        if statesearch in core.statedict():
+            if statesearch=='DC':
+                # DC is not considered an admin 1 by GTrends but an Admin 2 (DMA).
+                geography_broad="US-MD-511"
+            else:
+                geography_broad = "US-"+statesearch
+        # Eventually add options to drill into DMAs themselves. Use the state_dma_dict.
+        else:
+            # Default to the entire USA
+            geography_broad = 'US'
     else:
+        # Default to the entire USA
         geography_broad = 'US'
 
     # Build the payload
@@ -240,6 +252,7 @@ if __name__ == '__main__':
     # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
     # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
     the_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
+    sleep(2)  # 2 second pause to trick the Google API?
     states_df = extract_spatial_data(the_payload, subregion='states')
     sleep(2)  # 2 second pause to trick the Google API?
     temporal_df = extract_temporal_data()
@@ -251,5 +264,8 @@ if __name__ == '__main__':
     print(temporal_df.head(10))
     print(dma_df.head(10))
     print(dma_df.tail(10))
+
+    # # Test a state-specific trend pull
+    # maryland_payload = payload_builder(geography_broad='US-MD')
 
     core.runtime(start)
