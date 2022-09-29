@@ -7,7 +7,7 @@ Pulls heavily from:
 
 import pandas as pd
 from ccaoa import core
-import pytrends
+import pytrends, os, inspect, json
 from pytrends.request import TrendReq
 
 ece_topic_code = "%2Fm%2F022hpx".replace("%2F", r"/")
@@ -216,7 +216,32 @@ def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
     return geog_df
 
 
-# def dma__for_state(state):
+def dma_id_dict():
+    """ Returns a dictionary that connects each media market (DMA) to its unique ID. """
+    cur_path =         os.path.realpath(
+            os.path.abspath(
+                os.path.split(inspect.getfile(inspect.currentframe()))[0]
+            )
+        )
+    targ_fil = "dma_code_dict.json"
+    json_directory = os.path.join(cur_path, "json")
+    if os.path.exists(json_directory) is True:
+        dma_id_json = os.path.join(json_directory, targ_fil)
+    else:
+        potential_json_dict = [os.path.join(root, targ_fil) for root, dirs, files in os.walk(cur_path) if targ_fil in files][0]
+        if os.path.exists(potential_json_dict):
+            dma_id_json =potential_json_dict
+        else:
+            print("There was an error finding the DMA ~ DMA_ID JSON.\nFix this issue in a coding bugfix.")
+            # Basically, figure out a smart exception later. Just get it working now.
+            dma_id_json = None  # This will error below
+
+    with open(dma_id_json) as open_id_json:
+        dma_id_crosswalk = json.load(open_id_json)
+    return dma_id_crosswalk
+
+
+# def dma_for_state(state):
 #     """ """
 
 
@@ -237,6 +262,15 @@ def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volum
         region = subregion_identifier(region)
         # Extract data
         extracted_df = extract_spatial_data(payload_item, subregion=region, low_volume=low_volume)
+
+        if region == 'DMA':
+            # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
+            # Extract a dict = {DMA: its_id_number}
+            dma_id_reversedict = core.reverse_dict(dma_id_dict())
+            # Apply those IDs to the DMAs in the dataframe
+            extracted_df["dma_id"] = extracted_df[region.lower()].apply(lambda x: dma_id_reversedict[x])
+
+
     else:
         # You have chose to examine spatial data this time with the payload and *not* temportal data.
         # # Run this function again and select "False" for this variable to see temporal trends.
@@ -268,6 +302,14 @@ if __name__ == '__main__':
     print(temporal_df.head(10))
     print(dma_df.head(10))
     print(dma_df.tail(10))
+
+    # Test adding DMA IDs to the DMA subregion USA DF.
+    # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
+    # Extract a dict = {DMA: its_id_number}
+    dma_id_reversedict = core.reverse_dict(dma_id_dict())
+    # Apply those IDs to the DMAs in the dataframe
+    dma_df["dma_id"] = dma_df["DMA".lower()].apply(lambda x: dma_id_reversedict[x])
+    print(dma_df.head(10))
 
     # # Test a state-specific trend pull
     # maryland_payload = payload_builder(geography_broad='US-MD')
