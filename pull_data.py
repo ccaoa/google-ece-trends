@@ -60,7 +60,7 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
     # Set up framework here for if a user passes a state to transform it into the correct format for the payload build.
     usa_list = ["USA","US","UNITEDSTATES", 'AMERICA']
     if geography_broad.replace(" ",'').upper() not in usa_list:
-        statesearch = core.st_upperformat(geography_broad)
+        statesearch = core.st_upperformat(geography_broad).replace('US-','')
         if statesearch in core.statedict():
             if statesearch=='DC':
                 # DC is not considered an admin 1 by GTrends but an Admin 2 (DMA).
@@ -272,6 +272,64 @@ def dmas_all_for_state_dict(state):
     targ_state_dma_dict = states_dmas_dict[state]
     # Return a dict of {ID: DMA,} for <state>
     return targ_state_dma_dict
+
+
+def related_queries_engine(payload_item, top_not_rising=True):
+    """ Extract any Google Trends data you want: any time, any place.
+        Note: You MUST provide a payload into this function.
+        It is not intended to continuously re-create a payload and will not function that way. """
+    if isinstance(payload_item, pytrends.request.TrendReq) is False:
+        print("You did not pass a valid payload item into this function. \n"
+              "You must create one to use for all you Google Trends extracting needs.\n"
+              "Save an item by executing the 'payload_builder()' function and pass it through this one again.")
+        return
+    rqs_dict=payload_item.related_queries()
+    search_item = payload_item.kw_list[0]
+    if search_item is None:
+        search_item = ece_topic_code
+    rqs_dict = rqs_dict[search_item]
+    top = rqs_dict['top']
+    rising = rqs_dict['rising']
+
+    # Export which item is requested
+    if top_not_rising is True:
+        if top is not None:
+            return top
+        else:
+            print("There were no 'Top' related keywords for your search item,", search_item)
+            return None
+    else:
+        if rising is not None:
+            return rising
+        else:
+            print("There were no 'Rising' related keywords for your search item,", search_item)
+            return None
+
+
+def top_related_queries(payload_item):
+    """ Extract any Google Trends data you want: any time, any place.
+        Note: You MUST provide a payload into this function.
+        It is not intended to continuously re-create a payload and will not function that way. """
+    if isinstance(payload_item, pytrends.request.TrendReq) is False:
+        print("You did not pass a valid payload item into this function. \n"
+              "You must create one to use for all you Google Trends extracting needs.\n"
+              "Save an item by executing the 'payload_builder()' function and pass it through this one again.")
+        return
+    rq_df = related_queries_engine(payload_item, top_not_rising=True)
+    return rq_df
+
+
+def rising_related_queries(payload_item):
+    """ Extract any Google Trends data you want: any time, any place.
+        Note: You MUST provide a payload into this function.
+        It is not intended to continuously re-create a payload and will not function that way. """
+    if isinstance(payload_item, pytrends.request.TrendReq) is False:
+        print("You did not pass a valid payload item into this function. \n"
+              "You must create one to use for all you Google Trends extracting needs.\n"
+              "Save an item by executing the 'payload_builder()' function and pass it through this one again.")
+        return
+    rq_df = related_queries_engine(payload_item, top_not_rising=False)
+    return rq_df
 
 
 def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True):
