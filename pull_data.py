@@ -314,30 +314,50 @@ if __name__ == '__main__':
     from time import time, sleep
     start = time()
 
+
+    def original_main_testing():
+        # Beware of timeout requests:
+        # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
+        # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
+        the_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
+        sleep(2)  # 2 second pause to trick the Google API?
+        states_df = extract_spatial_data(the_payload, subregion='states')
+        sleep(2)  # 2 second pause to trick the Google API?
+        temporal_df = extract_temporal_data()
+        sleep(2)  # 2 second pause to trick the Google API?
+        dma_df = extract_spatial_data(the_payload, subregion='DMA')
+
+        print(states_df.head(10))
+        print(states_df.tail(10))
+        print(temporal_df.head(10))
+        print(dma_df.head(10))
+        print(dma_df.tail(10))
+
+        # Test adding DMA IDs to the DMA subregion USA DF.
+        # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
+        # Extract a dict = {DMA: its_id_number}
+        dma_id_reversedict = core.reverse_dict(dma_id_dict())
+        # Apply those IDs to the DMAs in the dataframe
+        dma_df["dma_id"] = dma_df["DMA".lower()].apply(lambda x: dma_id_reversedict[x])
+        print(dma_df.head(10))
+
     # Beware of timeout requests:
     # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
     # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
-    the_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
+    usa_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
+    # Reformat the below with extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True) func.
     sleep(2)  # 2 second pause to trick the Google API?
-    states_df = extract_spatial_data(the_payload, subregion='states')
+    usa_states_df = extract_data(usa_payload, region='states', spatial_not_temporal=True)
     sleep(2)  # 2 second pause to trick the Google API?
-    temporal_df = extract_temporal_data()
+    usa_temporal_df = extract_data(usa_payload, spatial_not_temporal=False)
     sleep(2)  # 2 second pause to trick the Google API?
-    dma_df = extract_spatial_data(the_payload, subregion='DMA')
+    usa_dma_df = extract_data(usa_payload, spatial_not_temporal=True,region='DMA')
 
-    print(states_df.head(10))
-    print(states_df.tail(10))
-    print(temporal_df.head(10))
-    print(dma_df.head(10))
-    print(dma_df.tail(10))
-
-    # Test adding DMA IDs to the DMA subregion USA DF.
-    # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
-    # Extract a dict = {DMA: its_id_number}
-    dma_id_reversedict = core.reverse_dict(dma_id_dict())
-    # Apply those IDs to the DMAs in the dataframe
-    dma_df["dma_id"] = dma_df["DMA".lower()].apply(lambda x: dma_id_reversedict[x])
-    print(dma_df.head(10))
+    print(usa_states_df.head(10))
+    print(usa_states_df.tail(10))
+    print(usa_temporal_df.head(10))
+    print(usa_dma_df.head(10))
+    print(usa_dma_df.tail(10))
 
     # # Test a state-specific trend pull
     # maryland_payload = payload_builder(geography_broad='US-MD')
