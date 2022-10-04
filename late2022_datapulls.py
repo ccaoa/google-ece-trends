@@ -16,7 +16,7 @@ def full_run_gtrends():
     google_connection = pull.connect_to_gtrends()
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
-    init_late2022_studyperiod = '2020-02-14 2021-02-14'  # The COVID Valentines' study period.
+    init_late2022_studyperiod = '2018-06-03 2022-09-10'  # The COVID Valentines' study period.
     geog_usa = 'US'
     # Build the payload
     usa_payload = pull.payload_builder(timeframe=init_late2022_studyperiod, geography_broad=geog_usa, connection_item=google_connection)  # Default args  # Future: pass your timeframe argument into this func.
