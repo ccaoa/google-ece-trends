@@ -79,6 +79,13 @@ def full_run_gtrends():
     valentines_top_qs = pull.top_related_queries(valentines_usa_payload)
     valentines_rising_qs = pull.rising_related_queries(valentines_usa_payload)
 
+
+    # NEXT: Store all the data for all of the dataframes generated here.
+    #Example below:
+    storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
+    store.store_data(storage_path, usa_states_df,init_late2022_studyperiod)
+    #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}  then   for tf in dict: for df in tf: store_data().
+
     return
 
 
