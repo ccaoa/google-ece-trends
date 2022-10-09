@@ -60,7 +60,7 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
     # Set up framework here for if a user passes a state to transform it into the correct format for the payload build.
     usa_list = ["USA","US","UNITEDSTATES", 'AMERICA']
     if geography_broad.replace(" ",'').upper() not in usa_list:
-        statesearch = core.st_upperformat(geography_broad).replace('US-','')
+        statesearch = core.st_upperformat(geography_broad.replace('US-',''))
         if statesearch in core.statedict():
             if statesearch=='DC':
                 # DC is not considered an admin 1 by GTrends but an Admin 2 (DMA).
@@ -172,7 +172,9 @@ def subregion_identifier(subregion_input):
     # Finally, there are cities. 'CITY' returns city level data
     # 'COUNTRY' returns country level data. In case you wanted one score for the whole US?
     uoa_resolutions = ['COUNTRY', 'REGION', 'DMA', 'CITY']
-    if subregion_input.upper().replace(" ", "") not in uoa_resolutions:
+    if subregion_input is None:
+        subregion = subregion_input
+    elif subregion_input.upper().replace(" ", "") not in uoa_resolutions:
         if subregion_input.lower().replace(" ", "") in ['state', 'states', 'usstates']:
             subregion = 'REGION'
         elif subregion_input.lower().replace(" ", "") in ['county', 'counties']:
@@ -208,7 +210,10 @@ def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
 
     # Format the new DF to make it easier to read
     # # The region search item is set by default as a pandas DF index. Identify that name.
-    region_column = subregion.lower()
+    if subregion is None:
+        region_column = None
+    else:
+        region_column = subregion.lower()
     if region_column=='region':
         region_column='state'
     geog_df = gtis_df_formatter(geog_df, ece_topic_code, region_column, rank_sort=True)

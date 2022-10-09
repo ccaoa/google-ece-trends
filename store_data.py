@@ -1,5 +1,7 @@
 import inspect, datetime as dt, os
 
+from ccaoa import core
+
 
 def retrieve_singlevar_name(var):
     """ Courtesy of https://stackoverflow.com/a/18425523/15517267 """
@@ -17,10 +19,13 @@ def date_from_searchperiod(search_period_date):
     return date_range
 
 
-def store_data(storage_directory_file_path,gtrends_data, search_date_period, csv_not_xlsx=True):
+def store_data(storage_directory_file_path,gtrends_data, search_date_period, gtrends_file_name=None,csv_not_xlsx=True):
     """ Store the GTrends data you just pulled. """
     # Get the name of the variable for downstream storage naming metadata.
-    dataset_name = retrieve_singlevar_name(gtrends_data)
+    if gtrends_file_name is None:
+        dataset_name = retrieve_singlevar_name(gtrends_data)
+    else:
+        dataset_name =gtrends_file_name
     date_range = date_from_searchperiod(search_date_period)
     today = dt.datetime.today().strftime('%Y%m%d')
 
@@ -31,6 +36,7 @@ def store_data(storage_directory_file_path,gtrends_data, search_date_period, csv
 
     file_name = dataset_name + "_" + date_range +"_"+today+ext
     file_path = os.path.join(storage_directory_file_path,file_name)
+    core.df_to_file(gtrends_data,file_path)
 
     return
 

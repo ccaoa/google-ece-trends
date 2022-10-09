@@ -82,9 +82,27 @@ def full_run_gtrends():
 
     # NEXT: Store all the data for all of the dataframes generated here.
     #Example below:
-    storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
-    store.store_data(storage_path, usa_states_df,init_late2022_studyperiod)
-    #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}  then   for tf in dict: for df in tf: store_data().
+    # storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
+    storage_path = r"C:\Users\acc-s\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data"
+    #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}
+    filing_dict={
+        valentines_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
+        init_late2022_studyperiod:[
+            usa_states_df,usa_temporal_df,usa_dma_df,usa_top_qs,usa_rising_qs,
+            ky_dma,ky_time,in_dma,in_time,oh_dma,oh_time,
+        ]
+    }
+    #then   for tf in dict: for df in tf: store_data().
+    # store.store_data(storage_path, usa_states_df,init_late2022_studyperiod)
+    # store_data(storage_directory_file_path,gtrends_data, search_date_period, csv_not_xlsx=True)
+    print("Data will be stored in", storage_path)
+    for tf in filing_dict:
+        for dataframe in filing_dict[tf]:
+            if core.check_empty_dataframe(dataframe) is False:
+                store.store_data(storage_path,dataframe,tf,gtrends_file_name=store.retrieve_singlevar_name(dataframe),csv_not_xlsx=True)
+                print(store.retrieve_singlevar_name(dataframe),"was stored for time period", tf)
+            else:
+                print(store.retrieve_singlevar_name(dataframe),"was not captured and will not be stored.")
 
     return
 
