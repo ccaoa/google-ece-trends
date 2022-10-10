@@ -41,6 +41,7 @@ def full_run_gtrends():
     geog_in = 'US-IN'
     geog_oh = 'US-OH'
     # Build the payloads
+    # *NOTE: Looks like you can only have 1 payload active at a time. Do all calcs for KY, THEN move on to IN, etc!*
     ky_payload = pull.payload_builder(geography_broad=geog_ky, timeframe=init_late2022_studyperiod, connection_item=google_connection)
     sleep(11)  # >10 second pause to trick the Google API?
     in_payload = pull.payload_builder(geography_broad=geog_in, timeframe=init_late2022_studyperiod, connection_item=google_connection)
@@ -51,15 +52,15 @@ def full_run_gtrends():
     # Pull relevant data
     ky_dma = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=True, region='DMA')
     sleep(11)
-    ky_time = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=True)
+    ky_time = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=False)
     sleep(11)
     in_dma = pull.extract_data(payload_item=in_payload, spatial_not_temporal=True, region='DMA')
     sleep(11)
-    in_time = pull.extract_data(payload_item=in_payload, spatial_not_temporal=True)
+    in_time = pull.extract_data(payload_item=in_payload, spatial_not_temporal=False)
     sleep(11)
     oh_dma = pull.extract_data(payload_item=oh_payload, spatial_not_temporal=True, region='DMA')
     sleep(11)
-    oh_time = pull.extract_data(payload_item=oh_payload, spatial_not_temporal=True)
+    oh_time = pull.extract_data(payload_item=oh_payload, spatial_not_temporal=False)
     sleep(11)
 
 
