@@ -15,6 +15,7 @@ def full_run_gtrends():
     # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
     google_connection = pull.connect_to_gtrends()
     sleep(11)  # >10 second pause to trick the Google API?
+    
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
     init_late2022_studyperiod = '2018-06-03 2022-09-10'  # The COVID Valentines' study period.
@@ -38,25 +39,29 @@ def full_run_gtrends():
 
     # Collect data to highlight the Cincinnati Problem (The fact that DMAs are inconsistently reported at state level):
     geog_ky = 'US-KY'
-    geog_in = 'US-IN'
-    geog_oh = 'US-OH'
     # Build the payloads
     # *NOTE: Looks like you can only have 1 payload active at a time. Do all calcs for KY, THEN move on to IN, etc!*
+    # So, KY is up first.
     ky_payload = pull.payload_builder(geography_broad=geog_ky, timeframe=init_late2022_studyperiod, connection_item=google_connection)
     sleep(11)  # >10 second pause to trick the Google API?
-    in_payload = pull.payload_builder(geography_broad=geog_in, timeframe=init_late2022_studyperiod, connection_item=google_connection)
-    sleep(11)  # >10 second pause to trick the Google API?
-    oh_payload = pull.payload_builder(geography_broad=geog_oh, timeframe=init_late2022_studyperiod, connection_item=google_connection)
-    sleep(11)
-    #
     # Pull relevant data
     ky_dma = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=True, region='DMA')
     sleep(11)
     ky_time = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=False)
     sleep(11)
+    #
+    # Next is Indiana
+    geog_in = 'US-IN'
+    in_payload = pull.payload_builder(geography_broad=geog_in, timeframe=init_late2022_studyperiod, connection_item=google_connection)
+    sleep(11)  # >10 second pause to trick the Google API?
     in_dma = pull.extract_data(payload_item=in_payload, spatial_not_temporal=True, region='DMA')
     sleep(11)
     in_time = pull.extract_data(payload_item=in_payload, spatial_not_temporal=False)
+    sleep(11)
+    #
+    # Finally, Ohio
+    geog_oh = 'US-OH'
+    oh_payload = pull.payload_builder(geography_broad=geog_oh, timeframe=init_late2022_studyperiod, connection_item=google_connection)
     sleep(11)
     oh_dma = pull.extract_data(payload_item=oh_payload, spatial_not_temporal=True, region='DMA')
     sleep(11)
@@ -66,10 +71,10 @@ def full_run_gtrends():
 
     # Also include some data from the classic COVID Valentines' study period.
     # Augment the OR & MN data with some national spatial data + get some riding and top keywords.
-    sleep(11)  # >10 second pause to trick the Google API?
     valentines_period = '2020-02-14 2021-02-14'
     # Build the payload
     valentines_usa_payload = pull.payload_builder(valentines_period, geography_broad=geog_usa, connection_item=google_connection)
+    sleep(11)  # >10 second pause to trick the Google API?
     valentines_states_df = pull.extract_data(valentines_usa_payload, region='states', spatial_not_temporal=True)
     sleep(11)  # >10 second pause to trick the Google API?
     valentines_temporal_df = pull.extract_data(valentines_usa_payload, spatial_not_temporal=False)
@@ -87,6 +92,8 @@ def full_run_gtrends():
     # storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
     storage_path = r"C:\Users\acc-s\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data"
     #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}
+    # Try adding each df to the dict after it is created above in the code.
+    # # That way, if I comment out certain parts, it won't error here for having undefined variables.
     filing_dict={
         valentines_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
         init_late2022_studyperiod:[
