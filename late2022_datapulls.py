@@ -15,7 +15,7 @@ def full_run_gtrends():
     # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
     google_connection = pull.connect_to_gtrends()
     sleep(11)  # >10 second pause to trick the Google API?
-    
+
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
     init_late2022_studyperiod = '2018-06-03 2022-09-10'  # The COVID Valentines' study period.
@@ -46,7 +46,7 @@ def full_run_gtrends():
     sleep(11)  # >10 second pause to trick the Google API?
     # Pull relevant data
     ky_dma = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=True, region='DMA')
-    sleep(11)
+    sleep(21)
     ky_time = pull.extract_data(payload_item=ky_payload, spatial_not_temporal=False)
     sleep(11)
     #
@@ -104,7 +104,7 @@ def full_run_gtrends():
     #then   for tf in dict: for df in tf: store_data().
     # store.store_data(storage_path, usa_states_df,init_late2022_studyperiod)
     # store_data(storage_directory_file_path,gtrends_data, search_date_period, csv_not_xlsx=True)
-    print("Data will be stored in", storage_path)
+    print("Data will be stored in", storage_path,'\n-----------------------------------------------')
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
@@ -112,7 +112,7 @@ def full_run_gtrends():
                 print(store.retrieve_singlevar_name(dataframe),"was stored for time period", tf)
             else:
                 print(store.retrieve_singlevar_name(dataframe),"was not captured and will not be stored.")
-
+    print('-----------------------------------------------\n')
     return
 
 

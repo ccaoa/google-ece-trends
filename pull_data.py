@@ -337,10 +337,11 @@ def rising_related_queries(payload_item):
     return rq_df
 
 
-def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True):
+def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True, suppress_prints=True):
     """ Extract any Google Trends data you want: any time, any place.
         Note: You MUST provide a payload into this function.
-        It is not intended to continuously re-create a payload and will not function that way. """
+        This function is not intended to continuously re-create a payload and will not function that way.
+        This is to prevent Google 429 errors. """
     if isinstance(payload_item, pytrends.request.TrendReq) is False:
         print("You did not pass a valid payload item into this function. \n"
               "You must create one to use for all you Google Trends extracting needs.\n"
@@ -362,6 +363,8 @@ def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volum
             # Apply those IDs to the DMAs in the dataframe
             extracted_df["dma_id"] = extracted_df[region.lower()].apply(lambda x: dma_id_reversedict[x])
 
+        if suppress_prints is False:
+            print(payload_item.geo, "Google Trends data for", region.lower().replace("region","state")+'s',"complete.")
 
     else:
         # You have chose to examine spatial data this time with the payload and *not* temportal data.
@@ -370,7 +373,25 @@ def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volum
         # Extract data
         extracted_df = extract_temporal_data(payload_item)
 
+        if suppress_prints is False:
+            print(payload_item.geo, "Google Trends data for time range", payload_item.interest_over_time_widget['request']['time'] ,"complete.")
+
     return extracted_df
+
+
+def extract_data_try(payload_item, spatial_not_temporal=True, region=None, low_volume=True, suppress_prints=True):
+    """
+    Try using the `extract_data()` function to dynamically pull Google Trends Data.
+    In the event of a Google 429 error, return None instead of erroring and killing the entire script run.
+    This will allow downstream manipulation of code to run and rerun data extractions regardless of Google blockades.
+    """
+    try:
+        ret_item = extract_data(payload_item=payload_item,spatial_not_temporal=spatial_not_temporal,region=region,low_volume=low_volume, suppress_prints=suppress_prints)
+    except Exception as ex:
+        print(ex)
+        ret_item = None
+
+    return ret_item
 
 
 if __name__ == '__main__':
