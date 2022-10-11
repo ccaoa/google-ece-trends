@@ -374,7 +374,7 @@ def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volum
         extracted_df = extract_temporal_data(payload_item)
 
         if suppress_prints is False:
-            print(payload_item.geo, "Google Trends data for time range", payload_item.interest_over_time_widget['request']['time'] ,"complete.")
+            print(payload_item.geo, "Google Trends data for time range", str(payload_item.interest_over_time_widget['request']['time']) ,"complete.")
 
     return extracted_df
 
@@ -388,7 +388,11 @@ def extract_data_try(payload_item, spatial_not_temporal=True, region=None, low_v
     try:
         ret_item = extract_data(payload_item=payload_item,spatial_not_temporal=spatial_not_temporal,region=region,low_volume=low_volume, suppress_prints=suppress_prints)
     except Exception as ex:
-        print(ex)
+        if spatial_not_temporal is True:
+            prt=region.lower().replace("region","state")+' region'
+        else:
+            prt="timeframe "+str(payload_item.interest_over_time_widget['request']['time'])
+        print('Extraction pull for',prt,'was unsuccessful. Returning `None` item. Error:\n   ',str(ex))
         ret_item = None
 
     return ret_item
