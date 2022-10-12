@@ -6,7 +6,7 @@
 # Methodology testing
 # # adpted from https://github.com/Tanu-N-Prabhu/Python/blob/master/Google_Trends_API.ipynb
 import numpy as np, pandas as pd, json
-from ccaoa import quick, corefunctions as cf
+from ccaoa import core as cf
 from pytrends.request import TrendReq
 # Connect to Google Trends; open the gateway.
 ptrend = TrendReq(
@@ -162,7 +162,7 @@ scored_dma_df.head(10)
 dmadict =r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\dma_code_dict.json"
 with open(dmadict, 'r') as load_file:
     code_dma_normdict = json.load(load_file)
-dma_code_reversedict = quick.reverse_dict(code_dma_normdict)
+dma_code_reversedict = cf.reverse_dict(code_dma_normdict)
 # Apply the DMA Code to the DMA GTIS DF.
 # # (Do I want a string here? Numeral? Play by ear and change the `astype()` arg as needed.
 scored_dma_df['dma_id'] = scored_dma_df['DMA'].apply(lambda d: dma_code_reversedict[d]).astype(str)

@@ -1,13 +1,6 @@
 # Setup python virtual environments for Windows
 
-To run the script test.py with a virtual python environment, 
-double click/execute the test.bat file.
-That's it.
-
-- Here, test.py and .bat are stand-ins for a real python file with installation requirements you are trying to run. 
-Edit the `test.py` reference in `test.bat` to point to the script you hope to run.
-
-To simply set up the venv itself, just execute the `setup.bat` file.
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 ## Requirements
 
@@ -16,6 +9,12 @@ is set to your desired python.exe.
 
 - Package dependencies may require a minimum python version. 
 Tip: use the latest version of python you have available. 
+- To utilize ESRI's ArcGIS spatial package, `arcpy`, in a venv,
+set the python 3 interpreter that comes with the ArcGIS Pro software as your base interpreter.
 
-### Notes
+## Usage
+**To simply set up the venv itself, just execute the `setup.bat` file.** That's it.
+
+## Notes
 - Conda environments may experience issues installing with `ssl` DLL issues.
+- To see more about this workflow, please check out [this repository](https://github.com/cooperjaXC/windows_python_venv).
