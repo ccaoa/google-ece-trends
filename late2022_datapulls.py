@@ -30,6 +30,21 @@ def full_run_gtrends():
     init_late2022_studyperiod = '2018-06-03 2022-09-10'  # The COVID Valentines' study period.
     filing_dict[init_late2022_studyperiod]=[]  # Establish dictionary list for downstream filing.
     geog_usa = 'US'
+    #
+    # Set up variables here for dynamic and multiple downstream uses.
+    # # Set all future DF variables to None for now. They'll be defined later.
+    usa_states_df = usa_temporal_df = usa_dma_df = usa_top_qs = usa_rising_qs =ky_dma = ky_time = in_dma = in_time = oh_dma = oh_time = None
+    # # Put all these vars in a list.
+    u_fil_list = [
+        usa_states_df, usa_temporal_df, usa_dma_df, usa_top_qs, usa_rising_qs,
+        ky_dma,ky_time,in_dma,in_time,oh_dma,oh_time,
+    ]
+    # # Now define their unique arguments for the extract_data() function.
+    # # # Doing it here this way ensures that you can try running the function again if the first time does not work.
+    # # # Dict template: {df: (payload_item, spatial_not_temporal=True, region=None, low_volume=True, suppress_prints=True}
+    # # # # For payload_item, define its variables. Don't want to keep creating payloads (right?)
+
+    #
     # Build the payload
     usa_payload = pull.payload_builder(timeframe=init_late2022_studyperiod, geography_broad=geog_usa, connection_item=google_connection)  # Default args  # Future: pass your timeframe argument into this func.
     sleep(11)  # >10 second pause to trick the Google API?
