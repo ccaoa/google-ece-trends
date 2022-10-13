@@ -14,7 +14,31 @@ ece_topic_code = "%2Fm%2F022hpx".replace("%2F", r"/")
 worker_topic_code = "%2Fg%2F11bc6xhvhf".replace("%2F", r"/")
 
 
-def connect_to_gtrends(language='en-US'):
+def backoff_factor_calculator(retries=2, backoff_factor=0.1):
+    """ Calculator to figure out how many seconds would elapse using a particular number of retries by the submitted backoff factor.
+    See https://github.com/GeneralMills/pytrends#connect-to-google for more. """
+    loops=0
+    raw_sleeps =[]
+    while loops < retries:
+        sleep_seconds = backoff_factor * (2 ** ((loops+1) - 1))
+        raw_sleeps.append(sleep_seconds)
+        loops+=1
+    # Convert the raw seconds to readable text
+    prt_sleeps=[]
+    for slp in raw_sleeps:
+        if slp >=60:
+            minutes = int(slp / 60)
+            minutes_remainder = slp % 60
+            seconds = int(minutes_remainder)
+            add_text = str(minutes)+ " min, "+ str(seconds)+ " sec"
+        else:
+            add_text = str(slp)+ " sec"
+        prt_sleeps.append(add_text)
+
+    return prt_sleeps
+
+
+def connect_to_gtrends(language='en-US', retries=10, backoff_factor=0.1):
     """ This is a shell function for pytrends.request.TrendReq().
     That function takes several arguments, but until they are better understood, the defaults will be used. """
 
@@ -26,7 +50,12 @@ def connect_to_gtrends(language='en-US'):
     # Connect to Google Trends; open the gateway.
     ptrend = TrendReq(
         hl='en-US',
-        # tz=360, timeout=(10,25), retries=2, backoff_factor=0.1, requests_args={'verify':False} #,proxies=['https://34.203.233.13:80']}#
+        # tz=360,
+        tz=abs(300),  # Eastern Standard Time  # https://forbrains.co.uk/international_tools/earth_timezones
+        # timeout=(10,25),
+        # retries=2, backoff_factor=0.1,
+        retries=retries, backoff_factor=backoff_factor,
+        # requests_args={'verify':False} #,proxies=['https://34.203.233.13:80']}#
     )
     return ptrend
 
@@ -77,6 +106,7 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
 
     # Build the payload
     if connection_item is None:
+        # Connect to Google using my default arguments.
         connection_item=connect_to_gtrends()
     connection_item.build_payload(kw_list=[search_item],timeframe=timeframe,geo=geography_broad)
 

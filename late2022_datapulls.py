@@ -13,7 +13,7 @@ def full_run_gtrends():
     # Beware of timeout requests:
     # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
     # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
-    google_connection = pull.connect_to_gtrends()
+    google_connection = pull.connect_to_gtrends(retries=8, backoff_factor=.7)
     sleep(11)  # >10 second pause to trick the Google API?
 
     # Establish a dictionary to contain the dataframes for downstream saving.
@@ -114,8 +114,8 @@ def full_run_gtrends():
 
     # NEXT: Store all the data for all of the dataframes generated here.
     #Example below:
-    # storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
-    storage_path = r"C:\Users\acc-s\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data"
+    storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data"
+    # storage_path = r"C:\Users\acc-s\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data"
     #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}
     # Try adding each df to the dict after it is created above in the code.
     # # That way, if I comment out certain parts, it won't error here for having undefined variables.
@@ -151,4 +151,6 @@ def full_run_gtrends():
 
 
 if __name__ == '__main__':
+    start = time()
     full_run_gtrends()
+    core.runtime(start=start)
