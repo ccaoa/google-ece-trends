@@ -7,14 +7,43 @@ Pulls heavily from:
 
 import pandas as pd
 from ccaoa import core
-import pytrends, os, inspect, json
+import pytrends, os
 from pytrends.request import TrendReq
+
+try:
+    from . import dma
+except:
+    import dma
 
 ece_topic_code = "%2Fm%2F022hpx".replace("%2F", r"/")
 worker_topic_code = "%2Fg%2F11bc6xhvhf".replace("%2F", r"/")
 
 
-def connect_to_gtrends(language='en-US'):
+def backoff_factor_calculator(retries=2, backoff_factor=0.1):
+    """ Calculator to figure out how many seconds would elapse using a particular number of retries by the submitted backoff factor.
+    See https://github.com/GeneralMills/pytrends#connect-to-google for more. """
+    loops=0
+    raw_sleeps =[]
+    while loops < retries:
+        sleep_seconds = backoff_factor * (2 ** ((loops+1) - 1))
+        raw_sleeps.append(sleep_seconds)
+        loops+=1
+    # Convert the raw seconds to readable text
+    prt_sleeps=[]
+    for slp in raw_sleeps:
+        if slp >=60:
+            minutes = int(slp / 60)
+            minutes_remainder = slp % 60
+            seconds = int(minutes_remainder)
+            add_text = str(minutes)+ " min, "+ str(seconds)+ " sec"
+        else:
+            add_text = str(slp)+ " sec"
+        prt_sleeps.append(add_text)
+
+    return prt_sleeps
+
+
+def connect_to_gtrends(language='en-US', retries=10, backoff_factor=0.1):
     """ This is a shell function for pytrends.request.TrendReq().
     That function takes several arguments, but until they are better understood, the defaults will be used. """
 
@@ -26,7 +55,12 @@ def connect_to_gtrends(language='en-US'):
     # Connect to Google Trends; open the gateway.
     ptrend = TrendReq(
         hl='en-US',
-        # tz=360, timeout=(10,25), retries=2, backoff_factor=0.1, requests_args={'verify':False} #,proxies=['https://34.203.233.13:80']}#
+        # tz=360,
+        tz=abs(300),  # Eastern Standard Time  # https://forbrains.co.uk/international_tools/earth_timezones
+        # timeout=(10,25),
+        # retries=2, backoff_factor=0.1,
+        retries=retries, backoff_factor=backoff_factor,
+        # requests_args={'verify':False} #,proxies=['https://34.203.233.13:80']}#
     )
     return ptrend
 
@@ -77,6 +111,7 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
 
     # Build the payload
     if connection_item is None:
+        # Connect to Google using my default arguments.
         connection_item=connect_to_gtrends()
     connection_item.build_payload(kw_list=[search_item],timeframe=timeframe,geo=geography_broad)
 
@@ -221,64 +256,6 @@ def extract_spatial_data(payload=None,subregion="REGION", low_volume=True):
     return geog_df
 
 
-def find_jsons():
-    """ Find the JSON files that store dictionary items and return a list of the files.
-    0) dma_code_dict.json - Sets a unique identifier (key) for all USA DMA regions (value).
-    1) state_dma_dict.json - Connects all DMAs (values) associated with (key) state."""
-    cur_path = os.path.realpath(
-            os.path.abspath(
-                os.path.split(inspect.getfile(inspect.currentframe()))[0]
-            )
-        )
-    dma_id_fil = "dma_code_dict.json"
-    state_targ_fil = 'state_dma_dict.json'
-    file_names=[dma_id_fil,state_targ_fil]
-    json_directory = os.path.join(cur_path, "json")
-    if os.path.exists(json_directory) is False:
-        potential_json_dir = [root for root, dirs, files in os.walk(cur_path) if dma_id_fil in files][0]
-        if os.path.exists(potential_json_dir):
-            json_directory =potential_json_dir
-            del potential_json_dir
-        else:
-            print("There was an error finding the JSON dictionary subdirectory.\nFix this issue in a coding bugfix.")
-            # Basically, figure out a smart exception later. Just get it working now.
-            json_directory = None  # This will error below
-    # Set the file paths for the GTrends Json files in a list. Access by indexing downstream.
-    list_of_json_dicts = [os.path.join(json_directory, j) for j in file_names if os.path.exists(os.path.join(json_directory, j))]
-    return list_of_json_dicts
-
-
-def json_to_python_dict(json_file):
-    """ Pass a json file and return a python dictionary. """
-    # ADD TO CCAOA.CORE - will be added for v2.0 release.
-    with open(json_file) as open_the_json:
-        python_dict = json.load(open_the_json)
-    return python_dict
-
-
-def dma_id_dict():
-    """ Returns a dictionary that connects each media market (DMA) to its unique ID. """
-    # ID the target ID ~ DMA JSON file
-    dma_id_json = find_jsons()[0]
-    dma_id_crosswalk= json_to_python_dict(dma_id_json)
-    return dma_id_crosswalk
-
-
-def dmas_all_for_state_dict(state):
-    """ For state, extract all associated DMAs & their unique IDs. """
-    # Use the appropriate json file.
-    state_dma_json = find_jsons()[1]
-    # Extract the full contents of the JSON into a python dictionary.
-    states_dmas_dict = json_to_python_dict(state_dma_json)
-    # return states_dmas_dict  # This would've returned the entire json content. We want just 1 state.
-    # Format the state argument correctly.
-    state = core.st_upperformat(state)
-    # Extract just those DMAs associated with <state>.
-    targ_state_dma_dict = states_dmas_dict[state]
-    # Return a dict of {ID: DMA,} for <state>
-    return targ_state_dma_dict
-
-
 def related_queries_engine(payload_item, top_not_rising=True):
     """ Extract any Google Trends data you want: any time, any place.
         Note: You MUST provide a payload into this function.
@@ -337,10 +314,11 @@ def rising_related_queries(payload_item):
     return rq_df
 
 
-def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True):
+def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True, suppress_prints=True):
     """ Extract any Google Trends data you want: any time, any place.
         Note: You MUST provide a payload into this function.
-        It is not intended to continuously re-create a payload and will not function that way. """
+        This function is not intended to continuously re-create a payload and will not function that way.
+        This is to prevent Google 429 errors. """
     if isinstance(payload_item, pytrends.request.TrendReq) is False:
         print("You did not pass a valid payload item into this function. \n"
               "You must create one to use for all you Google Trends extracting needs.\n"
@@ -358,10 +336,12 @@ def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volum
         if region == 'DMA':
             # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
             # Extract a dict = {DMA: its_id_number}
-            dma_id_reversedict = core.reverse_dict(dma_id_dict())
+            dma_id_reversedict = core.reverse_dict(dma.dma_id_dict())
             # Apply those IDs to the DMAs in the dataframe
             extracted_df["dma_id"] = extracted_df[region.lower()].apply(lambda x: dma_id_reversedict[x])
 
+        if suppress_prints is False:
+            print(payload_item.geo, "Google Trends data for", region.lower().replace("region","state")+'s',"complete.")
 
     else:
         # You have chose to examine spatial data this time with the payload and *not* temportal data.
@@ -370,7 +350,29 @@ def extract_data(payload_item, spatial_not_temporal=True, region=None, low_volum
         # Extract data
         extracted_df = extract_temporal_data(payload_item)
 
+        if suppress_prints is False:
+            print(payload_item.geo, "Google Trends data for time range", str(payload_item.interest_over_time_widget['request']['time']) ,"complete.")
+
     return extracted_df
+
+
+def extract_data_try(payload_item, spatial_not_temporal=True, region=None, low_volume=True, suppress_prints=True):
+    """
+    Try using the `extract_data()` function to dynamically pull Google Trends Data.
+    In the event of a Google 429 error, return None instead of erroring and killing the entire script run.
+    This will allow downstream manipulation of code to run and rerun data extractions regardless of Google blockades.
+    """
+    try:
+        ret_item = extract_data(payload_item=payload_item,spatial_not_temporal=spatial_not_temporal,region=region,low_volume=low_volume, suppress_prints=suppress_prints)
+    except Exception as ex:
+        if spatial_not_temporal is True:
+            prt=region.lower().replace("region","state")+' region'
+        else:
+            prt="timeframe "+str(payload_item.interest_over_time_widget['request']['time'])
+        print('Extraction pull for',prt,'was unsuccessful. Returning `None` item. Error:\n   ',str(ex))
+        ret_item = None
+
+    return ret_item
 
 
 if __name__ == '__main__':
@@ -399,7 +401,7 @@ if __name__ == '__main__':
         # Test adding DMA IDs to the DMA subregion USA DF.
         # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
         # Extract a dict = {DMA: its_id_number}
-        dma_id_reversedict = core.reverse_dict(dma_id_dict())
+        dma_id_reversedict = core.reverse_dict(dma.dma_id_dict())
         # Apply those IDs to the DMAs in the dataframe
         dma_df["dma_id"] = dma_df["DMA".lower()].apply(lambda x: dma_id_reversedict[x])
         print(dma_df.head(10))
