@@ -96,9 +96,19 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
     if geography_broad.replace(" ",'').upper() not in usa_list:
         statesearch = core.st_upperformat(geography_broad.replace('US-',''))
         if statesearch in core.statedict():
+            # The first two characters (excluding 'US-') are a state. Means we have a valid state or DMA geog.
             if statesearch=='DC':
                 # DC is not considered an admin 1 by GTrends but an Admin 2 (DMA).
                 geography_broad="US-MD-511"
+            # Else, if two dashes in the geography and the last 3 characters are a valid DMA ID:
+            elif str(geography_broad).count("-") == 2 and geography_broad[len(geography_broad)-3:len(geography_broad)] in dma.dma_id_dict():
+                # A geography with
+                #   1) a valid state state in the correct position,
+                #   2) 2 dashes, &
+                #   3) the last 3 characters are a valid DMA ID
+                # likely indicates a DMA is being passed as the broad geography.
+                # print('Running with the DMA', geography_broad)
+                pass  # essentially, geography_broad = geography_broad
             else:
                 geography_broad = "US-"+statesearch
         # Eventually add options to drill into DMAs themselves. Use the state_dma_dict.

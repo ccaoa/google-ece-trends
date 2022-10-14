@@ -138,14 +138,12 @@ def full_run_gtrends():
     # # since March - April 2021 when original MN & OR data was collected.
     # 1st, MN
     geog_mn = 'US-MN'
-    mn_payload = pull.payload_builder(geography_broad=geog_mn, timeframe=valentines_time_period,
-                                      connection_item=google_connection)
+    mn_payload = pull.payload_builder(geography_broad=geog_mn, timeframe=valentines_time_period,connection_item=google_connection)
     mn_dma = pull.extract_data_try(payload_item=mn_payload, spatial_not_temporal=True, region='DMA')
     mn_time = pull.extract_data_try(payload_item=mn_payload, spatial_not_temporal=False)
     # Then, Oregon
     geog_or = 'US-OR'
-    or_payload = pull.payload_builder(geography_broad=geog_or, timeframe=valentines_time_period,
-                                      connection_item=google_connection)
+    or_payload = pull.payload_builder(geography_broad=geog_or, timeframe=valentines_time_period, connection_item=google_connection)
     or_dma = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=True, region='DMA')
     or_time = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=False)
     # Also include Eugene, Oregon to look within a DMA for kicks and longitudinal consistency.
