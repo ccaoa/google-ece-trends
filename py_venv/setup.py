@@ -132,9 +132,11 @@ def main() -> None:
     Write installed modules to requirements.txt
     """
     root_dir = Path(".")  # Path("./py_venv")  #
-    py_venv_dir = root_dir / 'py_venv'
+    py_venv_dir = root_dir / "py_venv"
     requirements_in_path = root_dir / "requirements.in"  # Path("./requirements.in")
-    requirements_txt_path = py_venv_dir / "requirements.txt"  # Path("./py_venv/requirements.txt")
+    requirements_txt_path = (
+        py_venv_dir / "requirements.txt"
+    )  # Path("./py_venv/requirements.txt")
 
     if not requirements_in_path.exists():
         # Search in the other directory for it.

@@ -8,16 +8,17 @@
 import numpy as np, pandas as pd, json
 from ccaoa import core as cf
 from pytrends.request import TrendReq
+
 # Connect to Google Trends; open the gateway.
 ptrend = TrendReq(
-    hl='en-US', #tz=360, timeout=(10,25), retries=2, backoff_factor=0.1, requests_args={'verify':False} #,proxies=['https://34.203.233.13:80']}#
+    hl="en-US",  # tz=360, timeout=(10,25), retries=2, backoff_factor=0.1, requests_args={'verify':False} #,proxies=['https://34.203.233.13:80']}#
 )
 
 # Get Google Hot Trends data
-hottrenddf = ptrend.trending_searches(pn='united_states')
+hottrenddf = ptrend.trending_searches(pn="united_states")
 hottrenddf.head()
 # To get today's trending topics just use:
-df = ptrend.today_searches(pn='US')
+df = ptrend.today_searches(pn="US")
 
 
 # PAYLOAD TESTING
@@ -67,15 +68,15 @@ df = ptrend.today_searches(pn='US')
 # Looks like the topic code for Child care is:
 topic_chrome_code = "%2Fm%2F022hpx"
 # Which must be translated to (see issue link above):
-topic_code_translation = topic_chrome_code.replace("%2F",r"/")
+topic_code_translation = topic_chrome_code.replace("%2F", r"/")
 # So, go try it out!
 # # For the full build_payload() variable notes, see above with the original search term comments
 ptrend.build_payload(
     # Fill the keyword list with the formatted child care topic.
     kw_list=[topic_code_translation],
     # cat='403', # Don't use this data. Returns insignificant results in browser, so maybe unreliable pytrends data.
-    timeframe='2020-02-14 2021-02-14',  # My classic COIVD timeperiod
-    geo='US'
+    timeframe="2020-02-14 2021-02-14",  # My classic COIVD timeperiod
+    geo="US",
 )
 # Success!
 
@@ -83,13 +84,15 @@ ptrend.build_payload(
 
 # GEOGRAPHY
 # # Default region = US State (when using USA as the payload region); use "REGION" for states in the USA.
-region_df = ptrend.interest_by_region(resolution='REGION')#resolution='DMA', inc_low_vol=True, inc_geo_code=False)
+region_df = ptrend.interest_by_region(
+    resolution="REGION"
+)  # resolution='DMA', inc_low_vol=True, inc_geo_code=False)
 region_df.head(9)  # alphabetical
 # # Rename the score column
-score_column_name = topic_code_translation # primary_search_term
+score_column_name = topic_code_translation  # primary_search_term
 # region_df.columns=region_df.columns.str.replace("/","_")#.replace("/","_")
-region_df=region_df.rename(columns={score_column_name: "gtis"})#, inplace=True)
-score_column_name = 'gtis'
+region_df = region_df.rename(columns={score_column_name: "gtis"})  # , inplace=True)
+score_column_name = "gtis"
 # See the leading 10 entries
 region_df.sort_values(score_column_name, ascending=False).head(9)
 # Testing notes
@@ -103,32 +106,38 @@ region_df["state"] = region_df.index
 # Set state col as first column
 colsreg = region_df.columns.to_list()
 colsreg = colsreg[-1:] + colsreg[:-1]
-region_df=region_df[colsreg]
+region_df = region_df[colsreg]
 # Reset the index to be numerical.
-region_df = region_df.reset_index(drop=True)#, inplace=False)
+region_df = region_df.reset_index(drop=True)  # , inplace=False)
 #
 # Print the dataframe with a rank
 # # Generate a plain, functional DF with a ranking of 1 to n(columns in region DF)
 # rank_df = pd.DataFrame(list(range(1,52)),columns=["rank"])
-rank_df = pd.DataFrame(list(range(1,len(region_df))),columns=["rank"])
+rank_df = pd.DataFrame(list(range(1, len(region_df))), columns=["rank"])
 ranked_region_df = pd.concat(
     # Sorted version of the GTrends Data
-    [region_df.sort_values(score_column_name, ascending=False).reset_index(drop=True),
-     # Merged with a ranking
-     rank_df.astype(int)]
-    ,axis=1
+    [
+        region_df.sort_values(score_column_name, ascending=False).reset_index(
+            drop=True
+        ),
+        # Merged with a ranking
+        rank_df.astype(int),
+    ],
+    axis=1,
 )
 ranked_region_df.head(10)
 
 # GEOGRAPHY - DMAs
-dma_uoa_label = 'DMA'
+dma_uoa_label = "DMA"
 dma_df = ptrend.interest_by_region(resolution=dma_uoa_label, inc_low_vol=True)
 # Try to functionize the downstream manipulation of the region DF
 def gtis_df_formatter(payload_region_df, gtis_field, uoa):
-    """ Generates a clean DF with a formatted GTIS column + a ranking column for each UOA region. """
+    """Generates a clean DF with a formatted GTIS column + a ranking column for each UOA region."""
     # Rename the Google Trends Interest Score (GTIS) column
-    score_column_name = 'gtis'
-    payload_region_df=payload_region_df.rename(columns={gtis_field: score_column_name})
+    score_column_name = "gtis"
+    payload_region_df = payload_region_df.rename(
+        columns={gtis_field: score_column_name}
+    )
 
     # Add the geographic Unit of Analysis (UOA) region (that is currently an index in the DF) as a physical column
     payload_region_df[uoa] = payload_region_df.index
@@ -140,18 +149,28 @@ def gtis_df_formatter(payload_region_df, gtis_field, uoa):
     payload_region_df = payload_region_df.reset_index(drop=True)  # , inplace=False)
 
     # Add a rank to the dataframe
-    rank_dataframe = pd.DataFrame(list(range(1,len(payload_region_df))), columns=['rank'])
+    rank_dataframe = pd.DataFrame(
+        list(range(1, len(payload_region_df))), columns=["rank"]
+    )
     # Include the rankings in the payload dictionary
     ranked_regional_df = pd.concat(
         # Sorted version of the GTrends Data
-        [payload_region_df.sort_values(score_column_name, ascending=False).reset_index(drop=True),
-         # Merge regional data with its GTIS ranking
-         rank_dataframe.astype(int)]
-        , axis=1
+        [
+            payload_region_df.sort_values(
+                score_column_name, ascending=False
+            ).reset_index(drop=True),
+            # Merge regional data with its GTIS ranking
+            rank_dataframe.astype(int),
+        ],
+        axis=1,
     )
     return ranked_regional_df
+
+
 # Pass the DMA into the GTIS formatter function.
-scored_dma_df = gtis_df_formatter(payload_region_df=dma_df, gtis_field=topic_code_translation, uoa=dma_uoa_label)
+scored_dma_df = gtis_df_formatter(
+    payload_region_df=dma_df, gtis_field=topic_code_translation, uoa=dma_uoa_label
+)
 scored_dma_df.head(10)
 
 # Make connections with the `county_dma_xwalk.xlsx`, `dma_code_dict.json`, & `state_dma_dict.json` files
@@ -159,30 +178,34 @@ scored_dma_df.head(10)
 # notes:
 # * The 'Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vernon IL' DMA from Google is listed in my shapefiles as 'Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vern', probably for a 50 length limit.
 #   * This was fixed  directly within the JSON dictionaries manually and shapefile with new `dmanameful` fields in both .shps.
-dmadict =r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\dma_code_dict.json"
-with open(dmadict, 'r') as load_file:
+dmadict = r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\dma_code_dict.json"
+with open(dmadict, "r") as load_file:
     code_dma_normdict = json.load(load_file)
 dma_code_reversedict = cf.reverse_dict(code_dma_normdict)
 # Apply the DMA Code to the DMA GTIS DF.
 # # (Do I want a string here? Numeral? Play by ear and change the `astype()` arg as needed.
-scored_dma_df['dma_id'] = scored_dma_df['DMA'].apply(lambda d: dma_code_reversedict[d]).astype(str)
+scored_dma_df["dma_id"] = (
+    scored_dma_df["DMA"].apply(lambda d: dma_code_reversedict[d]).astype(str)
+)
 scored_dma_df.head(10)
 # Now try subsetting the score dict by a state.
 # # Eventually make the targ_state var a variable in a function.
 targ_state = "NM"  # Just an example, but one with multiple split counties.
 targ_state = cf.st_upperformat(targ_state)
-statedmajson=r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\state_dma_dict.json"
-with open(statedmajson, 'r') as another_load_file:
+statedmajson = r"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\spatial_data\Schneider_GIS_Google_Trends_Metro_Areas\state_dma_dict.json"
+with open(statedmajson, "r") as another_load_file:
     state_dmacode_dict = json.load(another_load_file)
 state_subset_dict = state_dmacode_dict[targ_state]
 # Subset the GTIS dataframe
-state_gtis_dict = scored_dma_df.loc[scored_dma_df['dma_id'].isin(state_subset_dict)]#np.where(scored_dma_df.dma_id)
+state_gtis_dict = scored_dma_df.loc[
+    scored_dma_df["dma_id"].isin(state_subset_dict)
+]  # np.where(scored_dma_df.dma_id)
 
 # TEMPORAL TRENDS
 # Try a basic time command
 overtime_df = ptrend.interest_over_time()
 # Gives you weekly time data
-overtime_df=overtime_df.rename(columns={topic_code_translation: "gtis"})
+overtime_df = overtime_df.rename(columns={topic_code_translation: "gtis"})
 
 
 # Related items
@@ -193,7 +216,7 @@ related_queries.values()
 related_topic = ptrend.related_topics()
 related_topic.values()
 # # # Top related topics
-top_related_topics = related_topic[topic_code_translation]['top']
-print(top_related_topics[['topic_title', 'value']])
-rising_related_topics = related_topic[topic_code_translation]['rising']
-print(rising_related_topics[['topic_title', 'value']])
+top_related_topics = related_topic[topic_code_translation]["top"]
+print(top_related_topics[["topic_title", "value"]])
+rising_related_topics = related_topic[topic_code_translation]["rising"]
+print(rising_related_topics[["topic_title", "value"]])
