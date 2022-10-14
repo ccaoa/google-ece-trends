@@ -101,8 +101,11 @@ def payload_builder(
     # GEOGRAPHY
     # Set up framework here for if a user passes a state to transform it into the correct format for the payload build.
     usa_list = ["USA", "US", "UNITEDSTATES", "AMERICA"]
+    geography_broad = str(geography_broad)
     if geography_broad.replace(" ", "").upper() not in usa_list:
-        statesearch = core.st_upperformat(geography_broad.replace("US-", ""))
+        statesearch = core.st_upperformat(
+            geography_broad.replace("US-", ""), suppress_print=True
+        )
         if statesearch in core.statedict():
             # The first two characters (excluding 'US-') are a state. Means we have a valid state or DMA geog.
             if statesearch == "DC":
