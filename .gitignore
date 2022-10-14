@@ -4,3 +4,4 @@
 *.httr-oauth
 __pycache__/
 venv/
+.storage_path
