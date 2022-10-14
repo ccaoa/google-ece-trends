@@ -1,6 +1,6 @@
 """
-___
-Pulls heavily from:
+Script providing functions for easy and custom pulls of Google Trends data for different times and places.
+Heavily inspired by:
 * https://github.com/GeneralMills/pytrends
 * https://github.com/Tanu-N-Prabhu/Python/blob/master/Google_Trends_API.ipynb
 """
@@ -96,9 +96,19 @@ def payload_builder(timeframe=None, geography_broad='US', search_item=ece_topic_
     if geography_broad.replace(" ",'').upper() not in usa_list:
         statesearch = core.st_upperformat(geography_broad.replace('US-',''))
         if statesearch in core.statedict():
+            # The first two characters (excluding 'US-') are a state. Means we have a valid state or DMA geog.
             if statesearch=='DC':
                 # DC is not considered an admin 1 by GTrends but an Admin 2 (DMA).
                 geography_broad="US-MD-511"
+            # Else, if two dashes in the geography and the last 3 characters are a valid DMA ID:
+            elif str(geography_broad).count("-") == 2 and geography_broad[len(geography_broad)-3:len(geography_broad)] in dma.dma_id_dict():
+                # A geography with
+                #   1) a valid state state in the correct position,
+                #   2) 2 dashes, &
+                #   3) the last 3 characters are a valid DMA ID
+                # likely indicates a DMA is being passed as the broad geography.
+                # print('Running with the DMA', geography_broad)
+                pass  # essentially, geography_broad = geography_broad
             else:
                 geography_broad = "US-"+statesearch
         # Eventually add options to drill into DMAs themselves. Use the state_dma_dict.
@@ -136,7 +146,8 @@ def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     payload_df =payload_df.rename(columns={search_term: score_column_name})
     # The date/geography variable item is set by default as a pandas DF index. We want it as an actual, physical column.
     # # If temporal, UOA should be = 'date'
-    # # # (See if this differs as time period for results differs. I.e. if UOA is a week vs a day). If it does, see spatial function way of resolving multiple possible UOAs.
+    # # # (See if this differs as time period for results differs. I.e. if UOA is a week vs a day).
+    # # # # If it does, see spatial function way of resolving multiple possible UOAs.
     # # If spatial, UOA will vary: uoa_resolutions =['COUNTRY','REGION','DMA','CITY']
     payload_df[uoa] = payload_df.index
     # Set UOA col as first column
@@ -199,14 +210,34 @@ def extract_temporal_data(payload=None, time_uoa='date'):
 
 
 def subregion_identifier(subregion_input):
-    """ Figure out what sub-region of your broad geography you want to explore from the payload."""
+    """ Figure out what sub-region of your payload's broader geography you want to explore."""
+
     # The default is "REGION", the international code for subnational UOAs (Admin Level 1).
     # # For the US, this is States.
     # However, useful also in the US are media markets, specifically Nielsen Designated Market Areas (DMAs).
     # # This is the last continuous geography in the USA.
-    # Finally, there are cities. 'CITY' returns city level data
     # 'COUNTRY' returns country level data. In case you wanted one score for the whole US?
+    # # This is the broadest, least precise geographic UOA supported.
+    #
+    # Finally, there are cities. 'CITY' returns city level data.
+    # # However, be warned: pytrends v4.8 in PyPi does not support all runs of City UOA trends. Updated 1 Feb 2022.
+    # # # https://pypi.org/project/pytrends/
+    # # Running with "CITY" as UOA of subregion results in:
+    # # # * states for country payloads
+    # # # * DMAs for state payloads
+    # # # * errors for DMA payloads
+    # # This is a known issue logged in GitHub:
+    # # # Issue https://github.com/GeneralMills/pytrends/issues/392
+    # # # Merged to Master by pull request https://github.com/GeneralMills/pytrends/pull/509 in GitHub on 26 Mar 2022.
+    # # # Issue https://github.com/GeneralMills/pytrends/issues/316 still remains open; TBD if PR #509 fixes.
+    # # # Unclear if issue 497 is applicable; pertains to non-USA regions, but user experiencing similar issue as above.
+    # # # # https://github.com/GeneralMills/pytrends/issues/497
+    # # But, PR 509 has not been applied to the PyPi version of the repo.
+    # # So, as long as PyPi remains behind GitHub, `pip install pytrends` will not be sufficient to work with cities.
+    # # Solutions: pip install directly from GitHub or wait for new pytrends release.
+    # # Also see: https://stackoverflow.com/questions/61435486/pytrends-fail-to-get-us-city-level-data
     uoa_resolutions = ['COUNTRY', 'REGION', 'DMA', 'CITY']
+
     if subregion_input is None:
         subregion = subregion_input
     elif subregion_input.upper().replace(" ", "") not in uoa_resolutions:
@@ -379,53 +410,22 @@ if __name__ == '__main__':
     from time import time, sleep
     start = time()
 
-
     def original_main_testing():
         # Beware of timeout requests:
         # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
         # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
-        the_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
-        sleep(2)  # 2 second pause to trick the Google API?
+        # This should be fixed with the new backoff_factor elements of the payload builder.
+        the_payload = payload_builder()  # Default args
+        # sleep(2)  # 2 second pause to trick the Google API?  # No longer necessary with the backoff_factor applied.
         states_df = extract_spatial_data(the_payload, subregion='states')
-        sleep(2)  # 2 second pause to trick the Google API?
         temporal_df = extract_temporal_data()
-        sleep(2)  # 2 second pause to trick the Google API?
-        dma_df = extract_spatial_data(the_payload, subregion='DMA')
+        # Below equates to extract_spatial_data(the_payload, subregion='DMA')
+        dma_df = extract_data_try(the_payload, spatial_not_temporal=True,region='DMA')
 
         print(states_df.head(10))
         print(states_df.tail(10))
         print(temporal_df.head(10))
         print(dma_df.head(10))
         print(dma_df.tail(10))
-
-        # Test adding DMA IDs to the DMA subregion USA DF.
-        # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
-        # Extract a dict = {DMA: its_id_number}
-        dma_id_reversedict = core.reverse_dict(dma.dma_id_dict())
-        # Apply those IDs to the DMAs in the dataframe
-        dma_df["dma_id"] = dma_df["DMA".lower()].apply(lambda x: dma_id_reversedict[x])
-        print(dma_df.head(10))
-
-    # Beware of timeout requests:
-    # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
-    # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
-    usa_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
-    # Reformat the below with extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True) func.
-    sleep(2)  # 2 second pause to trick the Google API?
-    usa_states_df = extract_data(usa_payload, region='states', spatial_not_temporal=True)
-    sleep(2)  # 2 second pause to trick the Google API?
-    usa_temporal_df = extract_data(usa_payload, spatial_not_temporal=False)
-    sleep(2)  # 2 second pause to trick the Google API?
-    usa_dma_df = extract_data(usa_payload, spatial_not_temporal=True,region='DMA')
-
-    print(usa_states_df.head(10))
-    print(usa_states_df.tail(10))
-    print(usa_temporal_df.head(10))
-    print(usa_dma_df.head(10))
-    print(usa_dma_df.tail(10))
-
-    # # Test a state-specific trend pull
-    # maryland_payload = payload_builder(geography_broad='US-MD')
-    # ky_payload = payload_builder(geography_broad='US-KY')
 
     core.runtime(start)
