@@ -4,9 +4,9 @@ from time import time, sleep
 from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store
+    from . import pull_data as pull, store_data as store, dma
 except:
-    import pull_data as pull, store_data as store
+    import pull_data as pull, store_data as store, dma
 
 
 def get_storage_path():
@@ -45,7 +45,7 @@ def full_run_gtrends():
 
     # Establish a dictionary to contain the dataframes for downstream saving.
     filing_dict = {}
-        # valentines_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
+        # valentines_time_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
         # init_late2022_studyperiod:[
         #     usa_states_df,usa_temporal_df,usa_dma_df,usa_top_qs,usa_rising_qs,
         #     ky_dma,ky_time,in_dma,in_time,oh_dma,oh_time,
@@ -116,11 +116,11 @@ def full_run_gtrends():
 
 
     # Also include some data from the classic COVID Valentines' study period.
-    # Augment the OR & MN data with some national spatial data + get some riding and top keywords.
-    valentines_period = '2020-02-14 2021-02-14'
-    filing_dict[valentines_period] = []  # Establish dictionary list for downstream filing.
+    # Augment the existing OR & MN data with some national spatial data + get some riding and top keywords.
+    valentines_time_period = '2020-02-14 2021-02-14'
+    filing_dict[valentines_time_period] = []  # Establish dictionary list for downstream filing.
     # Build the payload
-    valentines_usa_payload = pull.payload_builder(valentines_period, geography_broad=geog_usa, connection_item=google_connection)
+    valentines_usa_payload = pull.payload_builder(valentines_time_period, geography_broad=geog_usa, connection_item=google_connection)
     # sleep(11)  # >10 second pause to trick the Google API?
     valentines_states_df = pull.extract_data_try(valentines_usa_payload, region='states', spatial_not_temporal=True)
     # sleep(11)  # >10 second pause to trick the Google API?
@@ -133,10 +133,27 @@ def full_run_gtrends():
     valentines_top_qs = pull.top_related_queries(valentines_usa_payload)
     # sleep(11)  # >10 second pause to trick the Google API?
     valentines_rising_qs = pull.rising_related_queries(valentines_usa_payload)
+    #
+    # Pull state-level OR & MN data to demonstrate how the Cincy Problem has been resolved by Google
+    # # since March - April 2021 when original MN & OR data was collected.
+    # 1st, MN
+    geog_mn = 'US-MN'
+    mn_payload = pull.payload_builder(geography_broad=geog_mn, timeframe=valentines_time_period,
+                                      connection_item=google_connection)
+    mn_dma = pull.extract_data_try(payload_item=mn_payload, spatial_not_temporal=True, region='DMA')
+    mn_time = pull.extract_data_try(payload_item=mn_payload, spatial_not_temporal=False)
+    # Then, Oregon
+    geog_or = 'US-OR'
+    or_payload = pull.payload_builder(geography_broad=geog_or, timeframe=valentines_time_period,
+                                      connection_item=google_connection)
+    or_dma = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=True, region='DMA')
+    or_time = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=False)
+    #
     # Filing dictionary work
-    v_fil_list = [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs]
+    v_fil_list = [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs,
+                  mn_dma,mn_time, or_dma, or_time]
     # Add each df collected to the filing dictionary
-    [filing_dict[valentines_period].append(v) for v in v_fil_list]# if v not in filing_dict[valentines_period]]  # # <- Causes errors
+    [filing_dict[valentines_time_period].append(v) for v in v_fil_list]# if v not in filing_dict[valentines_time_period]]  # # <- Causes errors
 
 
     # NEXT: Store all the data for all of the dataframes generated here.
@@ -148,7 +165,7 @@ def full_run_gtrends():
     # Try adding each df to the dict after it is created above in the code.
     # # That way, if I comment out certain parts, it won't error here for having undefined variables.
     # filing_dict={
-    #     valentines_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
+    #     valentines_time_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
     #     init_late2022_studyperiod:[
     #         usa_states_df,usa_temporal_df,usa_dma_df,usa_top_qs,usa_rising_qs,
     #         ky_dma,ky_time,in_dma,in_time,oh_dma,oh_time,
