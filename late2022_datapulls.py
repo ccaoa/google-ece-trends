@@ -1,6 +1,7 @@
-import pandas as pd
+import pandas as pd, os
 from ccaoa import core
 from time import time, sleep
+from pathlib import Path
 
 try:
     from . import pull_data as pull, store_data as store
@@ -8,8 +9,30 @@ except:
     import pull_data as pull, store_data as store
 
 
+def get_storage_path():
+    """ Dynamically define the storage path with an external file that you gitignore.
+    Keeps one from having to constantly edit their file paths in-code if working on different machines."""
+    dot_storage_path = os.path.join(os.path.curdir,".storage_path")
+    if not os.path.exists(dot_storage_path):
+        Path(dot_storage_path).touch()
+    with open(dot_storage_path) as sfile:
+        path_store = str(sfile.read())
+    # Make sure there are no pythonic quotations, etc around the path.
+    path_store=path_store.replace('r"','"').replace('"','')
+    if not os.path.exists(path_store):
+        print("Your file",
+              path_store,
+              "doesn't exist.\n"
+              "Edit your `.storage_path` file in this directory to designate a destination for the Google Trends data.")
+    sfile.close()
+    return path_store
+
+
 def full_run_gtrends():
-    """ """
+    """ Collect custom data for J. A. Cooper (2023) Google Trends publication. """
+    # Make sure you have a valid storage location before going to the trouble of running all these trends.
+    storage_path = get_storage_path()
+
     # Beware of timeout requests:
     # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
     # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
@@ -114,7 +137,8 @@ def full_run_gtrends():
 
     # NEXT: Store all the data for all of the dataframes generated here.
     #Example below:
-    storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data"
+    # Storage paths now dynamically set.
+    # storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
     # storage_path = r"C:\Users\acc-s\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data"
     #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}
     # Try adding each df to the dict after it is created above in the code.
