@@ -1,6 +1,6 @@
 """
-___
-Pulls heavily from:
+Script providing functions for easy and custom pulls of Google Trends data for different times and places.
+Heavily inspired by:
 * https://github.com/GeneralMills/pytrends
 * https://github.com/Tanu-N-Prabhu/Python/blob/master/Google_Trends_API.ipynb
 """
@@ -146,7 +146,8 @@ def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     payload_df =payload_df.rename(columns={search_term: score_column_name})
     # The date/geography variable item is set by default as a pandas DF index. We want it as an actual, physical column.
     # # If temporal, UOA should be = 'date'
-    # # # (See if this differs as time period for results differs. I.e. if UOA is a week vs a day). If it does, see spatial function way of resolving multiple possible UOAs.
+    # # # (See if this differs as time period for results differs. I.e. if UOA is a week vs a day).
+    # # # # If it does, see spatial function way of resolving multiple possible UOAs.
     # # If spatial, UOA will vary: uoa_resolutions =['COUNTRY','REGION','DMA','CITY']
     payload_df[uoa] = payload_df.index
     # Set UOA col as first column
@@ -210,7 +211,7 @@ def extract_temporal_data(payload=None, time_uoa='date'):
 
 def subregion_identifier(subregion_input):
     """ Figure out what sub-region of your payload's broader geography you want to explore."""
-    
+
     # The default is "REGION", the international code for subnational UOAs (Admin Level 1).
     # # For the US, this is States.
     # However, useful also in the US are media markets, specifically Nielsen Designated Market Areas (DMAs).
@@ -408,53 +409,22 @@ if __name__ == '__main__':
     from time import time, sleep
     start = time()
 
-
     def original_main_testing():
         # Beware of timeout requests:
         # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
         # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
-        the_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
-        sleep(2)  # 2 second pause to trick the Google API?
+        # This should be fixed with the new backoff_factor elements of the payload builder.
+        the_payload = payload_builder()  # Default args
+        # sleep(2)  # 2 second pause to trick the Google API?  # No longer necessary with the backoff_factor applied.
         states_df = extract_spatial_data(the_payload, subregion='states')
-        sleep(2)  # 2 second pause to trick the Google API?
         temporal_df = extract_temporal_data()
-        sleep(2)  # 2 second pause to trick the Google API?
-        dma_df = extract_spatial_data(the_payload, subregion='DMA')
+        # Below equates to extract_spatial_data(the_payload, subregion='DMA')
+        dma_df = extract_data_try(the_payload, spatial_not_temporal=True,region='DMA')
 
         print(states_df.head(10))
         print(states_df.tail(10))
         print(temporal_df.head(10))
         print(dma_df.head(10))
         print(dma_df.tail(10))
-
-        # Test adding DMA IDs to the DMA subregion USA DF.
-        # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
-        # Extract a dict = {DMA: its_id_number}
-        dma_id_reversedict = core.reverse_dict(dma.dma_id_dict())
-        # Apply those IDs to the DMAs in the dataframe
-        dma_df["dma_id"] = dma_df["DMA".lower()].apply(lambda x: dma_id_reversedict[x])
-        print(dma_df.head(10))
-
-    # Beware of timeout requests:
-    # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
-    # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
-    usa_payload = payload_builder()  # Default args  # Future: pass your timeframe argument into this func.
-    # Reformat the below with extract_data(payload_item, spatial_not_temporal=True, region=None, low_volume=True) func.
-    sleep(2)  # 2 second pause to trick the Google API?
-    usa_states_df = extract_data(usa_payload, region='states', spatial_not_temporal=True)
-    sleep(2)  # 2 second pause to trick the Google API?
-    usa_temporal_df = extract_data(usa_payload, spatial_not_temporal=False)
-    sleep(2)  # 2 second pause to trick the Google API?
-    usa_dma_df = extract_data(usa_payload, spatial_not_temporal=True,region='DMA')
-
-    print(usa_states_df.head(10))
-    print(usa_states_df.tail(10))
-    print(usa_temporal_df.head(10))
-    print(usa_dma_df.head(10))
-    print(usa_dma_df.tail(10))
-
-    # # Test a state-specific trend pull
-    # maryland_payload = payload_builder(geography_broad='US-MD')
-    # ky_payload = payload_builder(geography_broad='US-KY')
 
     core.runtime(start)

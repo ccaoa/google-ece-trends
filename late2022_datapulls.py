@@ -45,12 +45,6 @@ def full_run_gtrends():
 
     # Establish a dictionary to contain the dataframes for downstream saving.
     filing_dict = {}
-        # valentines_time_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
-        # init_late2022_studyperiod:[
-        #     usa_states_df,usa_temporal_df,usa_dma_df,usa_top_qs,usa_rising_qs,
-        #     ky_dma,ky_time,in_dma,in_time,oh_dma,oh_time,
-        # ]
-    # }
 
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
@@ -168,33 +162,16 @@ def full_run_gtrends():
     # Add each df collected to the filing dictionary
     [filing_dict[valentines_time_period].append(v) for v in v_fil_list]# if v not in filing_dict[valentines_time_period]]  # # <- Causes errors
 
-
     # NEXT: Store all the data for all of the dataframes generated here.
-    #Example below:
-    # Storage paths now dynamically set.
-    # storage_path = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends"
-    # storage_path = r"C:\Users\acc-s\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data"
-    #do it by making a dictionary {timeframe:[df1,df2],timeframe2:[df4,df5]}
-    # Try adding each df to the dict after it is created above in the code.
-    # # That way, if I comment out certain parts, it won't error here for having undefined variables.
-    # filing_dict={
-    #     valentines_time_period: [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs],
-    #     init_late2022_studyperiod:[
-    #         usa_states_df,usa_temporal_df,usa_dma_df,usa_top_qs,usa_rising_qs,
-    #         ky_dma,ky_time,in_dma,in_time,oh_dma,oh_time,
-    #     ]
-    # }
-    #then   for tf in dict: for df in tf: store_data().
-    # store.store_data(storage_path, usa_states_df,init_late2022_studyperiod)
-    # store_data(storage_directory_file_path,gtrends_data, search_date_period, csv_not_xlsx=True)
-    print("Data will be stored in", storage_path,'\n-----------------------------------------------')
+    # Storage paths now dynamically set above.
+    print("Data will be stored in", storage_path)
     # Set the stage for reprocessing previously failed data collection efforts.
     dfs_to_process=0
     # Count all the DFs to process
     for tf in filing_dict:
         dfs_to_process += len(filing_dict[tf])
     dfs_with_data = 0
-    # while dfs_to_process > dfs_with_data:  # Eventually use this for retrying previously failed datasets.
+    print("Store", dfs_to_process, "datasets.\n-----------------------------------------------")
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
