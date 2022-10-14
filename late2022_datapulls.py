@@ -148,10 +148,21 @@ def full_run_gtrends():
                                       connection_item=google_connection)
     or_dma = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=True, region='DMA')
     or_time = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=False)
+    # Also include Eugene, Oregon to look within a DMA for kicks and longitudinal consistency.
+    # # The Beaver/Duck DMA!
+    # To construct the geography, we need that DMA ID. Dynamically access it.
+    beaver_duck_dma_name = next(key for key in core.reverse_dict(dma.dma_id_dict()) if "Eugene" in key)
+    beaver_duck_dma_id = str(core.reverse_dict(dma.dma_id_dict())[beaver_duck_dma_name])
+    geog_eugene = geog_or + "-" + beaver_duck_dma_id
+    # Then, go on collecting data like normal.
+    eugene_payload = pull.payload_builder(geography_broad=geog_eugene, timeframe=valentines_time_period,connection_item=google_connection)
+    eugene_time = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=False)
+    # A City-level UOA pull!
+    eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city')
     #
     # Filing dictionary work
     v_fil_list = [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs,
-                  mn_dma,mn_time, or_dma, or_time]
+                  mn_dma,mn_time, or_dma, or_time, eugene_time, eugene_city]
     # Add each df collected to the filing dictionary
     [filing_dict[valentines_time_period].append(v) for v in v_fil_list]# if v not in filing_dict[valentines_time_period]]  # # <- Causes errors
 
