@@ -155,12 +155,16 @@ def full_run_gtrends():
     # Then, go on collecting data like normal.
     eugene_payload = pull.payload_builder(geography_broad=geog_eugene, timeframe=valentines_time_period,connection_item=google_connection)
     eugene_time = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=False)
-    # A City-level UOA pull!
-    eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city')
+    # # A City-level UOA pull!
+    # # Turns out this is harder than I thought. Some issues with Cities. See pull_data.py for more on this.
+    # # For now, if you try to use 'city' as your region, you'll either get:
+    # # # A) an error (DMA as payload geog), or
+    # # # B) DMA results (State as payload geog).
+    # eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city')
     #
     # Filing dictionary work
     v_fil_list = [valentines_states_df,valentines_temporal_df,valentines_dma_df,valentines_top_qs,valentines_rising_qs,
-                  mn_dma,mn_time, or_dma, or_time, eugene_time, eugene_city]
+                  mn_dma,mn_time, or_dma, or_time, eugene_time]#, eugene_city]
     # Add each df collected to the filing dictionary
     [filing_dict[valentines_time_period].append(v) for v in v_fil_list]# if v not in filing_dict[valentines_time_period]]  # # <- Causes errors
 

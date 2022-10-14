@@ -209,14 +209,33 @@ def extract_temporal_data(payload=None, time_uoa='date'):
 
 
 def subregion_identifier(subregion_input):
-    """ Figure out what sub-region of your broad geography you want to explore from the payload."""
+    """ Figure out what sub-region of your payload's broader geography you want to explore."""
+    
     # The default is "REGION", the international code for subnational UOAs (Admin Level 1).
     # # For the US, this is States.
     # However, useful also in the US are media markets, specifically Nielsen Designated Market Areas (DMAs).
     # # This is the last continuous geography in the USA.
-    # Finally, there are cities. 'CITY' returns city level data
     # 'COUNTRY' returns country level data. In case you wanted one score for the whole US?
+    # # This is the broadest, least precise geographic UOA supported.
+    #
+    # Finally, there are cities. 'CITY' returns city level data.
+    # # However, be warned: pytrends v4.8 in PyPi does not support all runs of City UOA trends. Updated 1 Feb 2022.
+    # # # https://pypi.org/project/pytrends/
+    # # Running with "CITY" as UOA of subregion results in:
+    # # # * states for country payloads
+    # # # * DMAs for state payloads
+    # # # * errors for DMA payloads
+    # # This is a known issue logged in GitHub:
+    # # # Issue https://github.com/GeneralMills/pytrends/issues/392
+    # # # Merged to Master by pull request https://github.com/GeneralMills/pytrends/pull/509 in GitHub on 26 Mar 2022.
+    # # # Issue https://github.com/GeneralMills/pytrends/issues/316 still remains open; TBD if PR #509 fixes.
+    # # # Unclear if issue 497 is applicable; pertains to non-USA regions, but user experiencing similar issue as above.
+    # # # # https://github.com/GeneralMills/pytrends/issues/497
+    # # But, PR 509 has not been applied to the PyPi version of the repo.
+    # # So, as long as PyPi remains behind GitHub, `pip install pytrends` will not be sufficient to work with cities.
+    # # Solutions: pip install directly from GitHub or wait for new pytrends release.
     uoa_resolutions = ['COUNTRY', 'REGION', 'DMA', 'CITY']
+
     if subregion_input is None:
         subregion = subregion_input
     elif subregion_input.upper().replace(" ", "") not in uoa_resolutions:
