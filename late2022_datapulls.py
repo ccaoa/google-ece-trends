@@ -24,6 +24,7 @@ def get_storage_path():
               path_store,
               "doesn't exist.\n"
               "Edit your `.storage_path` file in this directory to designate a destination for the Google Trends data.")
+        # # Maybe in a future version, add a user input method to manually define this var in-run.
     sfile.close()
     return path_store
 
@@ -32,6 +33,9 @@ def full_run_gtrends():
     """ Collect custom data for J. A. Cooper (2023) Google Trends publication. """
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
     storage_path = get_storage_path()
+    if storage_path is None or storage_path == '':
+        # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
+        return
 
     # Beware of timeout requests:
     # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
