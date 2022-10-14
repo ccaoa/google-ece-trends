@@ -235,6 +235,7 @@ def subregion_identifier(subregion_input):
     # # But, PR 509 has not been applied to the PyPi version of the repo.
     # # So, as long as PyPi remains behind GitHub, `pip install pytrends` will not be sufficient to work with cities.
     # # Solutions: pip install directly from GitHub or wait for new pytrends release.
+    # # Also see: https://stackoverflow.com/questions/61435486/pytrends-fail-to-get-us-city-level-data
     uoa_resolutions = ['COUNTRY', 'REGION', 'DMA', 'CITY']
 
     if subregion_input is None:
