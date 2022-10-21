@@ -1,6 +1,6 @@
-import pandas as pd, os
+import pandas as pd, os, datetime as dt
 from ccaoa import core
-from time import time, sleep
+# from time import time, sleep
 from pathlib import Path
 
 try:
@@ -250,34 +250,46 @@ def full_run_gtrends():
 
     # NEXT: Store all the data for all of the dataframes generated here.
     # Storage paths now dynamically set above.
-    print("Data will be stored in", storage_path)
+    print("Data will be stored in", storage_path, ".")
     # Set the stage for reprocessing previously failed data collection efforts.
     dfs_to_process = 0
     # Count all the DFs to process
     for tf in filing_dict:
         dfs_to_process += len(filing_dict[tf])
     dfs_with_data = 0
+    today = dt.datetime.today().strftime("%Y-%m-%d")
     print(
-        "Store",
+        "Will store",
         dfs_to_process,
-        "datasets.\n-----------------------------------------------",
+        "datasets on",today,".\n-----------------------------------------------\n",
+        # "Storage File\tData Time Period\t\tStorage Folder\n",
+        # '------------\t----------------\t\t--------------',
     )
+    # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
+    print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", "Storage Folder"))
+    print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
+
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
+                gt_file_name = store.retrieve_singlevar_name(dataframe)
+                short_path = os.path.join(
+                    "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
+                    os.path.split(os.path.split(storage_path)[0])[1],
+                    os.path.split(storage_path)[1]
+                )
                 store.store_data(
                     storage_path,
                     dataframe,
                     tf,
-                    gtrends_file_name=store.retrieve_singlevar_name(dataframe),
+                    gtrends_file_name=gt_file_name,
                     csv_not_xlsx=True,
+                    suppress_prints=True
                 )
+                # print(str(gt_file_name)+'\t'+str(tf)+'\t\t'+str(short_path))
+                # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
+                print("{0:30}{1:30}{2}".format(gt_file_name, tf, short_path))
                 dfs_with_data += 1
-                print(
-                    store.retrieve_singlevar_name(dataframe),
-                    "was stored for time period",
-                    tf,
-                )
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
@@ -285,15 +297,19 @@ def full_run_gtrends():
                     "was not captured and will not be stored.",
                 )
     print(
+        "\n-----------------------------------------------\n",
+        # Print # of datasets stored out of total # datasets pulled.
         dfs_with_data,
         "out of",
         dfs_to_process,
         "datasets stored.\n-----------------------------------------------\n",
     )
+
     return
 
 
 if __name__ == "__main__":
+    from time import time
     start = time()
     full_run_gtrends()
     core.runtime(start=start)
