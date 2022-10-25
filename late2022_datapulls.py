@@ -1,18 +1,19 @@
-import pandas as pd, os, datetime as dt
+import os, datetime as dt, pandas as pd
 from ccaoa import core
 # from time import time, sleep
 from pathlib import Path
 
 try:
     from . import pull_data as pull, store_data as store, dma
-except:
+except ImportError:
     import pull_data as pull, store_data as store, dma
 
 
 def get_storage_path():
     """Dynamically define the storage path with an external file that you gitignore.
     Keeps one from having to constantly edit their file paths in-code if working on different machines."""
-    dot_storage_path = os.path.join(os.path.curdir, ".storage_path")
+    current_directory = dma.dma_module_directory()
+    dot_storage_path = os.path.join(current_directory, ".storage_path")
     if not os.path.exists(dot_storage_path):
         Path(dot_storage_path).touch()
     with open(dot_storage_path) as sfile:
