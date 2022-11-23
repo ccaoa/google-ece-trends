@@ -9,6 +9,7 @@
 :: To log the results of a run:
 :: --------------------------------------------------
 :: EXECUTION
+echo Starting Google Trends data pull.
 :: There are two ways of executing this batch file from the cmd shell.
 ::  Each depends on accessing the file and directory paths correctly.
 ::
