@@ -474,9 +474,10 @@ def extract_data_try(
         )
     except Exception as ex:
         if spatial_not_temporal is True:
-            prt = region.lower().replace("region", "state") + " region"
+            prt = str(payload_item.geo)+"'s "+region.lower().replace("region", "state") + " regions"
         else:
-            prt = "timeframe " + str(
+            # Need to extract the broad geography from the payload item.
+            prt = "temporal trends for "+str(payload_item.geo)+" for timeframe " + str(
                 payload_item.interest_over_time_widget["request"]["time"]
             )
         print(
@@ -500,9 +501,17 @@ if __name__ == "__main__":
         # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
         # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
         # This should be fixed with the new backoff_factor elements of the payload builder.
-        the_payload = payload_builder()  # Default args
+        init_late2022_studyperiod = "2018-06-03 2022-09-10"
+        the_payload = payload_builder(timeframe=init_late2022_studyperiod)  # Default args
         # sleep(2)  # 2 second pause to trick the Google API?  # No longer necessary with the backoff_factor applied.
-        states_df = extract_spatial_data(the_payload, subregion="states")
+        states_df = extract_data_try(
+            #extract_spatial_data(the_payload, subregion="states")
+            the_payload,
+            spatial_not_temporal=True,
+            region="states",
+            low_volume=True,
+            suppress_prints=False,
+        )
         temporal_df = extract_temporal_data()
         # Below equates to extract_spatial_data(the_payload, subregion='DMA')
         dma_df = extract_data_try(the_payload, spatial_not_temporal=True, region="DMA")
@@ -510,7 +519,10 @@ if __name__ == "__main__":
         print(states_df.head(10))
         print(states_df.tail(10))
         print(temporal_df.head(10))
+        print(temporal_df.tail(10))
         print(dma_df.head(10))
         print(dma_df.tail(10))
+
+    original_main_testing()
 
     core.runtime(start)

@@ -53,9 +53,7 @@ def full_run_gtrends(low_search_volume_results=True):
 
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
-    init_late2022_studyperiod = (
-        "2018-06-03 2022-09-10"  # The COVID Valentines' study period.
-    )
+    init_late2022_studyperiod = "2018-06-03 2022-09-10"
     filing_dict[
         init_late2022_studyperiod
     ] = []  # Establish dictionary list for downstream filing.
