@@ -32,13 +32,15 @@ def get_storage_path():
     return path_store
 
 
-def full_run_gtrends():
+def full_run_gtrends(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
     storage_path = get_storage_path()
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
         return
+    # Validate the low search volume flag as a boolean
+    low_search_volume_results = core.string_to_bool(low_search_volume_results)
 
     # Beware of timeout requests:
     # `pytrends.exceptions.ResponseError: The request failed: Google returned a response with code 429.`
@@ -51,9 +53,7 @@ def full_run_gtrends():
 
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
-    init_late2022_studyperiod = (
-        "2018-06-03 2022-09-10"  # The COVID Valentines' study period.
-    )
+    init_late2022_studyperiod = "2018-06-03 2022-09-10"
     filing_dict[
         init_late2022_studyperiod
     ] = []  # Establish dictionary list for downstream filing.
@@ -69,13 +69,13 @@ def full_run_gtrends():
     # Use the extract_data_try(payload_item, spatial_not_temporal=True, region=None, low_volume=True) func
     # to pull relevant data + formatting out of the payload.
     usa_states_df = pull.extract_data_try(
-        usa_payload, region="states", spatial_not_temporal=True
+        usa_payload, region="states", spatial_not_temporal=True, low_volume=low_search_volume_results
     )
     # # sleep(11)  # >10 second pause to trick the Google API?
-    usa_temporal_df = pull.extract_data_try(usa_payload, spatial_not_temporal=False)
+    usa_temporal_df = pull.extract_data_try(usa_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
     # # sleep(11)  # >10 second pause to trick the Google API?
     usa_dma_df = pull.extract_data_try(
-        usa_payload, spatial_not_temporal=True, region="DMA"
+        usa_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
 
     #
@@ -97,10 +97,10 @@ def full_run_gtrends():
     # sleep(11)  # >10 second pause to trick the Google API?
     # Pull relevant data
     ky_dma = pull.extract_data_try(
-        payload_item=ky_payload, spatial_not_temporal=True, region="DMA"
+        payload_item=ky_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
     # sleep(11)
-    ky_time = pull.extract_data_try(payload_item=ky_payload, spatial_not_temporal=False)
+    ky_time = pull.extract_data_try(payload_item=ky_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
     # sleep(11)
     #
     # Next is Indiana
@@ -112,10 +112,10 @@ def full_run_gtrends():
     )
     # sleep(11)  # >10 second pause to trick the Google API?
     in_dma = pull.extract_data_try(
-        payload_item=in_payload, spatial_not_temporal=True, region="DMA"
+        payload_item=in_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
     # sleep(11)
-    in_time = pull.extract_data_try(payload_item=in_payload, spatial_not_temporal=False)
+    in_time = pull.extract_data_try(payload_item=in_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
     # sleep(11)
     #
     # Finally, Ohio
@@ -127,10 +127,10 @@ def full_run_gtrends():
     )
     # sleep(11)
     oh_dma = pull.extract_data_try(
-        payload_item=oh_payload, spatial_not_temporal=True, region="DMA"
+        payload_item=oh_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
     # sleep(11)
-    oh_time = pull.extract_data_try(payload_item=oh_payload, spatial_not_temporal=False)
+    oh_time = pull.extract_data_try(payload_item=oh_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
     # sleep(11)
 
     # Filing dictionary work
@@ -166,15 +166,15 @@ def full_run_gtrends():
     )
     # sleep(11)  # >10 second pause to trick the Google API?
     valentines_states_df = pull.extract_data_try(
-        valentines_usa_payload, region="states", spatial_not_temporal=True
+        valentines_usa_payload, region="states", spatial_not_temporal=True, low_volume=low_search_volume_results
     )
     # sleep(11)  # >10 second pause to trick the Google API?
     valentines_temporal_df = pull.extract_data_try(
-        valentines_usa_payload, spatial_not_temporal=False
+        valentines_usa_payload, spatial_not_temporal=False, low_volume=low_search_volume_results
     )
     # sleep(11)  # >10 second pause to trick the Google API?
     valentines_dma_df = pull.extract_data_try(
-        valentines_usa_payload, spatial_not_temporal=True, region="DMA"
+        valentines_usa_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
     # sleep(11)  # >10 second pause to trick the Google API?
     #
@@ -193,9 +193,9 @@ def full_run_gtrends():
         connection_item=google_connection,
     )
     mn_dma = pull.extract_data_try(
-        payload_item=mn_payload, spatial_not_temporal=True, region="DMA"
+        payload_item=mn_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
-    mn_time = pull.extract_data_try(payload_item=mn_payload, spatial_not_temporal=False)
+    mn_time = pull.extract_data_try(payload_item=mn_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
     # Then, Oregon
     geog_or = "US-OR"
     or_payload = pull.payload_builder(
@@ -204,9 +204,9 @@ def full_run_gtrends():
         connection_item=google_connection,
     )
     or_dma = pull.extract_data_try(
-        payload_item=or_payload, spatial_not_temporal=True, region="DMA"
+        payload_item=or_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
     )
-    or_time = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=False)
+    or_time = pull.extract_data_try(payload_item=or_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
     # Also include Eugene, Oregon to look within a DMA for kicks and longitudinal consistency.
     # # The Beaver/Duck DMA!
     # To construct the geography, we need that DMA ID. Dynamically access it.
@@ -222,14 +222,14 @@ def full_run_gtrends():
         connection_item=google_connection,
     )
     eugene_time = pull.extract_data_try(
-        payload_item=eugene_payload, spatial_not_temporal=False
+        payload_item=eugene_payload, spatial_not_temporal=False, low_volume=low_search_volume_results
     )
     # # A City-level UOA pull!
     # # Turns out this is harder than I thought. Some issues with Cities. See pull_data.py for more on this.
     # # For now, if you try to use 'city' as your region, you'll either get:
     # # # A) an error (DMA as payload geog), or
     # # # B) DMA results (State as payload geog).
-    # eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city')
+    # eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city', low_volume=low_search_volume_results)
     #
     # Filing dictionary work
     v_fil_list = [
