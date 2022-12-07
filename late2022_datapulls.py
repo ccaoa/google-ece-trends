@@ -152,6 +152,29 @@ def full_run_gtrends(low_search_volume_results=True):
         filing_dict[init_late2022_studyperiod].append(u) for u in u_fil_list
     ]  # if u not in filing_dict[init_late2022_studyperiod]]  # <- Causes errors https://stackoverflow.com/questions/18548370/pandas-can-only-compare-identically-labeled-dataframe-objects-error
 
+    # Also collect Texas data to compare with the data I collected for annual report 2021
+    # # to further explore the Cincinnati Problem (The fact that DMAs are inconsistently reported at state level):
+    tx_time_period = "2021-03-21 2021-04-21"#"2020-02-14 2021-02-14"
+    # # Establish dictionary list for downstream filing.
+    filing_dict[tx_time_period] = []
+    geog_tx = "US-TX"
+    # Build the payloads; you can only have 1 payload active at a time.
+    tx_payload = pull.payload_builder(
+        geography_broad=geog_tx,
+        timeframe=tx_time_period,
+        connection_item=google_connection,
+    )
+    # Pull relevant data
+    tx_dma = pull.extract_data_try(
+        payload_item=tx_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
+    )
+    # Original data pull did not include Time, but why not?
+    tx_time = pull.extract_data_try(payload_item=tx_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
+    #
+    # Filing dictionary work: Add each df collected to the filing dictionary
+    u_fil_list = [tx_dma, tx_time]
+    [filing_dict[tx_time_period].append(u) for u in u_fil_list]
+
     # Also include some data from the classic COVID Valentines' study period.
     # Augment the existing OR & MN data with some national spatial data + get some riding and top keywords.
     valentines_time_period = "2020-02-14 2021-02-14"
