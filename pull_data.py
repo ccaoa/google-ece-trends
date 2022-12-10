@@ -154,6 +154,18 @@ def payload_builder(
 #     # payload.get_historical_interest(keywords)
 
 
+def index_as_first_col(indf, new_col_name):
+    """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
+    indf[new_col_name] = indf.index
+    # Set new col name for the former IDX as first column
+    cols = indf.columns.to_list()
+    cols = cols[-1:] + cols[:-1]
+    outdf = indf[cols]
+    # Reset the index to be numerical.
+    outdf = outdf.reset_index(drop=True)
+    return outdf
+
+
 def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     """Generates a clean DF with a formatted GTIS column for either time or geography results
     with an optional ranking column for each UOA region."""
@@ -166,13 +178,14 @@ def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     # # # (See if this differs as time period for results differs. I.e. if UOA is a week vs a day).
     # # # # If it does, see spatial function way of resolving multiple possible UOAs.
     # # If spatial, UOA will vary: uoa_resolutions =['COUNTRY','REGION','DMA','CITY']
-    payload_df[uoa] = payload_df.index
-    # Set UOA col as first column
-    cols = payload_df.columns.to_list()
-    cols = cols[-1:] + cols[:-1]
-    payload_df = payload_df[cols]
-    # Reset the index to be numerical.
-    payload_df = payload_df.reset_index(drop=True)
+    # payload_df[uoa] = payload_df.index
+    # # Set UOA col as first column
+    # cols = payload_df.columns.to_list()
+    # cols = cols[-1:] + cols[:-1]
+    # payload_df = payload_df[cols]
+    # # Reset the index to be numerical.
+    # payload_df = payload_df.reset_index(drop=True)
+    payload_df = index_as_first_col(payload_df, uoa)
 
     # Add a rank to the dataframe. Only sort if geography.
     # if rank is True:
