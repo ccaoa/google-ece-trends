@@ -135,6 +135,8 @@ def define_target_summary_dataset(raw_data_file):
 # def append_raw_data_fromdf(raw_gtrends_data_file):
 #     """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
 #     for the same given study time period and geography."""
+raw_data_collection_sheet = "raw_data_records"
+summary_stats_sheet="summary_stats"
 
 
 def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
@@ -167,12 +169,26 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         uoa_col = raw_data_in_df.columns[0]
         subset_raw_data = raw_data_in_df[[uoa_col]+['gtis']]
         # Get the data from the input file
-        trasnposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True)
+        transposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True, old_cols_as_index=True)
         # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
-        core.df_to_file(trasnposed_sub_df,target_summary_dataset,index=False,sheet_xlsx="raw_data_records")
-        # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
-        # After the transpose, the UOA is now the column field. It will become the column field for the summary stats.
+        core.df_to_file(transposed_sub_df,target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
 
+        # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
+        # # After the transpose, the UOA features are now the new columns.
+        # # They will also become the columns for the summary stats data.
+        # stats_df = transposed_sub_df.copy()
+        # # One way to do it is keep the dates as the columns and add rows:
+        # pd.concat([mnsubsettransposetime, pd.DataFrame(index=["IDXbaby"]), pd.DataFrame(index=['haha'])], axis=0,
+        #           ignore_index=False)
+        # Or, it could revert to dates being rows and the GTIS and error etc are column headers since that's the primary study var for this dataset.
+        stats_df = raw_data_in_df.copy()
+        # We only need the UOA and the GTIS (and maybe keep the DMA ID/state FIPS), nothing else
+        dropcols = ['rank','isPartial']
+        stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
+        # UOA column already defined above.
+        # The rest of the calcs will be shared by downstream processes, so write function for that.
+        # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
+        core.df_to_file(transposed_sub_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet)
 
 
 def append_raw_data_fromfile(raw_gtrends_data_file):
@@ -190,3 +206,9 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
         trnspse_in_df = transpose_df(in_df, first_col_as_new_col_names=True)
         columns_column = trnspse_in_df.columns[0]  # This will allow access to fields like 'gtis'
 
+
+# def calc_sumstats(summary_xlsx):
+
+
+if __name__ == '__main__':
+    pass
