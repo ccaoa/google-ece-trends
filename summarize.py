@@ -148,27 +148,37 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
             exists = False
         else:
             print("  The summary file will not be removed or refreshed.")
+            exists = True
             return
 
     # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
-
+    # # The conditional here may not be necessary
+    if exists is False:
+        # create the summary spreadsheet from the raw data.
+        raw_data_in_df = core.file_to_df(raw_gtrends_data_file)
+        # FIRST: We need to setup the raw data records collection sheet. All future raw data will be appended here.
+        # All we need are the UOA column (eg, date, dma, state, etc) and the GTIS.
+        # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
+        subset_raw_data = raw_data_in_df[[raw_data_in_df.columns[0]]+['gtis']]
+        # Get the data from the input file
+        trasnposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True)
+        # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
+        core.df_to_file(trasnposed_sub_df,target_summary_dataset,index=False,sheet_xlsx="raw_data_records")
+        # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
 
 
 def append_raw_data_fromfile(raw_gtrends_data_file):
     """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
     for the same given study time period and geography."""
-    # Get the data from the input file
-    in_df =core.file_to_df(raw_gtrends_data_file)
-    trnspse_in_df = transpose_df(in_df,first_col_as_new_col_names=True)
-    columns_column = trnspse_in_df.columns[0]  # This will allow access to fields like 'gtis'
-    # Find the summary dataset to append to
+    # Find the summary dataset which to append the data.
     target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
     if os.path.exists(target_summary_dataset) is False:
         # Do stuff to setup the summary xlsx with the current raw data as its first entry.
         setup_summary_spreadsheet(raw_gtrends_data_file)
     else:
         # Append the data to the stuff that is already there.
-        pass
+        # Get the data from the input file
+        in_df = core.file_to_df(raw_gtrends_data_file)
+        trnspse_in_df = transpose_df(in_df, first_col_as_new_col_names=True)
+        columns_column = trnspse_in_df.columns[0]  # This will allow access to fields like 'gtis'
 
-
-from xlsxwriter import l
