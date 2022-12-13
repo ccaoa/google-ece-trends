@@ -156,11 +156,12 @@ def payload_builder(
 
 def index_as_first_col(indf, new_col_name):
     """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
-    indf[new_col_name] = indf.index
+    outdf = indf.copy()
+    outdf[new_col_name] = outdf.index
     # Set new col name for the former IDX as first column
-    cols = indf.columns.to_list()
+    cols = outdf.columns.to_list()
     cols = cols[-1:] + cols[:-1]
-    outdf = indf[cols]
+    outdf = outdf[cols]
     # Reset the index to be numerical.
     outdf = outdf.reset_index(drop=True)
     return outdf

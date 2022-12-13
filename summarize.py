@@ -27,7 +27,7 @@ except ImportError:
 # ################################## #
 # #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
 # ONLY FOR TESTING PURPOSES!
-# FUNCTION-IZE AT END FOR MORE ROBUST CODE.
+# FUNCTION-IZE AT END FOR MORE ROBUST CODE. # We don't want file paths in these "modules" but in data pull .py files.
 def get_storage_path():
     """Dynamically define the storage path with an external file that you gitignore.
     Keeps one from having to constantly edit their file paths in-code if working on different machines."""
@@ -49,10 +49,126 @@ def get_storage_path():
         # # Maybe in a future version, add a user input method to manually define this var in-run.
     sfile.close()
     return path_store
-storage_path = get_storage_path()
+
 # #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
 # ################################## #
 
-def transpose_df(df, first_col_as_new_col_names=True):
+
+def index_as_first_col(indf, new_col_name):
+    """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
+    outdf = indf.copy()
+    outdf[new_col_name] = outdf.index
+    # Set new col name for the former IDX as first column
+    cols = outdf.columns.to_list()
+    cols = cols[-1:] + cols[:-1]
+    outdf = outdf[cols]
+    # Reset the index to be numerical.
+    outdf = outdf.reset_index(drop=True)
+    return outdf
+
+
+def transpose_df(df, first_col_as_new_col_names=True, old_col_names_as_first_row=True, col_of_oldcolumns_name="old_cols"):
     """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
-    df.set_index('dma').transpose()
+    # If the user wanted the first column of the PD DF to function as the column names
+    if core.string_to_bool(first_col_as_new_col_names) is True:
+        first_col = df.columns[0]
+        work_df = df.set_index(first_col).transpose()
+    else:
+        work_df = df.transpose()
+    # At this point, the old column headers are the index column, with the old first column as the first record.
+    # # https://stackoverflow.com/a/36013757/15517267
+    old_first_column = work_df.columns.name
+    if isinstance(col_of_oldcolumns_name, str) is not True:
+        try:
+            col_of_oldcolumns_name=str(col_of_oldcolumns_name)
+        except:
+            col_of_oldcolumns_name = "old_cols"
+    work_df = index_as_first_col(work_df, col_of_oldcolumns_name)#old_first_column)
+    return work_df
+
+
+# Goal:
+# FIRST: Get a tab in a summary xlsx sheet to have columns with all UOAs (eg states or DMAs, whatever they may be) or
+# dates (if a temporal DF) & each row is a *pull date* regardless of geog vs temporal dataset.
+# THEN: use the columns to calc in a new, other tab each column's (eg, state, DMA, or date
+# (day, week, month, etc whatever the temporal UOA was)) summary stats. Both tabs will have the same column headers.
+# The only difference will be the rows: raw data values collected into one sheet or summary stats of that data.
+# Similar (but not identical) to the SSM GD6/7s or map notes.
+
+def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
+    """ Define the local path in which you'll store summary result XLSXs. """
+    storage_path = get_storage_path()
+    if same_as_raw_storage is True:
+        return storage_path
+    else:
+        parent_dir = os.path.dirname(storage_path)
+        if use_parent_dir is True:
+            return parent_dir
+        else:
+            # Default to sibling directory in this case named "summary_data"
+            name_sibling_dir="summary_data"
+            sibling_dir_path = os.path.join(parent_dir,name_sibling_dir)
+            if os.path.exists(sibling_dir_path) is False:
+                # Create that sibling dir if it does not exist.
+                os.mkdir(sibling_dir_path)
+            return sibling_dir_path
+
+
+def define_target_summary_dataset(raw_data_file):
+    """ Use the name of the raw data file to target which summary Xlsx you'll be using. """
+    if os.path.exists(raw_data_file) is False:
+        raise FileNotFoundError
+    dataset_name = Path(raw_data_file).stem
+    dataset_name = dataset_name[:dataset_name.rfind("_")]
+    # This dataset name will be identical to the summary dataset name
+    sumstorpath=summary_storage_path()
+    summary_dataset_name = dataset_name+'.xlsx'
+    full_summary_file_path = os.path.join(sumstorpath, summary_dataset_name)
+    return full_summary_file_path
+
+
+# def append_raw_data_fromdf(raw_gtrends_data_file):
+#     """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
+#     for the same given study time period and geography."""
+
+
+def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
+    """ _ """
+    basename = os.path.basename(raw_gtrends_data_file)
+    target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
+    # Check to see if the file already exists
+    exists = False
+    if os.path.exists(target_summary_dataset) is True:
+        # The document already exists. Be very careful to not destroy your data!
+        print("The", basename, 'summary file already exists.')
+        if force is True:
+            # If you're sure........
+            print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
+            os.remove(target_summary_dataset)
+            exists = False
+        else:
+            print("  The summary file will not be removed or refreshed.")
+            return
+
+    # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
+
+
+
+def append_raw_data_fromfile(raw_gtrends_data_file):
+    """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
+    for the same given study time period and geography."""
+    # Get the data from the input file
+    in_df =core.file_to_df(raw_gtrends_data_file)
+    trnspse_in_df = transpose_df(in_df,first_col_as_new_col_names=True)
+    columns_column = trnspse_in_df.columns[0]  # This will allow access to fields like 'gtis'
+    # Find the summary dataset to append to
+    target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
+    if os.path.exists(target_summary_dataset) is False:
+        # Do stuff to setup the summary xlsx with the current raw data as its first entry.
+        setup_summary_spreadsheet(raw_gtrends_data_file)
+    else:
+        # Append the data to the stuff that is already there.
+        pass
+
+
+from xlsxwriter import l
