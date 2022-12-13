@@ -67,23 +67,28 @@ def index_as_first_col(indf, new_col_name):
     return outdf
 
 
-def transpose_df(df, first_col_as_new_col_names=True, old_col_names_as_first_row=True, col_of_oldcolumns_name="old_cols"):
+def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
     """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
     # If the user wanted the first column of the PD DF to function as the column names
     if core.string_to_bool(first_col_as_new_col_names) is True:
+        # The first column of the raw dataset containing UOA identifiers will be set as the column names of the new DF.
         first_col = df.columns[0]
         work_df = df.set_index(first_col).transpose()
     else:
+        # The first column of the raw dataset containing UOA identifiers will be set as the first row.
         work_df = df.transpose()
-    # At this point, the old column headers are the index column, with the old first column as the first record.
+    # At this point, the old column headers are the new index column, with the old first column as the first record.
     # # https://stackoverflow.com/a/36013757/15517267
-    old_first_column = work_df.columns.name
-    if isinstance(col_of_oldcolumns_name, str) is not True:
-        try:
-            col_of_oldcolumns_name=str(col_of_oldcolumns_name)
-        except:
-            col_of_oldcolumns_name = "old_cols"
-    work_df = index_as_first_col(work_df, col_of_oldcolumns_name)#old_first_column)
+    if core.string_to_bool(old_cols_as_index) is False:
+        # If the user wants the old columns bounced out into the first row:
+        old_first_column = work_df.columns.name
+        if isinstance(col_of_oldcolumns_name, str) is not True:
+            try:
+                col_of_oldcolumns_name=str(col_of_oldcolumns_name)
+            except:
+                col_of_oldcolumns_name = "old_cols"
+        work_df = index_as_first_col(work_df, col_of_oldcolumns_name)#old_first_column)
+    # Otherwise, the old column names will still be the index of the output DF.
     return work_df
 
 
@@ -159,12 +164,15 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         # FIRST: We need to setup the raw data records collection sheet. All future raw data will be appended here.
         # All we need are the UOA column (eg, date, dma, state, etc) and the GTIS.
         # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
-        subset_raw_data = raw_data_in_df[[raw_data_in_df.columns[0]]+['gtis']]
+        uoa_col = raw_data_in_df.columns[0]
+        subset_raw_data = raw_data_in_df[[uoa_col]+['gtis']]
         # Get the data from the input file
         trasnposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True)
         # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
         core.df_to_file(trasnposed_sub_df,target_summary_dataset,index=False,sheet_xlsx="raw_data_records")
         # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
+        # After the transpose, the UOA is now the column field. It will become the column field for the summary stats.
+
 
 
 def append_raw_data_fromfile(raw_gtrends_data_file):
