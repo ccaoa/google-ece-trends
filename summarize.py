@@ -137,6 +137,7 @@ def define_target_summary_dataset(raw_data_file):
 #     for the same given study time period and geography."""
 raw_data_collection_sheet = "raw_data_records"
 summary_stats_sheet="summary_stats"
+date_of_pull_field = "pull_date"
 
 
 def appending_raw_data_prep(raw_gtrends_data_file):
@@ -150,8 +151,11 @@ def appending_raw_data_prep(raw_gtrends_data_file):
                         (os.path.splitext(raw_gtrends_data_file)[0]).rfind("_") + 1:]
     formatted_date_of_pull = dt.datetime.strftime(dt.datetime.strptime(date_of_data_pull, "%Y%m%d"), "%m/%d/%Y")
     subset_raw_data = subset_raw_data.rename(columns={'gtis': formatted_date_of_pull})
-    # Get the data from the input file
-    transposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True, old_cols_as_index=True)
+    # Pull the date-of-pull into its own column for easy downstream access?
+    # Problem is that lots of UOA access is done by
+    # Transpose the subset data for format adhearance downstream.
+    transposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True, old_cols_as_index=False,
+                                     col_of_oldcolumns_name=date_of_pull_field)
     return transposed_sub_df
 
 
@@ -200,7 +204,11 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
         # The rest of the calcs will be shared by downstream processes, so write function for that.
         # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
-        core.df_to_file(stats_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet)
+        core.df_to_file(stats_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
+
+        return target_summary_dataset
+    else:
+        return None
 
 
 def append_raw_data_fromfile(raw_gtrends_data_file):
@@ -210,7 +218,8 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
     target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
     if os.path.exists(target_summary_dataset) is False:
         # Do stuff to setup the summary xlsx with the current raw data as its first entry.
-        setup_summary_spreadsheet(raw_gtrends_data_file)
+        setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
+        prepped_raw_data = core.file_to_df(setup_file,raw_data_collection_sheet)#, indexcolumn=uoa)
     else:
         # Append the data to the stuff that is already there.
         # # # Get the data from the input file
@@ -218,14 +227,20 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
         # # trnspse_in_df = transpose_df(in_df, first_col_as_new_col_names=True)
         # #  columns_column = trnspse_in_df.columns[0]  # This will allow access to fields like 'gtis'
         prepped_raw_data = appending_raw_data_prep(raw_gtrends_data_file)
+    return prepped_raw_data
 
 
 # def calc_sumstats(summary_xlsx):
 
 
 if __name__ == '__main__':
+    import time
+    start = time.time()
+
     tsttimepath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20221212.csv"
     tstgeogpath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221212.csv"
     # setup test
-    setup_summary_spreadsheet(tstgeogpath)
-    setup_summary_spreadsheet(tsttimepath)
+    setup_summary_spreadsheet(tstgeogpath, force=True)
+    setup_summary_spreadsheet(tsttimepath, force=True)
+
+    core.runtime(start)
