@@ -2,7 +2,7 @@
 lskdjf
 """
 
-import os, datetime as dt, pandas as pd
+import os, datetime as dt, numpy as np, pandas as pd
 from ccaoa import core
 # from time import time, sleep
 from pathlib import Path
@@ -236,6 +236,13 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
         appended_df = pd.concat([existing_raw_records,prepped_raw_data])
         # Sort by date to get the earliest rows on top.
         appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=True)
+        # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
+        appended_df = appended_df.replace(0,np.nan)
+        # Drop any rows that are complete duplicates.
+        # # This should keep rows with the same data collection date as long as the values are different.
+        # # This way we could presumably take multiple data measurements on the same day,
+        # # # collect different data, and use them all.
+        appended_df = appended_df.drop_duplicates()
         # Output this data back into its original tab.
         core.df_to_file(appended_df,target_summary_dataset,add_to_existing_xlsx=True,sheet_xlsx=raw_data_collection_sheet,overwrite_old_sheet=True)
 
