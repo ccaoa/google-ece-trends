@@ -133,11 +133,12 @@ def define_target_summary_dataset(raw_data_file):
 
 
 # def append_raw_data_fromdf(raw_gtrends_data_file):
-#     """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
+#     """Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
 #     for the same given study time period and geography."""
 raw_data_collection_sheet = "raw_data_records"
 summary_stats_sheet="summary_stats"
 date_of_pull_field = "pull_date"
+gtis_average_field = "gtis_mean"
 
 
 def appending_raw_data_prep(raw_gtrends_data_file):
@@ -146,7 +147,8 @@ def appending_raw_data_prep(raw_gtrends_data_file):
     # Get only the UOA & GTIS
     uoa_col = raw_data_in_df.columns[0]
     subset_raw_data = raw_data_in_df[[uoa_col] + ['gtis']]
-    # Rename the GTIS column with the date of the data pull. That way, you'll be able to tell which raw dataset the GTIS is coming from.
+    # Rename the GTIS column with the date of the data pull.
+    # That way, you'll be able to tell which raw dataset the GTIS is coming from.
     date_of_data_pull = os.path.splitext(raw_gtrends_data_file)[0][
                         (os.path.splitext(raw_gtrends_data_file)[0]).rfind("_") + 1:]
     formatted_date_of_pull = dt.datetime.strftime(dt.datetime.strptime(date_of_data_pull, "%Y%m%d"), "%m/%d/%Y")
@@ -167,7 +169,7 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
     exists = False
     if os.path.exists(target_summary_dataset) is True:
         # The document already exists. Be very careful to not destroy your data!
-        print("The", basename, 'summary file already exists.')
+        print("The", os.path.basename(target_summary_dataset), 'summary file already exists.')
         if force is True:
             # If you're sure........
             print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
@@ -202,6 +204,8 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         # We only need the UOA and the GTIS (and maybe keep the DMA ID/state FIPS), nothing else
         dropcols = ['rank','isPartial']
         stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
+        # Rename the GTIS field to make it clear that it's the average GTIS, not a single record.
+        stats_df = stats_df.rename(columns={'gtis':gtis_average_field})
         # The rest of the calcs will be shared by downstream processes, so write function for that.
         # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
         core.df_to_file(stats_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
@@ -219,18 +223,36 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
     if os.path.exists(target_summary_dataset) is False:
         # Do stuff to setup the summary xlsx with the current raw data as its first entry.
         setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
-        prepped_raw_data = core.file_to_df(setup_file,raw_data_collection_sheet)#, indexcolumn=uoa)
+        appended_df = core.file_to_df(setup_file,raw_data_collection_sheet)
     else:
         # Append the data to the stuff that is already there.
-        # # # Get the data from the input file
-        # # in_df = core.file_to_df(raw_gtrends_data_file)
-        # # trnspse_in_df = transpose_df(in_df, first_col_as_new_col_names=True)
-        # #  columns_column = trnspse_in_df.columns[0]  # This will allow access to fields like 'gtis'
+        # Prepare your new raw data
         prepped_raw_data = appending_raw_data_prep(raw_gtrends_data_file)
-    return prepped_raw_data
+        # Pull in the existing raw data records
+        existing_raw_records = core.file_to_df(target_summary_dataset, raw_data_collection_sheet)
+        # # If using indexes: https://stackoverflow.com/a/34236431/15517267
+        # df.loc[["x", "y"]]
+        # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
+        appended_df = pd.concat([existing_raw_records,prepped_raw_data])
+        # Sort by date to get the earliest rows on top.
+        appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=True)
+        # Output this data back into its original tab.
+        core.df_to_file(appended_df,target_summary_dataset,add_to_existing_xlsx=True,sheet_xlsx=raw_data_collection_sheet,overwrite_old_sheet=True)
+
+    return appended_df
 
 
-# def calc_sumstats(summary_xlsx):
+def calc_sumstats(summary_xlsx, coverage_factor_k=2):
+    """ 
+    Calculate the Summary Statistics (top 3 lines from the old GTrends xlsxs):
+        * Average
+        * Std Dev
+        * N
+        * Coverage Factor
+        * Expanded Uncertainty
+        * Rebased GTIS
+    """
+
 
 
 if __name__ == '__main__':
@@ -239,8 +261,13 @@ if __name__ == '__main__':
 
     tsttimepath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20221212.csv"
     tstgeogpath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221212.csv"
-    # setup test
-    setup_summary_spreadsheet(tstgeogpath, force=True)
-    setup_summary_spreadsheet(tsttimepath, force=True)
+    geogappndpth=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221209.csv"
+
+    # # setup test
+    # setup_summary_spreadsheet(tstgeogpath, force=True)
+    # setup_summary_spreadsheet(tsttimepath, force=True)
+
+    # Apppend test
+    append_raw_data_fromfile(geogappndpth)
 
     core.runtime(start)

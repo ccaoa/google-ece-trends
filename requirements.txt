@@ -1,4 +1,4 @@
 # ccaoa~=2.0  # Internal repository. See https://github.com/ccaoa/ccaoa-mapping
-git+ssh://git@github.com/ccaoa/ccaoa-mapping.git@staging#egg=ccaoa
+git+ssh://git@github.com/ccaoa/ccaoa-mapping.git#egg=ccaoa
 pytrends
 pandas~=1.3
