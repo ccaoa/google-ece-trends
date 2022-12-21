@@ -59,7 +59,7 @@ def uncertainty_df_field(
     ):
         # Calculate the uncertainty with a defined coverage factor (K)
         # # =(std_dev/SQRT(COUNT(F7:F1048576)))*2
-        uncertainty = (std_dev / math.sqrt(non_null_counts)) * coverage_factor_k
+        uncertainty = float((float(std_dev) / float(math.sqrt(float(non_null_counts)))) * float(coverage_factor_k))
         return uncertainty
     else:
         # The minimum records required to calculate uncertainty have not been acquired.

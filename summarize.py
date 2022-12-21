@@ -281,6 +281,12 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2):
     # sumstats_df[gtis_average_field] = [raw_data_df[d] for d in sumstats_df[dma_col]]#[sumstats_df[dma_col]]].mean()
     # [raw_data_df[d].mean() for d in sumstats_df[dma_col]]
     sumstats_df[gtis_average_field] = sumstats_df[dma_col].apply(lambda d: raw_data_df[d].mean())
+    # Standard Deviation
+    sumstats_df[std_dev_col] = sumstats_df[dma_col].apply(lambda d: raw_data_df[d].std())
+    # Coverage Factor
+    sumstats_df[covfactfield]=coverage_factor_k
+    # Expanded Uncertainty
+    sumstats_df[xpduncertainfield]=sumstats_df[dma_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
 
 
 if __name__ == '__main__':
