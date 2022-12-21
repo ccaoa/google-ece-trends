@@ -287,6 +287,16 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2):
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
     sumstats_df[xpduncertainfield]=sumstats_df[dma_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
+    # Count n(Observations)
+    sumstats_df[n_field]=sumstats_df[dma_col].apply(lambda d: raw_data_df[d].count())
+    # Rebase the maximum mean GTIS to = 100 to get a more "google trendy" result.
+    sumstats_df[rebase_gtis_field]=sumstats_df[gtis_average_field].apply(lambda m: tcalc.rebase_math(m,sumstats_df[gtis_average_field].max()))
+    # The above is a working version of rebase. Test with a dataset that does not have a mean GTIS = 100 (eg TX dataset)
+
+    # Write the results back to the XLSX
+    core.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet)
+
+    return sumstats_df
 
 
 if __name__ == '__main__':
@@ -302,6 +312,13 @@ if __name__ == '__main__':
     ordmafil1=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\or_dma_20200214-20210214_20221210.csv"
     ordmafil2 = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\or_dma_20200214-20210214_20221206.csv"
     # orfil1 later pull than ordmafil2
+    # Texas
+    txtdmapth1=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221207.csv"
+    txtdmapth2=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221208.csv"
+    txtdmapth3=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221209.csv"
+    txtdmapth4=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221212.csv"
+    # txtimepth2=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_time_20210321-20210421_20221216.csv"
+    tx_rawdata_fils=[txtdmapth1,txtdmapth2,txtdmapth3,txtdmapth4]
 
     # # setup test
     # setup_summary_spreadsheet(tstgeogpath, force=True)
@@ -311,11 +328,15 @@ if __name__ == '__main__':
     # # Apppend test
     # append_raw_data_fromfile(geogappndpth)
     # append_raw_data_fromfile(ordmafil1)
+    # [append_raw_data_fromfile(txt) for txt in tx_rawdata_fils]
     # time.sleep(1)
     # append_raw_data_fromfile(ordmafil2)
 
     # Summary stats calc test
-    summary_xlsx = define_target_summary_dataset(ordmafil2)
-    calc_sumstats(summary_xlsx)
+    # summary_xlsx = define_target_summary_dataset(ordmafil2)
+    # calc_sumstats(summary_xlsx)
 
+    txsumxlsx = define_target_summary_dataset(txtdmapth4)
+    # dftxsumstats = core.file_to_df(txsumxlsx)
+    calc_sumstats(txsumxlsx)
     core.runtime(start)
