@@ -1,5 +1,6 @@
 """
-lskdjf
+This file will calculate summary statistics for raw google trends data that you pull.
+The results of this file should give you meaningful, reportable results.
 """
 
 import os, datetime as dt, numpy as np, pandas as pd
@@ -141,7 +142,7 @@ date_of_pull_field = "pull_date"
 gtis_average_field = "gtis_mean"
 
 
-def appending_raw_data_prep(raw_gtrends_data_file):
+def raw_data_appending_prep(raw_gtrends_data_file):
     """ Functions common to both first init setup of raw data cumulative collection and appending new raw data."""
     raw_data_in_df = core.file_to_df(raw_gtrends_data_file)
     # Get only the UOA & GTIS
@@ -188,7 +189,7 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         # FIRST: We need to setup the raw data records collection sheet. All future raw data will be appended here.
         # All we need are the UOA column (eg, date, dma, state, etc) and the GTIS.
         # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
-        prepped_raw_data = appending_raw_data_prep(raw_gtrends_data_file)
+        prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
         # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
         core.df_to_file(prepped_raw_data,target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
 
@@ -227,7 +228,7 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
     else:
         # Append the data to the stuff that is already there.
         # Prepare your new raw data
-        prepped_raw_data = appending_raw_data_prep(raw_gtrends_data_file)
+        prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
         # Pull in the existing raw data records
         existing_raw_records = core.file_to_df(target_summary_dataset, raw_data_collection_sheet)
         # # If using indexes: https://stackoverflow.com/a/34236431/15517267
@@ -242,6 +243,7 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
         # # This should keep rows with the same data collection date as long as the values are different.
         # # This way we could presumably take multiple data measurements on the same day,
         # # # collect different data, and use them all.
+        # https://stackoverflow.com/questions/23667369/drop-all-duplicate-rows-across-multiple-columns-in-python-pandas
         appended_df = appended_df.drop_duplicates()
         # Output this data back into its original tab.
         core.df_to_file(appended_df,target_summary_dataset,add_to_existing_xlsx=True,sheet_xlsx=raw_data_collection_sheet,overwrite_old_sheet=True)
@@ -259,22 +261,55 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2):
         * Expanded Uncertainty
         * Rebased GTIS
     """
+    # Get data as it is
+    sumstats_df = core.file_to_df(summary_xlsx,summary_stats_sheet)
+    raw_data_df = core.file_to_df(summary_xlsx, raw_data_collection_sheet)
+    # SumStats Vars not previously defined
+    # gtis_average_field  # Previously defined
+    dma_col = 'dma'
+    covfactfield='cov_fact_k'
+    std_dev_col = 'std_dev'
+    xpduncertainfield='expd_uncrt'
+    rebase_gtis_field = 'rebse_gtis'
+    n_field = 'n_data_pts'
 
+    # CALCULATIONS
+    # Mean/Average
+    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[dma_col]].mean()  # Did not work in current form
+    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[dma_col]].mean()
+    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[dma_col]][sumstats_df[dma_col]].mean()
+    # sumstats_df[gtis_average_field] = [raw_data_df[d] for d in sumstats_df[dma_col]]#[sumstats_df[dma_col]]].mean()
+    # [raw_data_df[d].mean() for d in sumstats_df[dma_col]]
+    sumstats_df[gtis_average_field] = sumstats_df[dma_col].apply(lambda d: raw_data_df[d].mean())
 
 
 if __name__ == '__main__':
     import time
     start = time.time()
 
+    # RAW DATA TESTING FILES
+    # Minnesota
     tsttimepath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20221212.csv"
     tstgeogpath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221212.csv"
     geogappndpth=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221209.csv"
+    # Oregon
+    ordmafil1=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\or_dma_20200214-20210214_20221210.csv"
+    ordmafil2 = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\or_dma_20200214-20210214_20221206.csv"
+    # orfil1 later pull than ordmafil2
 
     # # setup test
     # setup_summary_spreadsheet(tstgeogpath, force=True)
     # setup_summary_spreadsheet(tsttimepath, force=True)
+    # setup_summary_spreadsheet(ordmafil1)
 
-    # Apppend test
-    append_raw_data_fromfile(geogappndpth)
+    # # Apppend test
+    # append_raw_data_fromfile(geogappndpth)
+    # append_raw_data_fromfile(ordmafil1)
+    # time.sleep(1)
+    # append_raw_data_fromfile(ordmafil2)
+
+    # Summary stats calc test
+    summary_xlsx = define_target_summary_dataset(ordmafil2)
+    calc_sumstats(summary_xlsx)
 
     core.runtime(start)
