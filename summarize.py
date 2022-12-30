@@ -308,7 +308,6 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # Coverage Factor
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
-    # # TROUBLESHOOT UNCERTAINTY; IT IS PRODUCING ONLY STD_DEV IN OUTPUT.
     sumstats_df[xpduncertainfield]=sumstats_df[uoa_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
     # Count n(Observations)
     sumstats_df[n_field]=sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].count())

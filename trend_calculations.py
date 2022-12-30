@@ -33,8 +33,6 @@ def uncertainty_df_field(
     # # Calculate the average of the field
     # # # May not need this....
     # average = df[field].average()
-    # Calculate the standard deviation.
-    std_dev = df[field].std()
 
     # Clean the target column to ensure any null values are treated as such
     df[field] = (
@@ -48,6 +46,9 @@ def uncertainty_df_field(
         .replace("NAN", np.nan)
     ).astype(float)
     non_null_counts = df[field].count()
+
+    # Calculate the standard deviation.
+    std_dev = df[field].std()
 
     # Ensure numeric input arguments
     # # Would be better with python argument typing, but I'm not there yet.
