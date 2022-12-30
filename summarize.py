@@ -305,20 +305,27 @@ if __name__ == '__main__':
     start = time.time()
 
     # RAW DATA TESTING FILES
+    # # Base path for multi-machine testing.
+    # base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
+    base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
     # Minnesota
-    tsttimepath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20221212.csv"
-    tstgeogpath=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221212.csv"
-    geogappndpth=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_dma_20200214-20210214_20221209.csv"
+    tsttimepath= os.path.join(base_path, r"raw_data\mn_time_20200214-20210214_20221212.csv")
+    tstgeogpath= os.path.join(base_path, r"raw_data\mn_dma_20200214-20210214_20221212.csv")
+    geogappndpth= os.path.join(base_path, r"raw_data\mn_dma_20200214-20210214_20221209.csv")
     # Oregon
-    ordmafil1=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\or_dma_20200214-20210214_20221210.csv"
-    ordmafil2 = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\or_dma_20200214-20210214_20221206.csv"
+    ordmafil1= os.path.join(base_path, r"raw_data\or_dma_20200214-20210214_20221210.csv")
+    ordmafil2 =  os.path.join(base_path, r"raw_data\or_dma_20200214-20210214_20221206.csv")
     # orfil1 later pull than ordmafil2
     # Texas
-    txtdmapth1=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221207.csv"
-    txtdmapth2=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221208.csv"
-    txtdmapth3=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221209.csv"
-    txtdmapth4=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_dma_20210321-20210421_20221212.csv"
-    # txtimepth2=r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\tx_time_20210321-20210421_20221216.csv"
+    # txtdmapth1= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221207.csv")
+    # txtdmapth2= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221208.csv")
+    # txtdmapth3= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221209.csv")
+    # txtdmapth4= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221212.csv")
+    # txtimepth2= os.path.join(base_path, r"raw_data\tx_time_20210321-20210421_20221216.csv")
+    txtdmapth1= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221218.csv")
+    txtdmapth2= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221226.csv")
+    txtdmapth3= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221228.csv")
+    txtdmapth4= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221229.csv")
     tx_rawdata_fils=[txtdmapth1,txtdmapth2,txtdmapth3,txtdmapth4]
 
     # # setup test
@@ -329,7 +336,7 @@ if __name__ == '__main__':
     # # Apppend test
     # append_raw_data_fromfile(geogappndpth)
     # append_raw_data_fromfile(ordmafil1)
-    # [append_raw_data_fromfile(txt) for txt in tx_rawdata_fils]
+    [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
     # time.sleep(1)
     # append_raw_data_fromfile(ordmafil2)
 
