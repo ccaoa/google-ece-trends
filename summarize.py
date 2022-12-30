@@ -179,7 +179,6 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         else:
             print("  The summary file will not be removed or refreshed.")
             exists = True
-            return
 
     # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
     # # The conditional here may not be necessary
@@ -258,8 +257,8 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
     return appended_df
 
 
-def calc_sumstats(summary_xlsx, coverage_factor_k=2):
-    """ 
+def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
+    """
     Calculate the Summary Statistics (top 3 lines from the old GTrends xlsxs):
         * Average
         * Std Dev
@@ -269,40 +268,59 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2):
         * Rebased GTIS
     """
     # Get data as it is
-    sumstats_df = core.file_to_df(summary_xlsx,summary_stats_sheet)
+    try:
+        sumstats_df = core.file_to_df(summary_xlsx,summary_stats_sheet)
+    except ValueError or NameError:
+        # The summary doc that exists does not have the summary_stats_sheet for some reason.
+        # Create it with an empty dataframe.
+        sumstats_df = pd.DataFrame()
+        core.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
     raw_data_df = core.file_to_df(summary_xlsx, raw_data_collection_sheet)
     # SumStats Vars not previously defined
     # gtis_average_field  # Previously defined
-    dma_col = 'dma'
+    # UOA Column. Needs to be dynamic to work with time or geography UOA.
+    uoa_col = (os.path.basename(summary_xlsx)).split("_")[1]# 'dma'
     covfactfield='cov_fact_k'
     std_dev_col = 'std_dev'
     xpduncertainfield='expd_uncrt'
     rebase_gtis_field = 'rebse_gtis'
     n_field = 'n_data_pts'
 
+    sumstatvars = [uoa_col,gtis_average_field,covfactfield,std_dev_col,xpduncertainfield,rebase_gtis_field,n_field]
+    # Establish these columns if they do not already exist.
+    cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
+    # # https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe#comment119897495_16327135
+    sumstats_df[cols_not_in_df] = None
+
     # CALCULATIONS
+    # Ensure the UOA records are all in the sum stats sheet.
+    transposed_sub_df = transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
+    sumstats_df[uoa_col] = transposed_sub_df[date_of_pull_field]  # 'pull_date'
     # Mean/Average
-    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[dma_col]].mean()  # Did not work in current form
-    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[dma_col]].mean()
-    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[dma_col]][sumstats_df[dma_col]].mean()
-    # sumstats_df[gtis_average_field] = [raw_data_df[d] for d in sumstats_df[dma_col]]#[sumstats_df[dma_col]]].mean()
-    # [raw_data_df[d].mean() for d in sumstats_df[dma_col]]
-    sumstats_df[gtis_average_field] = sumstats_df[dma_col].apply(lambda d: raw_data_df[d].mean())
+    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[uoa_col]].mean()  # Did not work in current form
+    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[uoa_col]].mean()
+    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[uoa_col]][sumstats_df[uoa_col]].mean()
+    # sumstats_df[gtis_average_field] = [raw_data_df[d] for d in sumstats_df[uoa_col]]#[sumstats_df[uoa_col]]].mean()
+    # [raw_data_df[d].mean() for d in sumstats_df[uoa_col]]
+    sumstats_df[gtis_average_field] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].mean())
     # Standard Deviation
-    sumstats_df[std_dev_col] = sumstats_df[dma_col].apply(lambda d: raw_data_df[d].std())
+    sumstats_df[std_dev_col] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].std())
     # Coverage Factor
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
     # # TROUBLESHOOT UNCERTAINTY; IT IS PRODUCING ONLY STD_DEV IN OUTPUT.
-    sumstats_df[xpduncertainfield]=sumstats_df[dma_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
+    sumstats_df[xpduncertainfield]=sumstats_df[uoa_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
     # Count n(Observations)
-    sumstats_df[n_field]=sumstats_df[dma_col].apply(lambda d: raw_data_df[d].count())
+    sumstats_df[n_field]=sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].count())
     # Rebase the maximum mean GTIS to = 100 to get a more "google trendy" result.
     sumstats_df[rebase_gtis_field]=sumstats_df[gtis_average_field].apply(lambda m: tcalc.rebase_math(m,sumstats_df[gtis_average_field].max()))
-    # The above is a working version of rebase. Test with a dataset that does not have a mean GTIS = 100 (eg TX dataset)
+    # Sort to have the most popular on top if the argument passed requests it.
+    # # Generally, we'll want to have geography fields (states & DMAs, etc) sorted by GTIS and time sorted by time.
+    if gtis_sort:
+        sumstats_df = sumstats_df.sort_values(by=[gtis_average_field,uoa_col], ascending=[False,True])
 
     # Write the results back to the XLSX
-    core.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet)
+    core.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True)
 
     return sumstats_df
 
