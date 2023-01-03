@@ -330,8 +330,8 @@ if __name__ == '__main__':
 
     # RAW DATA TESTING FILES
     # # Base path for multi-machine testing.
-    # base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
-    base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
+    base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
+    # base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
     # Minnesota
     tsttimepath= os.path.join(base_path, r"raw_data\mn_time_20200214-20210214_20221212.csv")
     tstgeogpath= os.path.join(base_path, r"raw_data\mn_dma_20200214-20210214_20221212.csv")
@@ -351,6 +351,10 @@ if __name__ == '__main__':
     txtdmapth3= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221228.csv")
     txtdmapth4= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221229.csv")
     tx_rawdata_fils=[txtdmapth1,txtdmapth2,txtdmapth3,txtdmapth4]
+    # Valentines
+    vtine_dma1 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221213.csv")
+    vtine_dma2 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221230.csv")
+    vtine_dma3 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221214.csv")
 
     # # setup test
     # setup_summary_spreadsheet(tstgeogpath, force=True)
@@ -359,8 +363,8 @@ if __name__ == '__main__':
 
     # # Apppend test
     # append_raw_data_fromfile(geogappndpth)
-    # append_raw_data_fromfile(ordmafil1)
-    [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
+    append_raw_data_fromfile(vtine_dma3)
+    # [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
     # time.sleep(1)
     # append_raw_data_fromfile(ordmafil2)
 
@@ -368,7 +372,8 @@ if __name__ == '__main__':
     # summary_xlsx = define_target_summary_dataset(ordmafil2)
     # calc_sumstats(summary_xlsx)
 
-    txsumxlsx = define_target_summary_dataset(txtdmapth4)
+    # txsumxlsx = define_target_summary_dataset(txtdmapth4)
+    vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
     # dftxsumstats = core.file_to_df(txsumxlsx)
-    calc_sumstats(txsumxlsx)
+    calc_sumstats(vdmasumxlsx)
     core.runtime(start)

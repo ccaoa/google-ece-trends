@@ -55,8 +55,11 @@ def uncertainty_df_field(
     coverage_factor_k = int(float(coverage_factor_k))
     minimum_observations = int(float(minimum_observations))
 
-    if (observation_threshold is False) or (
+    if ((observation_threshold is False) or (
         observation_threshold is True and non_null_counts >= minimum_observations
+    )) and (
+        # Must have a non-0 observation to be valid b/c you can't divide by 0 downstream to calc. uncertainty.
+        non_null_counts > 0
     ):
         # Calculate the uncertainty with a defined coverage factor (K)
         # # =(std_dev/SQRT(COUNT(F7:F1048576)))*2
