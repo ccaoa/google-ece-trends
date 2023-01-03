@@ -145,6 +145,9 @@ gtis_average_field = "gtis_mean"
 def raw_data_appending_prep(raw_gtrends_data_file):
     """ Functions common to both first init setup of raw data cumulative collection and appending new raw data."""
     raw_data_in_df = core.file_to_df(raw_gtrends_data_file)
+    # Ensure top and rising Qs "value" columns get renamed to 'gtis' for consistency and downstream functionality.
+    # # Will not affect DFs without a "value" column.
+    raw_data_in_df=raw_data_in_df.rename(columns={"value": 'gtis'})
     # Get only the UOA & GTIS
     uoa_col = raw_data_in_df.columns[0]
     subset_raw_data = raw_data_in_df[[uoa_col] + ['gtis']]
@@ -355,6 +358,12 @@ if __name__ == '__main__':
     vtine_dma1 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221213.csv")
     vtine_dma2 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221230.csv")
     vtine_dma3 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221214.csv")
+    # Rising Qs
+    rq1 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221214.csv")
+    rq2 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221114.csv")
+    rq3 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221204.csv")
+    rq4 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221104.csv")
+    rqz=[rq1,rq2,rq3,rq4]
 
     # # setup test
     # setup_summary_spreadsheet(tstgeogpath, force=True)
@@ -363,8 +372,9 @@ if __name__ == '__main__':
 
     # # Apppend test
     # append_raw_data_fromfile(geogappndpth)
-    append_raw_data_fromfile(vtine_dma3)
+    # append_raw_data_fromfile(vtine_dma3)
     # [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
+    [append_raw_data_fromfile(rq) for rq in rqz]
     # time.sleep(1)
     # append_raw_data_fromfile(ordmafil2)
 
@@ -373,7 +383,8 @@ if __name__ == '__main__':
     # calc_sumstats(summary_xlsx)
 
     # txsumxlsx = define_target_summary_dataset(txtdmapth4)
-    vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
+    # vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
+    rqsumxlsx = define_target_summary_dataset(rq1)
     # dftxsumstats = core.file_to_df(txsumxlsx)
-    calc_sumstats(vdmasumxlsx)
+    calc_sumstats(rqsumxlsx)
     core.runtime(start)
