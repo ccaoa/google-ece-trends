@@ -299,7 +299,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
 # The following functions employ the above to process multiple files simultaneously.
 
 
-def append_raw_items_from_list(raw_files_paths_list: list, suppress_prints=False):
+def append_raw_files_from_list(raw_files_paths_list: list, suppress_prints=False):
     """Append all the raw target files (passed as an argument via a list item) to the summary sheets."""
     # If a summary sheet is not yet set up, it should be created in this process.
     # [agg.append_raw_data_fromfile(tf) for tf in raw_files_paths_list]
@@ -342,7 +342,7 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
     """ Append the data from all of the raw data files in the directory passed as an argument. """
     if os.path.exists(raw_files_parent_dir):
         all_raw_files = [rf for rf in os.listdir(raw_files_parent_dir) ]
-        append_raw_items_from_list(all_raw_files, suppress_prints=suppress_prints)
+        append_raw_files_from_list(all_raw_files, suppress_prints=suppress_prints)
         return all_raw_files
     else:
         print("Does not exist as a file directory:",raw_files_parent_dir)
