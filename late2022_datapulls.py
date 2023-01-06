@@ -4,9 +4,9 @@ from ccaoa import core
 from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store, dma
+    from . import pull_data as pull, store_data as store, dma, summarize as agg
 except ImportError:
-    import pull_data as pull, store_data as store, dma
+    import pull_data as pull, store_data as store, dma, summarize as agg
 
 
 def get_storage_path():
@@ -280,7 +280,6 @@ def full_run_gtrends(low_search_volume_results=True):
     # Count all the DFs to process
     for tf in filing_dict:
         dfs_to_process += len(filing_dict[tf])
-    dfs_with_data = 0
     today = dt.datetime.today().strftime("%Y-%m-%d")
     print(
         "Will store",
@@ -293,6 +292,8 @@ def full_run_gtrends(low_search_volume_results=True):
     print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", "Storage Folder"))
     print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
 
+    dfs_with_data = 0
+    successfully_stored_raw_data_files=[]
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
@@ -302,7 +303,7 @@ def full_run_gtrends(low_search_volume_results=True):
                     os.path.split(os.path.split(storage_path)[0])[1],
                     os.path.split(storage_path)[1]
                 )
-                store.store_data(
+                successfully_stored_raw_data_file = store.store_data(
                     storage_path,
                     dataframe,
                     tf,
@@ -314,6 +315,7 @@ def full_run_gtrends(low_search_volume_results=True):
                 # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
                 print("{0:30}{1:30}{2}".format(gt_file_name, tf, short_path))
                 dfs_with_data += 1
+                successfully_stored_raw_data_files.append(successfully_stored_raw_data_file)
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
@@ -328,6 +330,9 @@ def full_run_gtrends(low_search_volume_results=True):
         dfs_to_process,
         "datasets stored.\n-----------------------------------------------\n",
     )
+
+    # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
+
 
     return
 

@@ -52,4 +52,4 @@ def store_data(
         tidy_today = str(dt.datetime.today().strftime("%d %b"))
         print(dataset_name+ext,"was stored for time period", search_date_period,"on",tidy_today, 'in', short_path, '.')
 
-    return
+    return file_path
