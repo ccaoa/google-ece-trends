@@ -1,7 +1,7 @@
-import os, datetime as dt, pandas as pd
+import os, datetime as dt
 from ccaoa import core
 # from time import time, sleep
-from pathlib import Path
+# from pathlib import Path
 
 try:
     from . import pull_data as pull, store_data as store, dma, summarize as agg
@@ -12,7 +12,7 @@ except ImportError:
 def full_run_gtrends(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
-    storage_path = agg.get_storage_path()
+    storage_path = store.get_storage_path()
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
         return
@@ -274,7 +274,7 @@ def full_run_gtrends(low_search_volume_results=True):
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
-                gt_file_name = store.retrieve_singlevar_name(dataframe)
+                gt_file_name = store.retrieve_variable_name(dataframe)
                 short_path = os.path.join(
                     "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
                     os.path.split(os.path.split(storage_path)[0])[1],
@@ -296,7 +296,7 @@ def full_run_gtrends(low_search_volume_results=True):
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
-                    store.retrieve_singlevar_name(dataframe),
+                    store.retrieve_variable_name(dataframe),
                     "was not captured and will not be stored.",
                 )
     print(
