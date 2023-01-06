@@ -327,6 +327,45 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     return sumstats_df
 
 
+def append_raw_items_from_directory(raw_dir_path: str, suppress_prints=False):
+    all_fils_basenames = os.listdir(raw_dir_path)
+    targ_files_listdir = [os.path.join(raw_dir_path, af) for af in all_fils_basenames]
+    # Append all the raw target files to the summary sheets.
+    # # If a summary sheet is not yet set up, it should be created.
+    # [agg.append_raw_data_fromfile(tf) for tf in targ_files_listdir]
+    # Use for loop to do some helpful print statements
+    print("Appending raw files.")
+    counter = 0
+    allfils = len(targ_files_listdir)
+    for tf in targ_files_listdir:
+        append_raw_data_fromfile(tf)
+        counter+=1
+        if core.string_to_bool(suppress_prints) is not True:
+            print(counter,'/',allfils,"processed:   ",os.path.basename(tf))
+    if core.string_to_bool(suppress_prints) is not True:
+        print("---------------------------------------------------------------")
+
+
+def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=False):
+    """
+    Use a list of summary xlsx datasets representing distinct and unique G Trends instances for which you're collecting
+    samples and summarize all the raw data records already recorded in the summary sheets
+    """
+    # [agg.calc_sumstats(sd) for sd in list_of_summary_datasets]
+    # Use for loop to do some helpful print statements
+    print("Summarizing files.")
+    counter = 0
+    allfils = len(list_of_summary_datasets)
+    for sd in list_of_summary_datasets:
+        # print(os.path.basename(sd))
+        calc_sumstats(sd)
+        counter+=1
+        if core.string_to_bool(suppress_prints) is not True:
+            print(counter,'/',allfils,"processed:   ",os.path.basename(sd))
+    if core.string_to_bool(suppress_prints) is not True:
+        print("---------------------------------------------------------------")
+
+
 if __name__ == '__main__':
     import time
     start = time.time()
