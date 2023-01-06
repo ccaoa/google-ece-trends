@@ -1,4 +1,8 @@
 # Google Trends of Child Care
+
+[//]: # (Embedding badges: https://naereen.github.io/badges/) 
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+
 This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
 to systematically pull Google search intensity data about the topic of "child care" for use as a proxy for ECE demand data.
 Code here automates data pulls one might otherwise have to access through [Google's Trends GUI](https://trends.google.com). 

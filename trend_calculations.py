@@ -26,36 +26,46 @@ def gtiratio_calculator(dma_gtis, dma_ccadmdnorm, uoa_ccadmdnorm, decimal_places
     return uoa_gtir
 
 
-def uncertainty_df_field(df, field, coverage_factor_k=2, observation_threshold=False, minimum_observations=30):
-    """ This function will calculate the uncertainty based on the numeric values in a dataframe's specified column."""
+def uncertainty_df_field(
+    df, field, coverage_factor_k=2, observation_threshold=False, minimum_observations=30
+):
+    """This function will calculate the uncertainty based on the numeric values in a dataframe's specified column."""
     # # Calculate the average of the field
     # # # May not need this....
     # average = df[field].average()
-    # Calculate the standard deviation.
-    std_dev = df[field].std()
 
     # Clean the target column to ensure any null values are treated as such
-    df[field]=(df[field].astype(str).str.upper()
-            .replace("", np.nan)
-            .replace("NULL", np.nan)
-            .replace("N/A", np.nan)
-            .replace("(BLANK)", np.nan)
-            .replace("NAN", np.nan)
+    df[field] = (
+        df[field]
+        .astype(str)
+        .str.upper()
+        .replace("", np.nan)
+        .replace("NULL", np.nan)
+        .replace("N/A", np.nan)
+        .replace("(BLANK)", np.nan)
+        .replace("NAN", np.nan)
     ).astype(float)
     non_null_counts = df[field].count()
+
+    # Calculate the standard deviation.
+    std_dev = df[field].std()
 
     # Ensure numeric input arguments
     # # Would be better with python argument typing, but I'm not there yet.
     coverage_factor_k = int(float(coverage_factor_k))
     minimum_observations = int(float(minimum_observations))
 
-    if (observation_threshold is False) or (observation_threshold is True and non_null_counts >= minimum_observations):
+    if ((observation_threshold is False) or (
+        observation_threshold is True and non_null_counts >= minimum_observations
+    )) and (
+        # Must have a non-0 observation to be valid b/c you can't divide by 0 downstream to calc. uncertainty.
+        non_null_counts > 0
+    ):
         # Calculate the uncertainty with a defined coverage factor (K)
         # # =(std_dev/SQRT(COUNT(F7:F1048576)))*2
-        uncertainty = (std_dev/math.sqrt(non_null_counts)) * coverage_factor_k
+        uncertainty = float((float(std_dev) / float(math.sqrt(float(non_null_counts)))) * float(coverage_factor_k))
         return uncertainty
     else:
         # The minimum records required to calculate uncertainty have not been acquired.
         # Record more data samples and try again.
         return None
-
