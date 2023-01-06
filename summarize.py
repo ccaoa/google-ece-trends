@@ -9,9 +9,9 @@ from ccaoa import core
 from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store, dma, trend_calculations as tcalc
+    from . import pull_data as pull, store_data as store, trend_calculations as tcalc
 except ImportError:
-    import pull_data as pull, store_data as store, dma, trend_calculations as tcalc
+    import pull_data as pull, store_data as store, trend_calculations as tcalc
 
 
 # Need to Transpose the individual data pull records, append them to the master pull list, and recalc the sum stats.
@@ -23,36 +23,6 @@ except ImportError:
 #   * N
 #   * Coverage Factor
 #   * Expanded Uncertainty
-
-
-# ################################## #
-# #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
-# ONLY FOR TESTING PURPOSES!
-# FUNCTION-IZE AT END FOR MORE ROBUST CODE. # We don't want file paths in these "modules" but in data pull .py files.
-def get_storage_path():
-    """Dynamically define the storage path with an external file that you gitignore.
-    Keeps one from having to constantly edit their file paths in-code if working on different machines."""
-    current_directory = dma.dma_module_directory()
-    dot_storage_path = os.path.join(current_directory, ".storage_path")
-    if not os.path.exists(dot_storage_path):
-        Path(dot_storage_path).touch()
-    with open(dot_storage_path) as sfile:
-        path_store = str(sfile.read())
-    # Make sure there are no pythonic quotations, etc around the path.
-    path_store = path_store.replace('r"', '"').replace('"', "")
-    if not os.path.exists(path_store):
-        print(
-            "Your file",
-            path_store,
-            "doesn't exist.\n"
-            "Edit your `.storage_path` file in this directory to designate a destination for the Google Trends data.",
-        )
-        # # Maybe in a future version, add a user input method to manually define this var in-run.
-    sfile.close()
-    return path_store
-
-# #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
-# ################################## #
 
 
 def index_as_first_col(indf, new_col_name):
@@ -103,7 +73,7 @@ def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, co
 
 def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
     """ Define the local path in which you'll store summary result XLSXs. """
-    storage_path = get_storage_path()
+    storage_path = store.get_storage_path()
     if same_as_raw_storage is True:
         return storage_path
     else:
@@ -326,22 +296,23 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
 
     return sumstats_df
 
+# The following functions employ the above to process multiple files simultaneously.
 
-def append_raw_items_from_directory(raw_dir_path: str, suppress_prints=False):
-    all_fils_basenames = os.listdir(raw_dir_path)
-    targ_files_listdir = [os.path.join(raw_dir_path, af) for af in all_fils_basenames]
-    # Append all the raw target files to the summary sheets.
-    # # If a summary sheet is not yet set up, it should be created.
-    # [agg.append_raw_data_fromfile(tf) for tf in targ_files_listdir]
-    # Use for loop to do some helpful print statements
-    print("Appending raw files.")
+
+def append_raw_items_from_list(raw_files_paths_list: list, suppress_prints=False):
+    """Append all the raw target files (passed as an argument via a list item) to the summary sheets."""
+    # If a summary sheet is not yet set up, it should be created in this process.
+    # [agg.append_raw_data_fromfile(tf) for tf in raw_files_paths_list]
+    # Could use the above to do this, but use for loop to do some helpful print statements
+    if core.string_to_bool(suppress_prints) is not True:
+        print("Appending raw files.")
     counter = 0
-    allfils = len(targ_files_listdir)
-    for tf in targ_files_listdir:
+    allfilscnt = len(raw_files_paths_list)
+    for tf in raw_files_paths_list:
         append_raw_data_fromfile(tf)
         counter+=1
         if core.string_to_bool(suppress_prints) is not True:
-            print(counter,'/',allfils,"processed:   ",os.path.basename(tf))
+            print(counter,'/',allfilscnt,"processed:   ",os.path.basename(tf))
     if core.string_to_bool(suppress_prints) is not True:
         print("---------------------------------------------------------------")
 
@@ -352,18 +323,42 @@ def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=Fal
     samples and summarize all the raw data records already recorded in the summary sheets
     """
     # [agg.calc_sumstats(sd) for sd in list_of_summary_datasets]
-    # Use for loop to do some helpful print statements
-    print("Summarizing files.")
+    # Could use the above to do this, but use for loop to do some helpful print statements
+    if core.string_to_bool(suppress_prints) is not True:
+        print("Summarizing files.")
     counter = 0
-    allfils = len(list_of_summary_datasets)
+    allfilscnt = len(list_of_summary_datasets)
     for sd in list_of_summary_datasets:
         # print(os.path.basename(sd))
         calc_sumstats(sd)
         counter+=1
         if core.string_to_bool(suppress_prints) is not True:
-            print(counter,'/',allfils,"processed:   ",os.path.basename(sd))
+            print(counter,'/',allfilscnt,"processed:   ",os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:
         print("---------------------------------------------------------------")
+
+
+def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
+    """ Append the data from all of the raw data files in the directory passed as an argument. """
+    if os.path.exists(raw_files_parent_dir):
+        all_raw_files = [rf for rf in os.listdir(raw_files_parent_dir) ]
+        append_raw_items_from_list(all_raw_files, suppress_prints=suppress_prints)
+        return all_raw_files
+    else:
+        print("Does not exist as a file directory:",raw_files_parent_dir)
+        print("  Try", store.get_storage_path())
+        return store.get_storage_path()
+
+
+def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
+    """ Append the data from all of the raw data files in the directory passed as an argument. """
+    if os.path.exists(summary_files_parent_dir):
+        all_agg_files = [af for af in os.listdir(summary_files_parent_dir)]
+        summarize_collected_data(all_agg_files)
+        return all_agg_files
+    else:
+        print("Does not exist as a file directory:", summary_files_parent_dir)
+        return None
 
 
 if __name__ == '__main__':
