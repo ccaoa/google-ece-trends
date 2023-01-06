@@ -372,9 +372,9 @@ if __name__ == '__main__':
 
     # # Apppend test
     # append_raw_data_fromfile(geogappndpth)
-    # append_raw_data_fromfile(vtine_dma3)
+    append_raw_data_fromfile(vtine_dma3)
     # [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
-    [append_raw_data_fromfile(rq) for rq in rqz]
+    # [append_raw_data_fromfile(rq) for rq in rqz]
     # time.sleep(1)
     # append_raw_data_fromfile(ordmafil2)
 
@@ -383,8 +383,8 @@ if __name__ == '__main__':
     # calc_sumstats(summary_xlsx)
 
     # txsumxlsx = define_target_summary_dataset(txtdmapth4)
-    # vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
-    rqsumxlsx = define_target_summary_dataset(rq1)
+    vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
+    # rqsumxlsx = define_target_summary_dataset(rq1)
     # dftxsumstats = core.file_to_df(txsumxlsx)
-    calc_sumstats(rqsumxlsx)
+    calc_sumstats(vdmasumxlsx)
     core.runtime(start)
