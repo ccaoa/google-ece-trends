@@ -9,33 +9,10 @@ except ImportError:
     import pull_data as pull, store_data as store, dma, summarize as agg
 
 
-def get_storage_path():
-    """Dynamically define the storage path with an external file that you gitignore.
-    Keeps one from having to constantly edit their file paths in-code if working on different machines."""
-    current_directory = dma.dma_module_directory()
-    dot_storage_path = os.path.join(current_directory, ".storage_path")
-    if not os.path.exists(dot_storage_path):
-        Path(dot_storage_path).touch()
-    with open(dot_storage_path) as sfile:
-        path_store = str(sfile.read())
-    # Make sure there are no pythonic quotations, etc around the path.
-    path_store = path_store.replace('r"', '"').replace('"', "")
-    if not os.path.exists(path_store):
-        print(
-            "Your file",
-            path_store,
-            "doesn't exist.\n"
-            "Edit your `.storage_path` file in this directory to designate a destination for the Google Trends data.",
-        )
-        # # Maybe in a future version, add a user input method to manually define this var in-run.
-    sfile.close()
-    return path_store
-
-
 def full_run_gtrends(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
-    storage_path = get_storage_path()
+    storage_path = agg.get_storage_path()
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
         return
