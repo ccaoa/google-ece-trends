@@ -28,6 +28,9 @@ echo Starting Google Trends data pull.
 ::schtasks /create /sc DAILY /tn gtrends /st 13:23 /tr "C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\coding\google-ece-pytrends\datapulls22.bat"
 :: Edit ex:
 ::schtasks /change /tn gtrends /st 14:34
+:: NOTE: You may need to format your windows paths with a space like this to get it to work.
+::schtasks /change /tn gtrends -tr "\"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\coding\google-ece-pytrends\datapulls22.bat""
+:: --------------------------------------------------
 :: REPORTING
 :: The data are being stored in the log.txt, but we can print that to the console in a schtasks too.
 type "%~dp0log.txt"
