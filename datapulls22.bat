@@ -29,6 +29,7 @@ echo Starting Google Trends data pull.
 :: Edit ex:
 ::schtasks /change /tn gtrends /st 14:34
 :: NOTE: You may need to format your windows paths with a space like this to get it to work.
+:: :: https://stackoverflow.com/a/3845970/15517267
 ::schtasks /change /tn gtrends -tr "\"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\coding\google-ece-pytrends\datapulls22.bat""
 :: --------------------------------------------------
 :: REPORTING
