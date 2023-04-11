@@ -1,5 +1,4 @@
 pytrends
-#ccaoa>2.1-beta
-#git+ssh://git@github.com/ccaoa/ccaoa-mapping.git#egg=ccaoa
+#ccaoa>=2.1
 git+ssh://git@github.com/ccaoa/ccaoa-mapping.git@dev#egg=ccaoa
 pandas
