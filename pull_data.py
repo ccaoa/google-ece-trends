@@ -259,7 +259,8 @@ def subregion_identifier(subregion_input):
     # # This is the broadest, least precise geographic UOA supported.
     #
     # Finally, there are cities. 'CITY' returns city level data.
-    # # However, be warned: pytrends v4.8 in PyPi does not support all runs of City UOA trends. Updated 1 Feb 2022.
+    # # However, be warned: pytrends v4.8 in PyPi does not support all runs of City UOA trends.
+    # # # That version was updated 1 Feb 2022.
     # # # https://pypi.org/project/pytrends/
     # # Running with "CITY" as UOA of subregion results in:
     # # # * states for country payloads
@@ -271,10 +272,15 @@ def subregion_identifier(subregion_input):
     # # # Issue https://github.com/GeneralMills/pytrends/issues/316 still remains open; TBD if PR #509 fixes.
     # # # Unclear if issue 497 is applicable; pertains to non-USA regions, but user experiencing similar issue as above.
     # # # # https://github.com/GeneralMills/pytrends/issues/497
-    # # But, PR 509 has not been applied to the PyPi version of the repo.
+    # # But, Pull Request 509 has not been applied to the PyPi version of the repo.
     # # So, as long as PyPi remains behind GitHub, `pip install pytrends` will not be sufficient to work with cities.
     # # Solutions: pip install directly from GitHub or wait for new pytrends release.
     # # Also see: https://stackoverflow.com/questions/61435486/pytrends-fail-to-get-us-city-level-data
+    # # UPDATE: As of January 2023, the desired updates above *should* be included in v4.9.0.
+    # # # https://pypi.org/project/pytrends/4.9.0/
+    # # # While v4.8 in PyPi did not have Pull Request 509 included and GitHub's did, both v4.9 should include this.
+    # # # Upgrade to ~=4.9 to inherit.
+    # # # https://github.com/GeneralMills/pytrends/releases/tag/v4.9.0
     uoa_resolutions = ["COUNTRY", "REGION", "DMA", "CITY"]
 
     if subregion_input is None:

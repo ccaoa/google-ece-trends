@@ -1,41 +1,18 @@
-import os, datetime as dt, pandas as pd
+import os, datetime as dt
 from ccaoa import core
 # from time import time, sleep
-from pathlib import Path
+# from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store, dma
+    from . import pull_data as pull, store_data as store, dma, summarize as agg
 except ImportError:
-    import pull_data as pull, store_data as store, dma
-
-
-def get_storage_path():
-    """Dynamically define the storage path with an external file that you gitignore.
-    Keeps one from having to constantly edit their file paths in-code if working on different machines."""
-    current_directory = dma.dma_module_directory()
-    dot_storage_path = os.path.join(current_directory, ".storage_path")
-    if not os.path.exists(dot_storage_path):
-        Path(dot_storage_path).touch()
-    with open(dot_storage_path) as sfile:
-        path_store = str(sfile.read())
-    # Make sure there are no pythonic quotations, etc around the path.
-    path_store = path_store.replace('r"', '"').replace('"', "")
-    if not os.path.exists(path_store):
-        print(
-            "Your file",
-            path_store,
-            "doesn't exist.\n"
-            "Edit your `.storage_path` file in this directory to designate a destination for the Google Trends data.",
-        )
-        # # Maybe in a future version, add a user input method to manually define this var in-run.
-    sfile.close()
-    return path_store
+    import pull_data as pull, store_data as store, dma, summarize as agg
 
 
 def full_run_gtrends(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
-    storage_path = get_storage_path()
+    storage_path = store.get_storage_path()
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
         return
@@ -280,7 +257,6 @@ def full_run_gtrends(low_search_volume_results=True):
     # Count all the DFs to process
     for tf in filing_dict:
         dfs_to_process += len(filing_dict[tf])
-    dfs_with_data = 0
     today = dt.datetime.today().strftime("%Y-%m-%d")
     print(
         "Will store",
@@ -293,16 +269,18 @@ def full_run_gtrends(low_search_volume_results=True):
     print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", "Storage Folder"))
     print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
 
+    dfs_with_data = 0
+    successfully_stored_raw_data_files=[]
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
-                gt_file_name = store.retrieve_singlevar_name(dataframe)
+                gt_file_name = store.retrieve_variable_name(dataframe)
                 short_path = os.path.join(
                     "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
                     os.path.split(os.path.split(storage_path)[0])[1],
                     os.path.split(storage_path)[1]
                 )
-                store.store_data(
+                successfully_stored_raw_data_file = store.store_data(
                     storage_path,
                     dataframe,
                     tf,
@@ -314,10 +292,11 @@ def full_run_gtrends(low_search_volume_results=True):
                 # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
                 print("{0:30}{1:30}{2}".format(gt_file_name, tf, short_path))
                 dfs_with_data += 1
+                successfully_stored_raw_data_files.append(successfully_stored_raw_data_file)
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
-                    store.retrieve_singlevar_name(dataframe),
+                    store.retrieve_variable_name(dataframe),
                     "was not captured and will not be stored.",
                 )
     print(
@@ -328,6 +307,15 @@ def full_run_gtrends(low_search_volume_results=True):
         dfs_to_process,
         "datasets stored.\n-----------------------------------------------\n",
     )
+
+    # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
+    # # Append the successfully pulled files into the corresponding raw data collection XLSX
+    agg.append_raw_files_from_list(successfully_stored_raw_data_files, suppress_prints=False)
+    # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
+    # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
+    # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
+    targ_sumfiles_listdir = [agg.define_target_summary_dataset(rds) for rds in successfully_stored_raw_data_files]
+    agg.summarize_collected_data(targ_sumfiles_listdir, suppress_prints=False)
 
     return
 
