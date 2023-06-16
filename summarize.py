@@ -7,6 +7,7 @@ import os, datetime as dt, numpy as np, pandas as pd
 from ccaoa import core
 # from time import time, sleep
 from pathlib import Path
+#from scipy import stats
 
 try:
     from . import pull_data as pull, store_data as store, trend_calculations as tcalc
@@ -258,7 +259,9 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     xpduncertainfield='expd_uncrt'
     rebase_gtis_field = 'rebse_gtis'
     n_field = 'n_data_pts'
-
+    se_field = "std_err"
+    ci_95_fld = "ci_95_pct"
+    # Order the output fields.
     sumstatvars = [uoa_col,gtis_average_field,covfactfield,std_dev_col,xpduncertainfield,rebase_gtis_field,n_field]
     # Establish these columns if they do not already exist.
     cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
@@ -278,12 +281,17 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     sumstats_df[gtis_average_field] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].mean())
     # Standard Deviation
     sumstats_df[std_dev_col] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].std())
+    # Count n(Observations)
+    sumstats_df[n_field]=sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].count())
+    # Confidence Interval
+    # # Standard Error first.
+    sumstats_df[se_field] = sumstats_df[std_dev_col] / np.sqrt(sumstats_df[n_field])
+    # # confidence_interval = (sample_mean - 1.96 * standard_error, sample_mean + 1.96 * standard_error)
+    sumstats_df[ci_95_fld] = (sumstats_df[gtis_average_field] - 1.96 * sumstats_df[se_field], sumstats_df[gtis_average_field] + 1.96 * sumstats_df[se_field])
     # Coverage Factor
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
     sumstats_df[xpduncertainfield]=sumstats_df[uoa_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
-    # Count n(Observations)
-    sumstats_df[n_field]=sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].count())
     # Rebase the maximum mean GTIS to = 100 to get a more "google trendy" result.
     sumstats_df[rebase_gtis_field]=sumstats_df[gtis_average_field].apply(lambda m: tcalc.rebase_math(m,sumstats_df[gtis_average_field].max()))
     # Sort to have the most popular on top if the argument passed requests it.
