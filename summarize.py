@@ -287,7 +287,10 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # # Standard Error first.
     sumstats_df[se_field] = sumstats_df[std_dev_col] / np.sqrt(sumstats_df[n_field])
     # # confidence_interval = (sample_mean - 1.96 * standard_error, sample_mean + 1.96 * standard_error)
-    sumstats_df[ci_95_fld] = (sumstats_df[gtis_average_field] - 1.96 * sumstats_df[se_field], sumstats_df[gtis_average_field] + 1.96 * sumstats_df[se_field])
+    #1st attempt didn't work
+    #sumstats_df[ci_95_fld] = (sumstats_df[gtis_average_field] - 1.96 * sumstats_df[se_field], sumstats_df[gtis_average_field] + 1.96 * sumstats_df[se_field])
+    sumstats_df[ci_95_fld] = [(average - 1.96 * se, average + 1.96 * se) for average, se in
+                              zip(sumstats_df[gtis_average_field], sumstats_df[se_field])]
     # Coverage Factor
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
@@ -361,7 +364,7 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
     """ Append the data from all of the raw data files in the directory passed as an argument. """
     if os.path.exists(summary_files_parent_dir):
-        all_agg_files = [af for af in os.listdir(summary_files_parent_dir)]
+        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir)]
         summarize_collected_data(all_agg_files)
         return all_agg_files
     else:
