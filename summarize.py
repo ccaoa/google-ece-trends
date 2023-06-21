@@ -353,7 +353,7 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
     """ Append the data from all of the raw data files in the directory passed as an argument. """
     if os.path.exists(summary_files_parent_dir):
-        all_agg_files = [af for af in os.listdir(summary_files_parent_dir)]
+        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir)]
         summarize_collected_data(all_agg_files)
         return all_agg_files
     else:
