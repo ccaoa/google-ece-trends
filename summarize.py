@@ -210,14 +210,18 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
             # df.loc[["x", "y"]]
             # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
             appended_df = pd.concat([existing_raw_records,prepped_raw_data])
+            # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
+            appended_df = appended_df.replace(0,np.nan)
+
             # Sort by date to get the earliest rows on top.
             # # This is sorting 2023 early months over 2022 late months. Need the opposite.
             # # Convert field to datetime
             appended_df[date_of_pull_field] = pd.to_datetime(appended_df[date_of_pull_field], format='%m/%d/%Y')
             # # Sort with the most recently added data on top.
             appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=False)
-            # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
-            appended_df = appended_df.replace(0,np.nan)
+            # # Re-convert the date field to a favorable text format for output printing.
+            appended_df[date_of_pull_field] = appended_df[date_of_pull_field].dt.strftime('%m/%d/%Y')
+
             # Drop any rows that are complete duplicates.
             # # This should keep rows with the same data collection date as long as the values are different.
             # # This way we could presumably take multiple data measurements on the same day,
@@ -405,7 +409,7 @@ if __name__ == '__main__':
     # base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
     base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
     raw_data_pth = os.path.join(base_path,"raw_data")
-    sum_data_pth = os.path.join(base_path, "summary_data")
+    sum_data_pth = summary_storage_path()  # os.path.join(base_path, "summary_data")
 
 
     def og_sumtesting():
@@ -464,11 +468,21 @@ if __name__ == '__main__':
         # dftxsumstats = core.file_to_df(txsumxlsx)
         calc_sumstats(vdmasumxlsx)
 
+    # # Execute OG SumStats Testing.
     # og_sumtesting()
+
+    def julyfourthtest():
+        independence_files = [os.path.join(raw_data_pth,f) for f in os.listdir(raw_data_pth) if "20230704" in f]
+        # independence_files = [fi.replace("20230704","20230630") for fi in independence_files if "oh_" in fi]
+        # [define_target_summary_dataset(fi) for fi in independence_files]
+        append_raw_files_from_list(independence_files)
+        return independence_files
+
+    julyfourthtest()
 
     # Summarize the already-appended data for all summary xlsxs in Summary Data directory.
     # summarize_all_summary_data(sum_data_pth)
-    summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
-                              r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
+    # summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
+    #                           r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
 
     core.runtime(start)
