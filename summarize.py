@@ -237,6 +237,8 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
         * Average
         * Std Dev
         * N
+        * Standard Error
+        * Confidence Interval
         * Coverage Factor
         * Expanded Uncertainty
         * Rebased GTIS
@@ -262,7 +264,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     se_field = "std_err"
     ci_95_fld = "ci_95_pct"
     # Order the output fields.
-    sumstatvars = [uoa_col,gtis_average_field,covfactfield,std_dev_col,xpduncertainfield,rebase_gtis_field,n_field]
+    sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field,ci_95_fld,rebase_gtis_field, covfactfield, xpduncertainfield]
     # Establish these columns if they do not already exist.
     cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
     # # https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe#comment119897495_16327135
@@ -287,8 +289,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # # Standard Error first.
     sumstats_df[se_field] = sumstats_df[std_dev_col] / np.sqrt(sumstats_df[n_field])
     # # confidence_interval = (sample_mean - 1.96 * standard_error, sample_mean + 1.96 * standard_error)
-    #1st attempt didn't work
-    #sumstats_df[ci_95_fld] = (sumstats_df[gtis_average_field] - 1.96 * sumstats_df[se_field], sumstats_df[gtis_average_field] + 1.96 * sumstats_df[se_field])
+    #2nd attempt didn't work; errors somewhere. Is it in the below or the calc of the Standard Error?
     sumstats_df[ci_95_fld] = [(average - 1.96 * se, average + 1.96 * se) for average, se in
                               zip(sumstats_df[gtis_average_field], sumstats_df[se_field])]
     # Coverage Factor
@@ -362,10 +363,12 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 
 
 def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
-    """ Append the data from all of the raw data files in the directory passed as an argument. """
+    #""" Append the data from all of the raw data files in the directory passed as an argument. """
+    """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
+     Takes the directory housing the summary files as an argument. """
     if os.path.exists(summary_files_parent_dir):
         all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir)]
-        summarize_collected_data(all_agg_files)
+        summarize_collected_data(all_agg_files, suppress_prints=suppress_prints)
         return all_agg_files
     else:
         print("Does not exist as a file directory:", summary_files_parent_dir)
@@ -376,60 +379,71 @@ if __name__ == '__main__':
     import time
     start = time.time()
 
-    # RAW DATA TESTING FILES
     # # Base path for multi-machine testing.
-    base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
     # base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
-    # Minnesota
-    tsttimepath= os.path.join(base_path, r"raw_data\mn_time_20200214-20210214_20221212.csv")
-    tstgeogpath= os.path.join(base_path, r"raw_data\mn_dma_20200214-20210214_20221212.csv")
-    geogappndpth= os.path.join(base_path, r"raw_data\mn_dma_20200214-20210214_20221209.csv")
-    # Oregon
-    ordmafil1= os.path.join(base_path, r"raw_data\or_dma_20200214-20210214_20221210.csv")
-    ordmafil2 =  os.path.join(base_path, r"raw_data\or_dma_20200214-20210214_20221206.csv")
-    # orfil1 later pull than ordmafil2
-    # Texas
-    # txtdmapth1= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221207.csv")
-    # txtdmapth2= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221208.csv")
-    # txtdmapth3= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221209.csv")
-    # txtdmapth4= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221212.csv")
-    # txtimepth2= os.path.join(base_path, r"raw_data\tx_time_20210321-20210421_20221216.csv")
-    txtdmapth1= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221218.csv")
-    txtdmapth2= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221226.csv")
-    txtdmapth3= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221228.csv")
-    txtdmapth4= os.path.join(base_path, r"raw_data\tx_dma_20210321-20210421_20221229.csv")
-    tx_rawdata_fils=[txtdmapth1,txtdmapth2,txtdmapth3,txtdmapth4]
-    # Valentines
-    vtine_dma1 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221213.csv")
-    vtine_dma2 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221230.csv")
-    vtine_dma3 = os.path.join(base_path, r"raw_data\valentines_dma_df_20200214-20210214_20221214.csv")
-    # Rising Qs
-    rq1 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221214.csv")
-    rq2 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221114.csv")
-    rq3 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221204.csv")
-    rq4 = os.path.join(base_path, r"raw_data\usa_rising_qs_20180603-20220910_20221104.csv")
-    rqz=[rq1,rq2,rq3,rq4]
+    base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
+    raw_data_pth = os.path.join(base_path,"raw_data")
+    sum_data_pth = os.path.join(base_path, "summary_data")
 
-    # # setup test
-    # setup_summary_spreadsheet(tstgeogpath, force=True)
-    # setup_summary_spreadsheet(tsttimepath, force=True)
-    # setup_summary_spreadsheet(ordmafil1)
 
-    # # Apppend test
-    # append_raw_data_fromfile(geogappndpth)
-    append_raw_data_fromfile(vtine_dma3)
-    # [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
-    # [append_raw_data_fromfile(rq) for rq in rqz]
-    # time.sleep(1)
-    # append_raw_data_fromfile(ordmafil2)
+    def og_sumtesting():
+        # RAW DATA TESTING FILES
 
-    # Summary stats calc test
-    # summary_xlsx = define_target_summary_dataset(ordmafil2)
-    # calc_sumstats(summary_xlsx)
+        # Minnesota
+        tsttimepath= os.path.join(raw_data_pth, "mn_time_20200214-20210214_20221212.csv")
+        tstgeogpath= os.path.join(raw_data_pth, "mn_dma_20200214-20210214_20221212.csv")
+        geogappndpth= os.path.join(raw_data_pth, "mn_dma_20200214-20210214_20221209.csv")
+        # Oregon
+        ordmafil1= os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221210.csv")
+        ordmafil2 =  os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221206.csv")
+        # orfil1 later pull than ordmafil2
+        # Texas
+        # txtdmapth1= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221207.csv")
+        # txtdmapth2= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221208.csv")
+        # txtdmapth3= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221209.csv")
+        # txtdmapth4= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221212.csv")
+        # txtimepth2= os.path.join(raw_data_pth, "tx_time_20210321-20210421_20221216.csv")
+        txtdmapth1= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221218.csv")
+        txtdmapth2= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221226.csv")
+        txtdmapth3= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221228.csv")
+        txtdmapth4= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221229.csv")
+        tx_rawdata_fils=[txtdmapth1,txtdmapth2,txtdmapth3,txtdmapth4]
+        # Valentines
+        vtine_dma1 = os.path.join(raw_data_pth, "valentines_dma_df_20200214-20210214_20221213.csv")
+        vtine_dma2 = os.path.join(raw_data_pth, "valentines_dma_df_20200214-20210214_20221230.csv")
+        vtine_dma3 = os.path.join(raw_data_pth, "valentines_dma_df_20200214-20210214_20221214.csv")
+        # Rising Qs
+        rq1 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221214.csv")
+        rq2 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221114.csv")
+        rq3 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221204.csv")
+        rq4 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221104.csv")
+        rqz=[rq1,rq2,rq3,rq4]
 
-    # txsumxlsx = define_target_summary_dataset(txtdmapth4)
-    vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
-    # rqsumxlsx = define_target_summary_dataset(rq1)
-    # dftxsumstats = core.file_to_df(txsumxlsx)
-    calc_sumstats(vdmasumxlsx)
+        # # setup test
+        # setup_summary_spreadsheet(tstgeogpath, force=True)
+        # setup_summary_spreadsheet(tsttimepath, force=True)
+        # setup_summary_spreadsheet(ordmafil1)
+
+        # # Apppend test
+        # append_raw_data_fromfile(geogappndpth)
+        append_raw_data_fromfile(vtine_dma3)
+        # [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
+        # [append_raw_data_fromfile(rq) for rq in rqz]
+        # time.sleep(1)
+        # append_raw_data_fromfile(ordmafil2)
+
+        # Summary stats calc test
+        # summary_xlsx = define_target_summary_dataset(ordmafil2)
+        # calc_sumstats(summary_xlsx)
+
+        # txsumxlsx = define_target_summary_dataset(txtdmapth4)
+        vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
+        # rqsumxlsx = define_target_summary_dataset(rq1)
+        # dftxsumstats = core.file_to_df(txsumxlsx)
+        calc_sumstats(vdmasumxlsx)
+
+    # og_sumtesting()
+
+    # Summarize the already-appended data for all summary xlsxs in Summary Data directory.
+    summarize_all_summary_data(sum_data_pth)
     core.runtime(start)
