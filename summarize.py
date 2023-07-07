@@ -4,7 +4,7 @@ The results of this file should give you meaningful, reportable results.
 """
 
 import os, datetime as dt, numpy as np, pandas as pd
-from ccaoa import core
+from ccaoa import core, raccoon as rc
 # from time import time, sleep
 from pathlib import Path
 #from scipy import stats
@@ -25,22 +25,23 @@ except ImportError:
 #   * Coverage Factor
 #   * Expanded Uncertainty
 
-
-def index_as_first_col(indf, new_col_name):
-    """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
-    outdf = indf.copy()
-    outdf[new_col_name] = outdf.index
-    # Set new col name for the former IDX as first column
-    cols = outdf.columns.to_list()
-    cols = cols[-1:] + cols[:-1]
-    outdf = outdf[cols]
-    # Reset the index to be numerical.
-    outdf = outdf.reset_index(drop=True)
-    return outdf
+# Depreciating this as this functionality is now included in ccaoa raccoon module.
+# def index_as_first_col(indf, new_col_name):
+#     """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
+#     outdf = indf.copy()
+#     outdf[new_col_name] = outdf.index
+#     # Set new col name for the former IDX as first column
+#     cols = outdf.columns.to_list()
+#     cols = cols[-1:] + cols[:-1]
+#     outdf = outdf[cols]
+#     # Reset the index to be numerical.
+#     outdf = outdf.reset_index(drop=True)
+#     return outdf
 
 
 def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
     """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
+    # NOTE: Migrate this function to a more generalizable format in ccaoa.raccoon module. Then call it here.
     # If the user wanted the first column of the PD DF to function as the column names
     if core.string_to_bool(first_col_as_new_col_names) is True:
         # The first column of the raw dataset containing UOA identifiers will be set as the column names of the new DF.
@@ -59,7 +60,7 @@ def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, co
                 col_of_oldcolumns_name=str(col_of_oldcolumns_name)
             except:
                 col_of_oldcolumns_name = "old_cols"
-        work_df = index_as_first_col(work_df, col_of_oldcolumns_name)#old_first_column)
+        work_df = rc.index_to_first_column(work_df, col_of_oldcolumns_name)#old_first_column)
     # Otherwise, the old column names will still be the index of the output DF.
     return work_df
 
@@ -268,22 +269,12 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     ci_95_uppr_fld = "ci_95_uppr"
     # Order the output fields.
     sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
-    # # Establish these columns if they do not already exist.
-    # # # Actually, not sure this step is necessary. They all get created through functions below.
-    # cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
-    # # # https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe#comment119897495_16327135
-    # sumstats_df[cols_not_in_df] = None
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
     transposed_sub_df = transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
     sumstats_df[uoa_col] = transposed_sub_df[date_of_pull_field]  # 'pull_date'
     # Mean/Average
-    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[uoa_col]].mean()  # Did not work in current form
-    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[uoa_col]].mean()
-    # sumstats_df[gtis_average_field] = raw_data_df[sumstats_df[uoa_col]][sumstats_df[uoa_col]].mean()
-    # sumstats_df[gtis_average_field] = [raw_data_df[d] for d in sumstats_df[uoa_col]]#[sumstats_df[uoa_col]]].mean()
-    # [raw_data_df[d].mean() for d in sumstats_df[uoa_col]]
     sumstats_df[gtis_average_field] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].mean())
     # Standard Deviation
     sumstats_df[std_dev_col] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].std())
@@ -458,5 +449,8 @@ if __name__ == '__main__':
     # og_sumtesting()
 
     # Summarize the already-appended data for all summary xlsxs in Summary Data directory.
-    summarize_all_summary_data(sum_data_pth)
+    # summarize_all_summary_data(sum_data_pth)
+    summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
+                              r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
+
     core.runtime(start)
