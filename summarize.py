@@ -211,6 +211,7 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
             # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
             appended_df = pd.concat([existing_raw_records,prepped_raw_data])
             # Sort by date to get the earliest rows on top.
+            # # This is sorting 2023 early months over 2022 late months. Need the opposite.
             appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=True)
             # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
             appended_df = appended_df.replace(0,np.nan)
@@ -311,7 +312,12 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # Sort to have the most popular on top if the argument passed requests it.
     # # Generally, we'll want to have geography fields (states & DMAs, etc) sorted by GTIS and time sorted by time.
     if gtis_sort:
-        sumstats_df = sumstats_df.sort_values(by=[gtis_average_field,uoa_col], ascending=[False,True])
+        if "time" in uoa_col.lower():
+            # Sort by the event time if it's a temporal dataset.
+            sumstats_df = sumstats_df.sort_values(by=uoa_col, ascending=True)
+        else:
+            # Sort by GTIS if it's a geographic dataset.
+            sumstats_df = sumstats_df.sort_values(by=[gtis_average_field,uoa_col], ascending=[False,True])
 
     # Now retain only the columns we want + order them in the desired order defined above in the `sumstatvars` variable.
     sumstats_df = sumstats_df[sumstatvars]
