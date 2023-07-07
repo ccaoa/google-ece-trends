@@ -264,12 +264,15 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     se_field = "std_err"
     moe_field = "moe_95_pct"
     ci_95_fld = "ci_95_pct"
+    ci_95_lowr_fld = "ci_95_lowr"
+    ci_95_uppr_fld = "ci_95_uppr"
     # Order the output fields.
-    sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_fld, rebase_gtis_field, covfactfield, xpduncertainfield]
-    # Establish these columns if they do not already exist.
-    cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
-    # # https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe#comment119897495_16327135
-    sumstats_df[cols_not_in_df] = None
+    sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
+    # # Establish these columns if they do not already exist.
+    # # # Actually, not sure this step is necessary. They all get created through functions below.
+    # cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
+    # # # https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe#comment119897495_16327135
+    # sumstats_df[cols_not_in_df] = None
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
@@ -300,6 +303,8 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # # Now, calculate the confidence interval
     sumstats_df[ci_95_fld] = [(average - moe, average + moe) for average, moe in
                               zip(sumstats_df[gtis_average_field], sumstats_df[moe_field])]
+    sumstats_df[ci_95_lowr_fld] = sumstats_df[gtis_average_field] - sumstats_df[moe_field]
+    sumstats_df[ci_95_uppr_fld] = sumstats_df[gtis_average_field] + sumstats_df[moe_field]
     # Coverage Factor
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
