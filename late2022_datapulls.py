@@ -324,4 +324,6 @@ if __name__ == "__main__":
     from time import time
     start = time()
     full_run_gtrends()
+    # # Only summarize the already-appended data:
+    # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
     core.runtime(start=start)
