@@ -262,9 +262,10 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     rebase_gtis_field = 'rebse_gtis'
     n_field = 'n_data_pts'
     se_field = "std_err"
+    moe_field = "moe_95_pct"
     ci_95_fld = "ci_95_pct"
     # Order the output fields.
-    sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field,ci_95_fld,rebase_gtis_field, covfactfield, xpduncertainfield]
+    sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_fld, rebase_gtis_field, covfactfield, xpduncertainfield]
     # Establish these columns if they do not already exist.
     cols_not_in_df = [ssv for ssv in sumstatvars if ssv not in sumstats_df.columns.to_list()]
     # # https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe#comment119897495_16327135
@@ -288,10 +289,17 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # Confidence Interval
     # # Standard Error first.
     sumstats_df[se_field] = sumstats_df[std_dev_col] / np.sqrt(sumstats_df[n_field])
-    # # confidence_interval = (sample_mean - 1.96 * standard_error, sample_mean + 1.96 * standard_error)
-    #2nd attempt didn't work; errors somewhere. Is it in the below or the calc of the Standard Error?
-    sumstats_df[ci_95_fld] = [(average - 1.96 * se, average + 1.96 * se) for average, se in
-                              zip(sumstats_df[gtis_average_field], sumstats_df[se_field])]
+    # # Margin of Error second.
+    # # # Using 1.96 as the factor here because I have somewhat normally distributed GTrends data,
+    # # # # and the sample size (and thus the degrees of freedom) is very large.
+    # # # Later, you may want to make this a function and if sample size < 30,
+    # # # # assume t distribution and calc a different factor.
+    # # # # e.g., `confidence_factor = scipy.stats.t.ppf((1 + confidence_level) / 2, df=degrees_of_freedom)`
+    factor_moe = 1.96
+    sumstats_df[moe_field] = sumstats_df[se_field] * factor_moe
+    # # Now, calculate the confidence interval
+    sumstats_df[ci_95_fld] = [(average - moe, average + moe) for average, moe in
+                              zip(sumstats_df[gtis_average_field], sumstats_df[moe_field])]
     # Coverage Factor
     sumstats_df[covfactfield]=coverage_factor_k
     # Expanded Uncertainty
