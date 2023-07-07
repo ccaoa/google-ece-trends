@@ -272,6 +272,9 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     ci_95_uppr_fld = "ci_95_uppr"
     # Order the output fields.
     sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
+    # Add dma_id column if it's a dma UOA.
+    if uoa_col.lower()=='dma':
+        sumstatvars.insert(1,"dma_id")
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
@@ -309,6 +312,9 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # # Generally, we'll want to have geography fields (states & DMAs, etc) sorted by GTIS and time sorted by time.
     if gtis_sort:
         sumstats_df = sumstats_df.sort_values(by=[gtis_average_field,uoa_col], ascending=[False,True])
+
+    # Now retain only the columns we want + order them in the desired order defined above in the `sumstatvars` variable.
+    sumstats_df = sumstats_df[sumstatvars]
 
     # Write the results back to the XLSX
     core.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True)
