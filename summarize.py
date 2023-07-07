@@ -3,9 +3,8 @@ This file will calculate summary statistics for raw google trends data that you 
 The results of this file should give you meaningful, reportable results.
 """
 
-import os, datetime as dt, numpy as np, pandas as pd
+import os, datetime as dt, time, numpy as np, pandas as pd
 from ccaoa import core, raccoon as rc
-# from time import time, sleep
 from pathlib import Path
 #from scipy import stats
 
@@ -95,7 +94,7 @@ def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
 def define_target_summary_dataset(raw_data_file):
     """ Use the name of the raw data file to target which summary Xlsx you'll be using. """
     if os.path.exists(raw_data_file) is False:
-        raise FileNotFoundError
+        raise FileNotFoundError(raw_data_file)
     dataset_name = Path(raw_data_file).stem
     dataset_name = dataset_name[:dataset_name.rfind("_")]
     # This dataset name will be identical to the summary dataset name
@@ -379,7 +378,7 @@ def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=Fal
 def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
     """ Append the data from all of the raw data files in the directory passed as an argument. """
     if os.path.exists(raw_files_parent_dir):
-        all_raw_files = [rf for rf in os.listdir(raw_files_parent_dir) ]
+        all_raw_files = [os.path.join(raw_files_parent_dir,rf) for rf in os.listdir(raw_files_parent_dir)]
         append_raw_files_from_list(all_raw_files, suppress_prints=suppress_prints)
         return all_raw_files
     else:
@@ -401,14 +400,48 @@ def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=Fa
         return None
 
 
+def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=summary_storage_path(),suppress_prints=False):
+    """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
+    Then, summarize the statistics of all of these raw datasets.
+    This represents a clean workflow that builds all. summary XLSXs from the ground up. """
+
+    # This right now represents a first attempt at this function.
+    # # However, using the append_all_raw_files() function is highly inefficient.
+    # # There are 3.8K raw GTrends files as of 7.7.23, and appending them one-by-one takes a very long time.
+    # # Futhermore, I ran into file permission errors while looping through the raw data.
+    # Goal: Do the append in-memory one data category (eg 1 of the 23 categories) at a time.
+    # # Then, export that to the summary file raw_data tab so it writes only once instead of ~150 times.
+    # # Use as many existing functions as possible to do this though!
+    # # Make sure bad rows (all 0s or nulls) are dropped.
+    # Then, hopefully the summarize_all_summary_data() function should run no problem.
+
+    # Check the arguments for validity.
+    if not os.path.exists(raw_files_dir):
+        raise FileNotFoundError(raw_files_dir)
+    if not os.path.exists(summary_files_dir):
+        raise FileNotFoundError(summary_files_dir)
+    try:
+        suppress_prints = core.string_to_bool(suppress_prints)
+    except:
+        # Restore the default and keep chugging.
+        suppress_prints = False
+
+    # Append all raw GTrends data files' contents to their summary XLSX datasets.
+    append_all_raw_files(raw_files_dir, suppress_prints=suppress_prints)
+    time.sleep(5)
+    # Summarize all those files now.
+    summarize_all_summary_data(summary_files_dir, suppress_prints=suppress_prints)
+
+    return
+
+
 if __name__ == '__main__':
-    import time
     start = time.time()
 
     # # Base path for multi-machine testing.
     # base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
-    base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
-    raw_data_pth = os.path.join(base_path,"raw_data")
+    # base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
+    raw_data_pth = store.get_storage_path()#os.path.join(base_path,"raw_data")
     sum_data_pth = summary_storage_path()  # os.path.join(base_path, "summary_data")
 
 
@@ -478,11 +511,32 @@ if __name__ == '__main__':
         append_raw_files_from_list(independence_files)
         return independence_files
 
-    julyfourthtest()
+    def backup():
+        backup_flag = "_backup"
+        # [os.rename(os.path.join(sum_data_pth,sumfil), os.path.join(sum_data_pth,os.path.splitext(sumfil)[0]+backup_flag+os.path.splitext(sumfil)[1])) for sumfil in os.listdir(sum_data_pth) if backup_flag not in sumfil]
+        [
+            os.rename(
+                os.path.join(sum_data_pth, sumfil),
+                os.path.join(
+                    sum_data_pth,
+                    os.path.splitext(sumfil)[0]
+                    + backup_flag
+                    + os.path.splitext(sumfil)[1],
+                ),
+            )
+            for sumfil in os.listdir(sum_data_pth)
+            if backup_flag not in sumfil
+        ]
+
+    # julyfourthtest()
+    # backup()
 
     # Summarize the already-appended data for all summary xlsxs in Summary Data directory.
     # summarize_all_summary_data(sum_data_pth)
     # summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
     #                           r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
+
+    # Full run to completely recreate all the summary files!
+    full_summary_run()
 
     core.runtime(start)
