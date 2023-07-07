@@ -212,7 +212,10 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
             appended_df = pd.concat([existing_raw_records,prepped_raw_data])
             # Sort by date to get the earliest rows on top.
             # # This is sorting 2023 early months over 2022 late months. Need the opposite.
-            appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=True)
+            # # Convert field to datetime
+            appended_df[date_of_pull_field] = pd.to_datetime(appended_df[date_of_pull_field], format='%m/%d/%Y')
+            # # Sort with the most recently added data on top.
+            appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=False)
             # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
             appended_df = appended_df.replace(0,np.nan)
             # Drop any rows that are complete duplicates.
