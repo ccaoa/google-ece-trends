@@ -257,6 +257,9 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # gtis_average_field  # Previously defined
     # UOA Column. Needs to be dynamic to work with time or geography UOA.
     uoa_col = (os.path.basename(summary_xlsx)).split("_")[1]# 'dma'
+    # # Rename UOA field if it is "time" to avoid confusion with pull_date vs time as the UOA.
+    if uoa_col.lower() == 'time':
+        uoa_col = "event_time"
     covfactfield='cov_fact_k'
     std_dev_col = 'std_dev'
     xpduncertainfield='expd_uncrt'
