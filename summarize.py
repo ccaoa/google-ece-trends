@@ -329,7 +329,8 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     sumstats_df = sumstats_df[sumstatvars]
 
     # Write the results back to the XLSX
-    rc.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True)
+    # # Make sure the "summary_stats" sheet is the first sheet in the output by using the `sheet_is_first_tab` argument.
+    rc.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True,sheet_is_first_tab=True)
 
     return sumstats_df
 
@@ -504,6 +505,17 @@ if __name__ == '__main__':
     # # Execute OG SumStats Testing.
     # og_sumtesting()
 
+    def summarize_or_dma_test():
+        # Oregon
+        ordmafil1= os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221210.csv")
+        ordmafil2 =  os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221206.csv")
+        # orfil1 later pull than ordmafil2
+        # Auto-define which is the summary XLSX for OR.
+        ordmasumxlsx = define_target_summary_dataset(ordmafil1)
+        # Summarize the data for Oregon's DMAs
+        return calc_sumstats(ordmasumxlsx)
+
+
     def julyfourthtest():
         independence_files = [os.path.join(raw_data_pth,f) for f in os.listdir(raw_data_pth) if "20230704" in f]
         # independence_files = [fi.replace("20230704","20230630") for fi in independence_files if "oh_" in fi]
@@ -536,7 +548,10 @@ if __name__ == '__main__':
     # summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
     #                           r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
 
-    # Full run to completely recreate all the summary files!
-    full_summary_run()
+    # simple test with only OR's DMAs.
+    summarize_or_dma_test()
+
+    # # Full run to completely recreate all the summary files!
+    # full_summary_run()
 
     core.runtime(start)
