@@ -264,9 +264,11 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # gtis_average_field  # Previously defined
     # UOA Column. Needs to be dynamic to work with time or geography UOA.
     uoa_col = (os.path.basename(summary_xlsx)).split("_")[1]# 'dma'
-    # # Rename UOA field if it is "time" to avoid confusion with pull_date vs time as the UOA.
-    if uoa_col.lower() == 'time':
+    # # Rename UOA field if it is "time" or 'temporal'
+    # # # Avoids confusion with pull_date vs event time as the UOA Google's measuring.
+    if uoa_col.lower() in ['time', 'temporal']:
         uoa_col = "event_time"
+    # Now define other, new SumStats variables
     covfactfield='cov_fact_k'
     std_dev_col = 'std_dev'
     xpduncertainfield='expd_uncrt'
@@ -281,6 +283,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
     # Add dma_id column if it's a dma UOA.
     if uoa_col.lower()=='dma':
+        # Add it in as the second column in the DF.
         sumstatvars.insert(1,"dma_id")
 
     # CALCULATIONS
