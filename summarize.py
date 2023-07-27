@@ -115,7 +115,7 @@ gtis_average_field = "gtis_mean"
 
 def raw_data_appending_prep(raw_gtrends_data_file):
     """ Functions common to both first init setup of raw data cumulative collection and appending new raw data."""
-    raw_data_in_df = core.file_to_df(raw_gtrends_data_file)
+    raw_data_in_df = rc.file_to_df(raw_gtrends_data_file)
     # Ensure top and rising Qs "value" columns get renamed to 'gtis' for consistency and downstream functionality.
     # # Will not affect DFs without a "value" column.
     raw_data_in_df=raw_data_in_df.rename(columns={"value": 'gtis'})
@@ -164,7 +164,7 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
         prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
         # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
-        core.df_to_file(prepped_raw_data,target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
+        rc.df_to_file(prepped_raw_data,target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
 
         # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
         # # After the transpose, the UOA features are now the new columns.
@@ -174,7 +174,7 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         # pd.concat([mnsubsettransposetime, pd.DataFrame(index=["IDXbaby"]), pd.DataFrame(index=['haha'])], axis=0,
         #           ignore_index=False)
         # Or, it could revert to dates being rows and the GTIS and error etc are column headers since that's the primary study var for this dataset.
-        stats_df = core.file_to_df(raw_gtrends_data_file)
+        stats_df = rc.file_to_df(raw_gtrends_data_file)
         # We only need the UOA and the GTIS (and maybe keep the DMA ID/state FIPS), nothing else
         dropcols = ['rank','isPartial']
         stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
@@ -182,7 +182,7 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         stats_df = stats_df.rename(columns={'gtis':gtis_average_field})
         # The rest of the calcs will be shared by downstream processes, so write function for that.
         # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
-        core.df_to_file(stats_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
+        rc.df_to_file(stats_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
 
         return target_summary_dataset
     else:
@@ -197,14 +197,14 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
     if os.path.exists(target_summary_dataset) is False:
         # Do stuff to setup the summary xlsx with the current raw data as its first entry.
         setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
-        appended_df = core.file_to_df(setup_file,raw_data_collection_sheet)
+        appended_df = rc.file_to_df(setup_file,raw_data_collection_sheet)
     else:
         # Prepare your new raw data
         prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
         try:
             # Append the data to the stuff that is already there.
             # Pull in the existing raw data records
-            existing_raw_records = core.file_to_df(target_summary_dataset, raw_data_collection_sheet)
+            existing_raw_records = rc.file_to_df(target_summary_dataset, raw_data_collection_sheet)
             # # If using indexes: https://stackoverflow.com/a/34236431/15517267
             # df.loc[["x", "y"]]
             # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
@@ -231,10 +231,10 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
             # While the summary file exists, the raw data tabulation sheet does not.
             # Create it and set this prepped raw data as the first record in the tab.
             # setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
-            appended_df = prepped_raw_data #core.file_to_df(setup_file, raw_data_collection_sheet)
+            appended_df = prepped_raw_data #rc.file_to_df(setup_file, raw_data_collection_sheet)
 
         # Output this data back into its original tab.
-        core.df_to_file(appended_df,target_summary_dataset,add_to_existing_xlsx=True,sheet_xlsx=raw_data_collection_sheet,overwrite_old_sheet=True)
+        rc.df_to_file(appended_df,target_summary_dataset,add_to_existing_xlsx=True,sheet_xlsx=raw_data_collection_sheet,overwrite_old_sheet=True)
 
     return appended_df
 
@@ -253,13 +253,13 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     """
     # Get data as it is
     try:
-        sumstats_df = core.file_to_df(summary_xlsx,summary_stats_sheet)
+        sumstats_df = rc.file_to_df(summary_xlsx,summary_stats_sheet)
     except ValueError or NameError:
         # The summary doc that exists does not have the summary_stats_sheet for some reason.
         # Create it with an empty dataframe.
         sumstats_df = pd.DataFrame()
-        core.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
-    raw_data_df = core.file_to_df(summary_xlsx, raw_data_collection_sheet)
+        rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
+    raw_data_df = rc.file_to_df(summary_xlsx, raw_data_collection_sheet)
     # SumStats Vars not previously defined
     # gtis_average_field  # Previously defined
     # UOA Column. Needs to be dynamic to work with time or geography UOA.
@@ -329,7 +329,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     sumstats_df = sumstats_df[sumstatvars]
 
     # Write the results back to the XLSX
-    core.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True)
+    rc.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True)
 
     return sumstats_df
 
@@ -498,7 +498,7 @@ if __name__ == '__main__':
         # txsumxlsx = define_target_summary_dataset(txtdmapth4)
         vdmasumxlsx = define_target_summary_dataset(vtine_dma1)
         # rqsumxlsx = define_target_summary_dataset(rq1)
-        # dftxsumstats = core.file_to_df(txsumxlsx)
+        # dftxsumstats = rc.file_to_df(txsumxlsx)
         calc_sumstats(vdmasumxlsx)
 
     # # Execute OG SumStats Testing.
