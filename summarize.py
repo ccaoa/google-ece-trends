@@ -264,11 +264,6 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # gtis_average_field  # Previously defined
     # UOA Column. Needs to be dynamic to work with time or geography UOA.
     uoa_col = (os.path.basename(summary_xlsx)).split("_")[1]# 'dma'
-    # # Rename UOA field if it is "time" or 'temporal'
-    # # # Avoids confusion with pull_date vs event time as the UOA Google's measuring.
-    if uoa_col.lower() in ['time', 'temporal']:
-        uoa_col = "event_time"
-    # Now define other, new SumStats variables
     covfactfield='cov_fact_k'
     std_dev_col = 'std_dev'
     xpduncertainfield='expd_uncrt'
@@ -330,6 +325,39 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
 
     # Now retain only the columns we want + order them in the desired order defined above in the `sumstatvars` variable.
     sumstats_df = sumstats_df[sumstatvars]
+
+    # Rename key columns now that they're filtered down to the ones we want.
+    # # Format: # new_column_names = {'old_column_name1': 'new_column_name1','old_column_name2': 'new_column_name2'}
+    the_renamed_fields = {}
+    temporal_uoa_sumstats_colname = "event_time"
+    all_renames={
+        # UOA field renames
+        # # No DMA change
+        # # States
+        'states': "state",
+        # # Query terms
+        "rising":"rising_term",
+        'query':'term',
+        'top':"top_term",
+        # # 'temporal'
+        # # # Avoids confusion with pull_date vs event time as the UOA Google's measuring.
+        'time': temporal_uoa_sumstats_colname,
+        'temporal': temporal_uoa_sumstats_colname,
+        'date': temporal_uoa_sumstats_colname
+        # No other non-UOA columns need to be renamed until further notice.
+    }
+    uoalower = uoa_col.lower()
+    if uoalower in all_renames:
+        # The UOA needs to be renamed
+        the_renamed_fields[uoa_col] = all_renames[uoalower]
+    # Execute the rename
+    if bool(the_renamed_fields):
+        # i.e., if the dictionary containing the names of the columns that need to be renamed is not empty,
+        # # then there are columns needing to be renamed
+        sumstats_df.rename(columns=the_renamed_fields, inplace=True)
+    # If you need to access a fresh all-columns list with the renamed columns:
+    # sumstats_df.columns.to_list()
+    print(sumstats_df.columns)
 
     # Write the results back to the XLSX
     # # Make sure the "summary_stats" sheet is the first sheet in the output by using the `sheet_is_first_tab` argument.
@@ -396,7 +424,7 @@ def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=Fa
     """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
      Takes the directory housing the summary files as an argument. """
     if os.path.exists(summary_files_parent_dir):
-        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir)]
+        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir) if af.endswith(".xlsx")]
         summarize_collected_data(all_agg_files, suppress_prints=suppress_prints)
         return all_agg_files
     else:
@@ -547,12 +575,12 @@ if __name__ == '__main__':
     # backup()
 
     # Summarize the already-appended data for all summary xlsxs in Summary Data directory.
-    # summarize_all_summary_data(sum_data_pth)
+    summarize_all_summary_data(sum_data_pth)
     # summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
     #                           r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
 
-    # simple test with only OR's DMAs.
-    summarize_or_dma_test()
+    # # simple test with only OR's DMAs.
+    # summarize_or_dma_test()
 
     # # Full run to completely recreate all the summary files!
     # full_summary_run()
