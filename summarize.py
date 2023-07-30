@@ -357,7 +357,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
         sumstats_df.rename(columns=the_renamed_fields, inplace=True)
     # If you need to access a fresh all-columns list with the renamed columns:
     # sumstats_df.columns.to_list()
-    print(sumstats_df.columns)
+    # print(sumstats_df.columns)
 
     # Write the results back to the XLSX
     # # Make sure the "summary_stats" sheet is the first sheet in the output by using the `sheet_is_first_tab` argument.
