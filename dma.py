@@ -77,6 +77,32 @@ def dma_name_to_id_dict():
     return dma_id_reversedict
 
 
+def dma_id_name_converter(dma_name_or_id_input_var, suppress_prints=False):
+    """Takes an input variable designating a DMA's formal name and returns its DMA ID code in text format
+        OR takes a DMA ID code and returns a DMA name."""
+    # All DMA IDs will be in string format, so convert all input variables to str.
+    dma_name_or_id_input_var = str(dma_name_or_id_input_var)
+    suppress_prints = core.string_to_bool(suppress_prints)
+    print(dma_name_or_id_input_var)
+    if dma_name_or_id_input_var in dma_id_to_name_dict():
+        # User wants to go from DMA ID to its name
+        target_name = dma_id_to_name_dict()[dma_name_or_id_input_var]
+        converted_result = target_name
+        del target_name
+    elif dma_name_or_id_input_var in dma_name_to_id_dict():
+        # User wants to go from DMA Name to its ID
+        target_id = dma_name_to_id_dict()[dma_name_or_id_input_var]
+        converted_result = target_id
+        del target_id
+    else:
+        converted_result = None
+        if suppress_prints is not False:
+            print(("'" + dma_name_or_id_input_var + "'"),
+                  "is an invalid entry for ST ~ FIPS conversion. Please re-enter and retry.")
+
+    return converted_result
+
+
 def dmas_all_for_state_dict(state):
     """For state, extract all associated DMAs & their unique IDs."""
     # Use the appropriate json file.
@@ -91,4 +117,23 @@ def dmas_all_for_state_dict(state):
     # Return a dict of {ID: DMA,} for <state>
     return targ_state_dma_dict
 
-print(list(dma_id_dict().items())[:3])
+
+if __name__ == '__main__':
+    # idinq='661'
+    # print(
+    # # list(dma_id_dict().items())[:3]
+    #     dma_id_to_name_dict()['531'],)
+    # print(dma_id_to_name_dict()['623'])
+    # print(dma_id_to_name_dict()[idinq])
+    # print(idinq in dma_id_to_name_dict())
+    # print(
+    #     # dma_id_to_name_dict()[531],
+    # dma_id_name_converter(661),type(dma_id_name_converter(661))
+    # )
+    # print(
+    # dma_id_name_converter('Knoxville TN'),
+    # dma_id_name_converter('Wichita Falls TX & Lawton OK'),
+    # dma_id_name_converter('Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vernon IL'),
+    # dma_id_name_converter('531')
+    # )
+    pass
