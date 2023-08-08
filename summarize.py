@@ -9,9 +9,9 @@ from pathlib import Path
 #from scipy import stats
 
 try:
-    from . import pull_data as pull, store_data as store, trend_calculations as tcalc
+    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc
 except ImportError:
-    import pull_data as pull, store_data as store, trend_calculations as tcalc
+    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc
 
 
 # Need to Transpose the individual data pull records, append them to the master pull list, and recalc the sum stats.
@@ -276,12 +276,20 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     ci_95_uppr_fld = "ci_95_uppr"
     # Order the output fields.
     sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
-    # Add dma_id column if it's a dma UOA.
+
+    # Add dma_id column if it's a Media Market (DMA) UOA.
     if uoa_col.lower()=='dma':
+        dma_id_col = 'dma_id'
         print("DMA FILE!:", os.path.basename(summary_xlsx))
-        # Add it in as the second column in the DF.
+        print("  '",dma_id_col,"' in DF before insert command? ie, was it already in there?", str("dma_id" in sumstats_df.columns))
+        # Add dma_id_col in as a column in the summary DF and fill the column in with the appropriate dma_id value.
+        sumstats_df[dma_id_col] = sumstats_df[uoa_col].apply(
+            lambda x: dma.dma_id_name_converter(x)
+        )
+        print("  '", dma_id_col, "' in DF after new apply command referencing dma.py?", str("dma_id" in sumstats_df.columns))
+        # Insert the dma_id_col as the second column in the final formatting of the columns' order.
         sumstatvars.insert(1,"dma_id")
-        print("  'dma_id' in DF after insert command?", str("dma_id" in sumstats_df.columns))
+        print("  '",dma_id_col,"' in DF after insert command?", str("dma_id" in sumstats_df.columns))
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
@@ -422,7 +430,6 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 
 
 def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
-    #""" Append the data from all of the raw data files in the directory passed as an argument. """
     """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
      Takes the directory housing the summary files as an argument. """
     if os.path.exists(summary_files_parent_dir):

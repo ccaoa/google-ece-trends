@@ -83,7 +83,7 @@ def dma_id_name_converter(dma_name_or_id_input_var, suppress_prints=False):
     # All DMA IDs will be in string format, so convert all input variables to str.
     dma_name_or_id_input_var = str(dma_name_or_id_input_var)
     suppress_prints = core.string_to_bool(suppress_prints)
-    print(dma_name_or_id_input_var)
+    # print(dma_name_or_id_input_var)
     if dma_name_or_id_input_var in dma_id_to_name_dict():
         # User wants to go from DMA ID to its name
         target_name = dma_id_to_name_dict()[dma_name_or_id_input_var]
