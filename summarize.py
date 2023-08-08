@@ -277,24 +277,24 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # Order the output fields.
     sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
 
-    # Add dma_id column if it's a Media Market (DMA) UOA.
-    if uoa_col.lower()=='dma':
-        dma_id_col = 'dma_id'
-        print("DMA FILE!:", os.path.basename(summary_xlsx))
-        print("  '",dma_id_col,"' in DF before insert command? ie, was it already in there?", str("dma_id" in sumstats_df.columns))
-        # Add dma_id_col in as a column in the summary DF and fill the column in with the appropriate dma_id value.
-        sumstats_df[dma_id_col] = sumstats_df[uoa_col].apply(
-            lambda x: dma.dma_id_name_converter(x)
-        )
-        print("  '", dma_id_col, "' in DF after new apply command referencing dma.py?", str("dma_id" in sumstats_df.columns))
-        # Insert the dma_id_col as the second column in the final formatting of the columns' order.
-        sumstatvars.insert(1,"dma_id")
-        print("  '",dma_id_col,"' in DF after insert command?", str("dma_id" in sumstats_df.columns))
-
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
     transposed_sub_df = transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
     sumstats_df[uoa_col] = transposed_sub_df[date_of_pull_field]  # 'pull_date'
+    # Add dma_id column if it's a Media Market (DMA) UOA.
+    # # This code cannot appear any earlier than here because this is where the UOA's column values are defined,
+    # # # and that is a prerequisite to assign the correct DMA ID (if it's a DMA UOA).
+    if uoa_col.lower() == 'dma':
+        dma_id_col = 'dma_id'
+        # Add dma_id_col in as a column in the summary DF and fill the column in with the appropriate dma_id value.
+        sumstats_df[dma_id_col] = sumstats_df[uoa_col].apply(
+            lambda x: dma.dma_id_name_converter(x)
+        )
+        # # TESTING PRINT; DELETE IF ALL DMAS CONNECTED TO THEIR CORRECT DMA ID
+        print(sumstats_df[[dma_id_col, uoa_col]])
+        # # END TEST HERE
+        # Now insert the dma_id_col as the second column in the final formatting of the columns' order.
+        sumstatvars.insert(1, "dma_id")
     # Mean/Average
     sumstats_df[gtis_average_field] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].mean())
     # Standard Deviation
