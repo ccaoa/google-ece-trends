@@ -420,8 +420,10 @@ def extract_data(
         if region == "DMA":
             # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
             # Apply the IDs to the DMAs in the dataframe in a new column
+            # # Note: This could become a function within the dma.py to inherit in the future.
+            # # # Multiple downstream files need this DataFrame application of a DMA ID, so function-ize it.
             extracted_df["dma_id"] = extracted_df[region.lower()].apply(
-                lambda x: dma.dma_id_name_converter()[x]
+                lambda x: dma.dma_id_name_converter(x)
             )
 
         if suppress_prints is False:

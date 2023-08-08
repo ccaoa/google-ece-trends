@@ -102,6 +102,9 @@ def dma_id_name_converter(dma_name_or_id_input_var, suppress_prints=False):
 
     return converted_result
 
+# Note: create a function here that uses dma_id_name_converter() to apply names &/or IDs to Pandas DataFrames.
+# # Multiple downstream files need this DataFrame application of a DMA ID, so function-ize it.
+
 
 def dmas_all_for_state_dict(state):
     """For state, extract all associated DMAs & their unique IDs."""
