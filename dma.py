@@ -58,12 +58,23 @@ def json_to_python_dict(json_file):
     return python_dict
 
 
-def dma_id_dict():
-    """Returns a dictionary that connects each media market (DMA) to its unique ID."""
+def dma_id_to_name_dict():
+    """Returns a dictionary that connects each media market (DMA) to its unique ID.
+    The dictionary has the DMA ID as the key in text format
+    and the written-out media market name as the value in text format."""
     # ID the target ID ~ DMA JSON file
     dma_id_json = find_jsons()[0]
     dma_id_crosswalk = json_to_python_dict(dma_id_json)
     return dma_id_crosswalk
+
+
+def dma_name_to_id_dict():
+    """Returns a dictionary that connects each media market (DMA) to its unique ID
+    in the reverse format from dma_id_to_name_dict().
+    The dictionary has the written-out media market name as the key in text format
+    and the DMA ID as the value in text format."""
+    dma_id_reversedict = core.reverse_dict(dma_id_to_name_dict())
+    return dma_id_reversedict
 
 
 def dmas_all_for_state_dict(state):
@@ -79,3 +90,5 @@ def dmas_all_for_state_dict(state):
     targ_state_dma_dict = states_dmas_dict[state]
     # Return a dict of {ID: DMA,} for <state>
     return targ_state_dma_dict
+
+print(list(dma_id_dict().items())[:3])
