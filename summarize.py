@@ -278,8 +278,10 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
     # Add dma_id column if it's a dma UOA.
     if uoa_col.lower()=='dma':
+        print("DMA FILE!:", os.path.basename(summary_xlsx))
         # Add it in as the second column in the DF.
         sumstatvars.insert(1,"dma_id")
+        print("  'dma_id' in DF after insert command?", str("dma_id" in sumstats_df.columns))
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
