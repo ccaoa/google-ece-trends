@@ -114,8 +114,8 @@ def payload_builder(
             # Else, if two dashes in the geography and the last 3 characters are a valid DMA ID:
             elif (
                 str(geography_broad).count("-") == 2
-                and geography_broad[len(geography_broad) - 3 : len(geography_broad)]
-                in dma.dma_id_dict()
+                and str(geography_broad[len(geography_broad) - 3 : len(geography_broad)])
+                in dma.dma_id_to_name_dict()  # dma_id_dict()
             ):
                 # A geography with
                 #   1) a valid state state in the correct position,
