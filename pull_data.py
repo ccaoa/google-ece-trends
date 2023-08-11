@@ -7,7 +7,7 @@ Heavily inspired by:
 
 import pandas as pd
 from ccaoa import core
-import pytrends, os
+import pytrends
 from pytrends.request import TrendReq
 
 try:
@@ -114,8 +114,8 @@ def payload_builder(
             # Else, if two dashes in the geography and the last 3 characters are a valid DMA ID:
             elif (
                 str(geography_broad).count("-") == 2
-                and geography_broad[len(geography_broad) - 3 : len(geography_broad)]
-                in dma.dma_id_dict()
+                and str(geography_broad[len(geography_broad) - 3 : len(geography_broad)])
+                in dma.dma_id_to_name_dict()  # dma_id_dict()
             ):
                 # A geography with
                 #   1) a valid state state in the correct position,
@@ -439,11 +439,11 @@ def extract_data(
 
         if region == "DMA":
             # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
-            # Extract a dict = {DMA: its_id_number}
-            dma_id_reversedict = core.reverse_dict(dma.dma_id_dict())
-            # Apply those IDs to the DMAs in the dataframe
+            # Apply the IDs to the DMAs in the dataframe in a new column
+            # # Note: This could become a function within the dma.py to inherit in the future.
+            # # # Multiple downstream files need this DataFrame application of a DMA ID, so function-ize it.
             extracted_df["dma_id"] = extracted_df[region.lower()].apply(
-                lambda x: dma_id_reversedict[x]
+                lambda x: dma.dma_id_name_converter(x)
             )
 
         if suppress_prints is False:

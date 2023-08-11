@@ -211,9 +211,9 @@ def full_run_gtrends(low_search_volume_results=True):
     # # The Beaver/Duck DMA!
     # To construct the geography, we need that DMA ID. Dynamically access it.
     beaver_duck_dma_name = next(
-        key for key in core.reverse_dict(dma.dma_id_dict()) if "Eugene" in key
+        key for key in dma.dma_name_to_id_dict() if "Eugene" in key
     )
-    beaver_duck_dma_id = str(core.reverse_dict(dma.dma_id_dict())[beaver_duck_dma_name])
+    beaver_duck_dma_id = str(dma.dma_id_name_converter(beaver_duck_dma_name))
     geog_eugene = geog_or + "-" + beaver_duck_dma_id
     # Then, go on collecting data like normal.
     eugene_payload = pull.payload_builder(
@@ -311,6 +311,7 @@ def full_run_gtrends(low_search_volume_results=True):
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
     # # Append the successfully pulled files into the corresponding raw data collection XLSX
     agg.append_raw_files_from_list(successfully_stored_raw_data_files, suppress_prints=False)
+    print()
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
     # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
     # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
