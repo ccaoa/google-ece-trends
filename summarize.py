@@ -290,9 +290,6 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
         sumstats_df[dma_id_col] = sumstats_df[uoa_col].apply(
             lambda x: dma.dma_id_name_converter(x)
         )
-        # # TESTING PRINT; DELETE IF ALL DMAS CONNECTED TO THEIR CORRECT DMA ID
-        print(sumstats_df[[dma_id_col, uoa_col]])
-        # # END TEST HERE
         # Now insert the dma_id_col as the second column in the final formatting of the columns' order.
         sumstatvars.insert(1, "dma_id")
     # Mean/Average
