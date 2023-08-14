@@ -9,7 +9,7 @@ except ImportError:
     import pull_data as pull, store_data as store, dma, summarize as agg
 
 
-def full_run_gtrends(low_search_volume_results=True):
+def full_gtrends_pull(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
     storage_path = store.get_storage_path()
@@ -308,12 +308,22 @@ def full_run_gtrends(low_search_volume_results=True):
         "datasets stored.\n-----------------------------------------------\n",
     )
 
+    return successfully_stored_raw_data_files
+
+
+def full_run_gtrends(low_search_volume_results=True):
+    """Collect and summarize custom data for J. A. Cooper (2023) Google Trends publication."""
+    # Collect the Google Trends Data by pulling it with the pytrends unofficial API.
+    # # Custom function that pulls exactly what we need.
+    successfully_stored_raw_data_files = full_gtrends_pull(core.string_to_bool(low_search_volume_results))
+
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
-    # # Append the successfully pulled files into the corresponding raw data collection XLSX
+    # Append the successfully pulled files into the corresponding raw data collection XLSX
     agg.append_raw_files_from_list(successfully_stored_raw_data_files, suppress_prints=False)
-    # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
-    # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
-    # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
+
+    # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
+    # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
+    # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
     targ_sumfiles_listdir = [agg.define_target_summary_dataset(rds) for rds in successfully_stored_raw_data_files]
     agg.summarize_collected_data(targ_sumfiles_listdir, suppress_prints=False)
 
