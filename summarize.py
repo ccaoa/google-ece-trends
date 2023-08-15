@@ -256,9 +256,13 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
         sumstats_df = rc.file_to_df(summary_xlsx,summary_stats_sheet)
     except ValueError or NameError:
         # The summary doc that exists does not have the summary_stats_sheet for some reason.
-        # Create it with an empty dataframe.
+        # Use an empty working dataframe going forward.
         sumstats_df = pd.DataFrame()
-        rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
+        # # After testing for Issue #6, it was determined that the rc.df_to_file() at the end of this function is
+        # # # sufficient to add the summary_stats_sheet as a new sheet to the XLSX, even with `add_to_existing_xlsx=True`
+        # # # and `overwrite_old_sheet=True` arguments.
+        # # So, we don't need to artificially create the sheet here; it'll get handled later.
+        # rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
     raw_data_df = rc.file_to_df(summary_xlsx, raw_data_collection_sheet)
     # SumStats Vars not previously defined
     # gtis_average_field  # Previously defined
