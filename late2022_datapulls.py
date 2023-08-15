@@ -8,14 +8,15 @@ try:
 except ImportError:
     import pull_data as pull, store_data as store, dma, summarize as agg
 
+storage_path = store.get_storage_path()
 
-def full_run_gtrends(low_search_volume_results=True):
+
+def full_gtrends_pull(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
-    storage_path = store.get_storage_path()
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
-        return
+        raise FileNotFoundError("Invalid storage path passed:", storage_path)
     # Validate the low search volume flag as a boolean
     low_search_volume_results = core.string_to_bool(low_search_volume_results)
 
@@ -308,8 +309,51 @@ def full_run_gtrends(low_search_volume_results=True):
         "datasets stored.\n-----------------------------------------------\n",
     )
 
+    return successfully_stored_raw_data_files
+
+
+def get_most_recent_files(path, num_files_to_keep):
+    # Get a list of all files in the directory
+    all_files = [os.path.join(path, filename) for filename in os.listdir(path)]
+
+    # Sort files by modification time in descending order
+    sorted_files = sorted(all_files, key=os.path.getmtime, reverse=True)
+
+    # Choose the most recent files
+    recent_files = sorted_files[:num_files_to_keep]
+
+    return recent_files
+
+
+def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, number_of_raw_files=23):
+    """Collect and summarize custom data for J. A. Cooper (2023) Google Trends publication."""
+    pull_trends_data = core.string_to_bool(pull_trends_data)
+    if pull_trends_data:
+        # Collect the Google Trends Data by pulling it with the pytrends unofficial API.
+        # # Custom function that pulls exactly what we need.
+        successfully_stored_raw_data_files = full_gtrends_pull(core.string_to_bool(low_search_volume_results))
+    else:
+        # Don't pull data again from Google. Default to the most recent files stored in the storage directory.
+        # # This would be useful if the pull code runs successfully, but the summary code needs testing and bugfixing.
+        # # This allows you to not re-hit the Google Trends API repeatedly during development. It is not the default.
+        number_of_raw_files = int(number_of_raw_files)
+        successfully_stored_raw_data_files = get_most_recent_files(storage_path, number_of_raw_files)
+        # print(successfully_stored_raw_data_files)
+
+        # Check to make sure they all have the same pull date
+        unique_pull_dates = list(set([x[len(x)-12:] for x in successfully_stored_raw_data_files]))
+        if len(unique_pull_dates)>1:
+            print("Raw data files from multiple pull dates selected for summarizing:")
+            print(unique_pull_dates)
+        elif len(unique_pull_dates)==0:
+            print("No raw data files to append")
+            exit()
+        else:
+            # Should only trigger if len()==1
+            print("Summarizing raw data files pulled on", unique_pull_dates[0])
+
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
-    # # Append the successfully pulled files into the corresponding raw data collection XLSX
+    # Append the successfully pulled files into the corresponding raw data collection XLSX
     agg.append_raw_files_from_list(successfully_stored_raw_data_files, suppress_prints=False)
     print()
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
@@ -324,7 +368,15 @@ def full_run_gtrends(low_search_volume_results=True):
 if __name__ == "__main__":
     from time import time
     start = time()
-    full_run_gtrends()
+
+    # Regular full run: pull data, append it, and summarize it.
+    full_run_gtrends(pull_trends_data=True)
+
+    # # Append and summarize already pulled data.
+    # number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
+    # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
+
     # # Only summarize the already-appended data:
     # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+
     core.runtime(start=start)
