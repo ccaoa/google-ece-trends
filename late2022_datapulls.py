@@ -1,44 +1,22 @@
-import os, datetime as dt, pandas as pd
+import os, datetime as dt
 from ccaoa import core
 # from time import time, sleep
-from pathlib import Path
+# from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store, dma
+    from . import pull_data as pull, store_data as store, dma, summarize as agg
 except ImportError:
-    import pull_data as pull, store_data as store, dma
+    import pull_data as pull, store_data as store, dma, summarize as agg
+
+storage_path = store.get_storage_path()
 
 
-def get_storage_path():
-    """Dynamically define the storage path with an external file that you gitignore.
-    Keeps one from having to constantly edit their file paths in-code if working on different machines."""
-    current_directory = dma.dma_module_directory()
-    dot_storage_path = os.path.join(current_directory, ".storage_path")
-    if not os.path.exists(dot_storage_path):
-        Path(dot_storage_path).touch()
-    with open(dot_storage_path) as sfile:
-        path_store = str(sfile.read())
-    # Make sure there are no pythonic quotations, etc around the path.
-    path_store = path_store.replace('r"', '"').replace('"', "")
-    if not os.path.exists(path_store):
-        print(
-            "Your file",
-            path_store,
-            "doesn't exist.\n"
-            "Edit your `.storage_path` file in this directory to designate a destination for the Google Trends data.",
-        )
-        # # Maybe in a future version, add a user input method to manually define this var in-run.
-    sfile.close()
-    return path_store
-
-
-def full_run_gtrends(low_search_volume_results=True):
+def full_gtrends_pull(low_search_volume_results=True):
     """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
-    storage_path = get_storage_path()
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
-        return
+        raise FileNotFoundError("Invalid storage path passed:", storage_path)
     # Validate the low search volume flag as a boolean
     low_search_volume_results = core.string_to_bool(low_search_volume_results)
 
@@ -152,6 +130,29 @@ def full_run_gtrends(low_search_volume_results=True):
         filing_dict[init_late2022_studyperiod].append(u) for u in u_fil_list
     ]  # if u not in filing_dict[init_late2022_studyperiod]]  # <- Causes errors https://stackoverflow.com/questions/18548370/pandas-can-only-compare-identically-labeled-dataframe-objects-error
 
+    # Also collect Texas data to compare with the data I collected for annual report 2021
+    # # to further explore the Cincinnati Problem (The fact that DMAs are inconsistently reported at state level):
+    tx_time_period = "2021-03-21 2021-04-21"#"2020-02-14 2021-02-14"
+    # # Establish dictionary list for downstream filing.
+    filing_dict[tx_time_period] = []
+    geog_tx = "US-TX"
+    # Build the payloads; you can only have 1 payload active at a time.
+    tx_payload = pull.payload_builder(
+        geography_broad=geog_tx,
+        timeframe=tx_time_period,
+        connection_item=google_connection,
+    )
+    # Pull relevant data
+    tx_dma = pull.extract_data_try(
+        payload_item=tx_payload, spatial_not_temporal=True, region="DMA", low_volume=low_search_volume_results
+    )
+    # Original data pull did not include Time, but why not?
+    tx_time = pull.extract_data_try(payload_item=tx_payload, spatial_not_temporal=False, low_volume=low_search_volume_results)
+    #
+    # Filing dictionary work: Add each df collected to the filing dictionary
+    u_fil_list = [tx_dma, tx_time]
+    [filing_dict[tx_time_period].append(u) for u in u_fil_list]
+
     # Also include some data from the classic COVID Valentines' study period.
     # Augment the existing OR & MN data with some national spatial data + get some riding and top keywords.
     valentines_time_period = "2020-02-14 2021-02-14"
@@ -211,9 +212,9 @@ def full_run_gtrends(low_search_volume_results=True):
     # # The Beaver/Duck DMA!
     # To construct the geography, we need that DMA ID. Dynamically access it.
     beaver_duck_dma_name = next(
-        key for key in core.reverse_dict(dma.dma_id_dict()) if "Eugene" in key
+        key for key in dma.dma_name_to_id_dict() if "Eugene" in key
     )
-    beaver_duck_dma_id = str(core.reverse_dict(dma.dma_id_dict())[beaver_duck_dma_name])
+    beaver_duck_dma_id = str(dma.dma_id_name_converter(beaver_duck_dma_name))
     geog_eugene = geog_or + "-" + beaver_duck_dma_id
     # Then, go on collecting data like normal.
     eugene_payload = pull.payload_builder(
@@ -257,7 +258,6 @@ def full_run_gtrends(low_search_volume_results=True):
     # Count all the DFs to process
     for tf in filing_dict:
         dfs_to_process += len(filing_dict[tf])
-    dfs_with_data = 0
     today = dt.datetime.today().strftime("%Y-%m-%d")
     print(
         "Will store",
@@ -270,16 +270,18 @@ def full_run_gtrends(low_search_volume_results=True):
     print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", "Storage Folder"))
     print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
 
+    dfs_with_data = 0
+    successfully_stored_raw_data_files=[]
     for tf in filing_dict:
         for dataframe in filing_dict[tf]:
             if core.check_empty_dataframe(dataframe) is False:
-                gt_file_name = store.retrieve_singlevar_name(dataframe)
+                gt_file_name = store.retrieve_variable_name(dataframe)
                 short_path = os.path.join(
                     "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
                     os.path.split(os.path.split(storage_path)[0])[1],
                     os.path.split(storage_path)[1]
                 )
-                store.store_data(
+                successfully_stored_raw_data_file = store.store_data(
                     storage_path,
                     dataframe,
                     tf,
@@ -291,10 +293,11 @@ def full_run_gtrends(low_search_volume_results=True):
                 # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
                 print("{0:30}{1:30}{2}".format(gt_file_name, tf, short_path))
                 dfs_with_data += 1
+                successfully_stored_raw_data_files.append(successfully_stored_raw_data_file)
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
-                    store.retrieve_singlevar_name(dataframe),
+                    store.retrieve_variable_name(dataframe),
                     "was not captured and will not be stored.",
                 )
     print(
@@ -306,11 +309,74 @@ def full_run_gtrends(low_search_volume_results=True):
         "datasets stored.\n-----------------------------------------------\n",
     )
 
+    return successfully_stored_raw_data_files
+
+
+def get_most_recent_files(path, num_files_to_keep):
+    # Get a list of all files in the directory
+    all_files = [os.path.join(path, filename) for filename in os.listdir(path)]
+
+    # Sort files by modification time in descending order
+    sorted_files = sorted(all_files, key=os.path.getmtime, reverse=True)
+
+    # Choose the most recent files
+    recent_files = sorted_files[:num_files_to_keep]
+
+    return recent_files
+
+
+def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, number_of_raw_files=23):
+    """Collect and summarize custom data for J. A. Cooper (2023) Google Trends publication."""
+    pull_trends_data = core.string_to_bool(pull_trends_data)
+    if pull_trends_data:
+        # Collect the Google Trends Data by pulling it with the pytrends unofficial API.
+        # # Custom function that pulls exactly what we need.
+        successfully_stored_raw_data_files = full_gtrends_pull(core.string_to_bool(low_search_volume_results))
+    else:
+        # Don't pull data again from Google. Default to the most recent files stored in the storage directory.
+        # # This would be useful if the pull code runs successfully, but the summary code needs testing and bugfixing.
+        # # This allows you to not re-hit the Google Trends API repeatedly during development. It is not the default.
+        number_of_raw_files = int(number_of_raw_files)
+        successfully_stored_raw_data_files = get_most_recent_files(storage_path, number_of_raw_files)
+        # print(successfully_stored_raw_data_files)
+
+        # Check to make sure they all have the same pull date
+        unique_pull_dates = list(set([x[len(x)-12:] for x in successfully_stored_raw_data_files]))
+        if len(unique_pull_dates)>1:
+            print("Raw data files from multiple pull dates selected for summarizing:")
+            print(unique_pull_dates)
+        elif len(unique_pull_dates)==0:
+            print("No raw data files to append")
+            exit()
+        else:
+            # Should only trigger if len()==1
+            print("Summarizing raw data files pulled on", unique_pull_dates[0])
+
+    # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
+    # Append the successfully pulled files into the corresponding raw data collection XLSX
+    agg.append_raw_files_from_list(successfully_stored_raw_data_files, suppress_prints=False)
+    print()
+    # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
+    # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
+    # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
+    targ_sumfiles_listdir = [agg.define_target_summary_dataset(rds) for rds in successfully_stored_raw_data_files]
+    agg.summarize_collected_data(targ_sumfiles_listdir, suppress_prints=False)
+
     return
 
 
 if __name__ == "__main__":
     from time import time
     start = time()
-    full_run_gtrends()
+
+    # Regular full run: pull data, append it, and summarize it.
+    full_run_gtrends(pull_trends_data=True)
+
+    # # Append and summarize already pulled data.
+    # number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
+    # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
+
+    # # Only summarize the already-appended data:
+    # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+
     core.runtime(start=start)
