@@ -40,7 +40,7 @@ except ImportError:
 
 def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
     """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
-    # NOTE: Migrate this function to a more generalizable format in ccaoa.raccoon module. Then call it here.
+    # TODO: Migrate this function to a more generalizable format in ccaoa.raccoon module. Then call it here.
     # If the user wanted the first column of the PD DF to function as the column names
     if core.string_to_bool(first_col_as_new_col_names) is True:
         # The first column of the raw dataset containing UOA identifiers will be set as the column names of the new DF.
@@ -380,6 +380,7 @@ def append_raw_files_from_list(raw_files_paths_list: list, suppress_prints=False
     # If a summary sheet is not yet set up, it should be created in this process.
     # [agg.append_raw_data_fromfile(tf) for tf in raw_files_paths_list]
     # Could use the above to do this, but use for loop to do some helpful print statements
+    # TODO: Develop method where individual data are not repeatedly written to the summary stats xlsx. Instead, store appended DF in-memory, *then* write at the end.
     if core.string_to_bool(suppress_prints) is not True:
         print("Appending raw files.")
     counter = 0
