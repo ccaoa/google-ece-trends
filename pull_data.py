@@ -7,7 +7,7 @@ Heavily inspired by:
 
 import pandas as pd
 from ccaoa import core
-import pytrends, os
+import pytrends
 from pytrends.request import TrendReq
 
 try:
@@ -114,8 +114,8 @@ def payload_builder(
             # Else, if two dashes in the geography and the last 3 characters are a valid DMA ID:
             elif (
                 str(geography_broad).count("-") == 2
-                and geography_broad[len(geography_broad) - 3 : len(geography_broad)]
-                in dma.dma_id_dict()
+                and str(geography_broad[len(geography_broad) - 3 : len(geography_broad)])
+                in dma.dma_id_to_name_dict()  # dma_id_dict()
             ):
                 # A geography with
                 #   1) a valid state state in the correct position,
@@ -154,6 +154,19 @@ def payload_builder(
 #     # payload.get_historical_interest(keywords)
 
 
+def index_as_first_col(indf, new_col_name):
+    """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
+    outdf = indf.copy()
+    outdf[new_col_name] = outdf.index
+    # Set new col name for the former IDX as first column
+    cols = outdf.columns.to_list()
+    cols = cols[-1:] + cols[:-1]
+    outdf = outdf[cols]
+    # Reset the index to be numerical.
+    outdf = outdf.reset_index(drop=True)
+    return outdf
+
+
 def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     """Generates a clean DF with a formatted GTIS column for either time or geography results
     with an optional ranking column for each UOA region."""
@@ -166,13 +179,14 @@ def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     # # # (See if this differs as time period for results differs. I.e. if UOA is a week vs a day).
     # # # # If it does, see spatial function way of resolving multiple possible UOAs.
     # # If spatial, UOA will vary: uoa_resolutions =['COUNTRY','REGION','DMA','CITY']
-    payload_df[uoa] = payload_df.index
-    # Set UOA col as first column
-    cols = payload_df.columns.to_list()
-    cols = cols[-1:] + cols[:-1]
-    payload_df = payload_df[cols]
-    # Reset the index to be numerical.
-    payload_df = payload_df.reset_index(drop=True)
+    # payload_df[uoa] = payload_df.index
+    # # Set UOA col as first column
+    # cols = payload_df.columns.to_list()
+    # cols = cols[-1:] + cols[:-1]
+    # payload_df = payload_df[cols]
+    # # Reset the index to be numerical.
+    # payload_df = payload_df.reset_index(drop=True)
+    payload_df = index_as_first_col(payload_df, uoa)
 
     # Add a rank to the dataframe. Only sort if geography.
     # if rank is True:
@@ -245,7 +259,8 @@ def subregion_identifier(subregion_input):
     # # This is the broadest, least precise geographic UOA supported.
     #
     # Finally, there are cities. 'CITY' returns city level data.
-    # # However, be warned: pytrends v4.8 in PyPi does not support all runs of City UOA trends. Updated 1 Feb 2022.
+    # # However, be warned: pytrends v4.8 in PyPi does not support all runs of City UOA trends.
+    # # # That version was updated 1 Feb 2022.
     # # # https://pypi.org/project/pytrends/
     # # Running with "CITY" as UOA of subregion results in:
     # # # * states for country payloads
@@ -257,10 +272,15 @@ def subregion_identifier(subregion_input):
     # # # Issue https://github.com/GeneralMills/pytrends/issues/316 still remains open; TBD if PR #509 fixes.
     # # # Unclear if issue 497 is applicable; pertains to non-USA regions, but user experiencing similar issue as above.
     # # # # https://github.com/GeneralMills/pytrends/issues/497
-    # # But, PR 509 has not been applied to the PyPi version of the repo.
+    # # But, Pull Request 509 has not been applied to the PyPi version of the repo.
     # # So, as long as PyPi remains behind GitHub, `pip install pytrends` will not be sufficient to work with cities.
     # # Solutions: pip install directly from GitHub or wait for new pytrends release.
     # # Also see: https://stackoverflow.com/questions/61435486/pytrends-fail-to-get-us-city-level-data
+    # # UPDATE: As of January 2023, the desired updates above *should* be included in v4.9.0.
+    # # # https://pypi.org/project/pytrends/4.9.0/
+    # # # While v4.8 in PyPi did not have Pull Request 509 included and GitHub's did, both v4.9 should include this.
+    # # # Upgrade to ~=4.9 to inherit.
+    # # # https://github.com/GeneralMills/pytrends/releases/tag/v4.9.0
     uoa_resolutions = ["COUNTRY", "REGION", "DMA", "CITY"]
 
     if subregion_input is None:
@@ -419,11 +439,11 @@ def extract_data(
 
         if region == "DMA":
             # Add a column to the extract df with the dma's unique ID based on the Schneider DMA shapefile (see README).
-            # Extract a dict = {DMA: its_id_number}
-            dma_id_reversedict = core.reverse_dict(dma.dma_id_dict())
-            # Apply those IDs to the DMAs in the dataframe
+            # Apply the IDs to the DMAs in the dataframe in a new column
+            # # Note: This could become a function within the dma.py to inherit in the future.
+            # # # Multiple downstream files need this DataFrame application of a DMA ID, so function-ize it.
             extracted_df["dma_id"] = extracted_df[region.lower()].apply(
-                lambda x: dma_id_reversedict[x]
+                lambda x: dma.dma_id_name_converter(x)
             )
 
         if suppress_prints is False:
