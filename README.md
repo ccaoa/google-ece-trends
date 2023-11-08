@@ -1,6 +1,7 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
+![Generic badge](https://img.shields.io/badge/version-0.0.4-blue.svg)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
@@ -29,7 +30,7 @@ and the spatial variation across a geographic subunit of the broader geography (
 a [media market](https://www.nielsen.com/dma-regions/), a major city).
 
 ## Usage
-### `pull_data.py`
+### [`pull_data.py`](pull_data.py)
 This file allows for easy and custom pulls of Google Trends data for different times and places.
 #### Key functions:
 * **`connect_to_gtrends`** - Establishes a connection to Google Trends in a particular language (English default). 
@@ -40,14 +41,80 @@ This file allows for easy and custom pulls of Google Trends data for different t
 * **`extract_data_try`** - Extract any Google Trends data you want: any time, any place.
     Returns a pandas DataFrame.
     * Note: You MUST provide a payload into this function.
-### `store_data.py`
+### [`store_data.py`](store_data.py)
 This file allows for easy storage of already pulled Google Trends data.
 #### Key functions:
 * **`store_data`** - Store trends data in a particular location with specific location and time naming parameters.
     Ensure the output file name includes metadata on the time period of the data, date of data pull, and the dataset's name.
     Data can be stored as `.xlsx` or `.csv` (default).
+### [`summarize.py`](summarize.py)
+This file, using `trend_calculations.py` formulas, produces summary files that calculate statistics from previously pulled Google Trends data.
+#### Key functions:
+* **`append_raw_files_from_list`** - Appends a list of trends XLSX datasets into the summary XLSX 
+in preparation for the calculation of summary statistics.
+* **`calc_sumstats`** - Calculates the following statistics for the already-stored xlsx GTrends data:
+    * Average Interest Score (GTIS)
+    * Std Dev
+    * Number of observations
+    * Standard Error
+    * Confidence Interval
+    * Coverage Factor
+    * Expanded Uncertainty
+    * Rebased GTIS
+* **`summarize_collected_data`** - Wrapper for `calc_sumstats()` that summarizes appended data 
+and writes the results to the summary XLSX.
 
-# Acknowledgements
+### [`late2022_datapulls.py`](late2022_datapulls.py)
+This file pulls specific pieces of Google Trends ECE data for 23 AOIs in preparation for a publication on this method.
+#### Key functions:
+* **`append_raw_files_from_list`** - Appends a list of trends XLSX datasets into the summary XLSX 
+in preparation for the calculation of summary statistics.
+* **`full_run_gtrends`** - Runs the data pull and summarization for the 23 specified datasets.
+#### Other helping files:
+* [`datapulls22.bat`](datapulls22.bat) - Windows Batch file wrapper for executing [`late2022_datapulls.py`](late2022_datapulls.py).
+* [`schedule_gtrends_daily_run.bat`](schedule_gtrends_daily_run.bat) - Schedules a daily execution of [`datapulls22.bat`](datapulls22.bat) for automatic data pulls on Windos OS. 
+
+# Other
+## Acknowledgements
 Thanks to Jacob Schneider for his consultation on this work 
 and for providing a spatial shapefile for the Designated Market Areas (DMAs) of the USA. 
 See more on [his website](https://sites.google.com/view/jacob-schneider/resources).
+
+## Virtual Environments
+If you would like to use direct executable modules from this package as scripts, 
+you can create a virtual python environment (venv) to ensure no dependency conflicts. 
+To do this, this repository includes a tool to aid in setting up the venv on Windows operating systems. 
+
+### Windows `py_venv` Tool
+The `py_venv` subdirectory includes setup files that can create your venv for you. 
+To do this, first open the `.\py_venv\set_python_path.bat` in a text editor.
+Set the `PYTHON_PATH` variable to the base interpreter off of which you want the venv to be built.
+
+* Recommended: use your interpreter that was included in your ArcGIS Pro installation. 
+This will ensure you will have all geoprocessing functions accessible in your venv.
+
+Then, execute the following in a Windows command prompt with the current directory set to the root of this repo:
+
+```
+.\py_venv\setup.bat
+```
+
+This batch file will install a virtual python environment for you in the `py_venv` subdirectory 
+based on the specifications in the `.\requirements.in` file. 
+
+The `.\py_venv\requirements.txt` file is generated at the time of the venv setup.
+It indicates the most recent development environment in which the `ccaoa` package was constructed. 
+It is a full `pip freeze` of the development environment.
+If you have any package dependency issues, you can reference the `.\py_venv\requirements.txt` file to compare with your 
+current environment. 
+
+Remember to reference the newly created venv as your new python interpreter. 
+This will be located at `.\py_venv\venv\Scripts\python.exe`.
+
+To activate the venv directly in the Windows command prompt, enter
+```
+.\py_venv\venv\Scripts\activate
+```
+
+Warning: housing venvs in locations with excessively long paths may cause errors in installing or importing packages.
+Make sure to `git clone` the repository into a folder without a long file path.
