@@ -86,27 +86,28 @@ you can create a virtual python environment (venv) to ensure no dependency confl
 To do this, this repository includes a tool to aid in setting up the venv on Windows operating systems. 
 
 ### Windows `py_venv` Tool
-The `py_venv` subdirectory includes setup files that can create your venv for you. 
-To do this, first open the `.\py_venv\set_python_path.bat` in a text editor.
+The [`py_venv`](py_venv) subdirectory includes setup files that can create your venv for you. 
+
+To do this, first open the [`.\py_venv\set_python_path.bat`](py_venv/set_python_path.bat) in a text editor.
 Set the `PYTHON_PATH` variable to the base interpreter off of which you want the venv to be built.
 
 * Recommended: use your interpreter that was included in your ArcGIS Pro installation. 
 This will ensure you will have all geoprocessing functions accessible in your venv.
 
-Then, execute the following in a Windows command prompt with the current directory set to the root of this repo:
+Then, execute the following in a **Windows command prompt** with the current directory set to the root of this repo:
 
 ```
 .\py_venv\setup.bat
 ```
 
-This batch file will install a virtual python environment for you in the `py_venv` subdirectory 
-based on the specifications in the `.\requirements.in` file. 
+This batch file will install a virtual python environment for you in the [`py_venv` subdirectory](py_venv) 
+based on the specifications in the [`.\requirements.in` file](requirements.in). 
 
-The `.\py_venv\requirements.txt` file is generated at the time of the venv setup.
-It indicates the most recent development environment in which the `ccaoa` package was constructed. 
+The [`.\py_venv\requirements.txt` file](py_venv/requirements.txt) is generated at the time of the venv setup.
+It indicates the most recent development environment in which this repository was developed. 
 It is a full `pip freeze` of the development environment.
-If you have any package dependency issues, you can reference the `.\py_venv\requirements.txt` file to compare with your 
-current environment. 
+If you have any package dependency issues, you can reference the [`.\py_venv\requirements.txt`](py_venv/requirements.txt)
+ file to compare with your current environment. 
 
 Remember to reference the newly created venv as your new python interpreter. 
 This will be located at `.\py_venv\venv\Scripts\python.exe`.
