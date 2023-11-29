@@ -380,7 +380,8 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
 
 
 def append_raw_files_from_list(raw_files_paths_list: list, suppress_prints=False):
-    """Append all the raw target files (passed as an argument via a list item) to the summary sheets."""
+    """Append all the raw target files (passed as an argument via a list item) to the summary sheets.
+    Corresponds to Issue #8 in GitHub. """
     # If a summary sheet is not yet set up, it should be created in this process.
     # [agg.append_raw_data_fromfile(tf) for tf in raw_files_paths_list]
     # Could use the above to do this, but use for loop to do some helpful print statements
@@ -420,7 +421,8 @@ def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=Fal
 
 
 def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
-    """ Append the data from all of the raw data files in the directory passed as an argument. """
+    """ Append the data from all of the raw data files in the directory passed as an argument.
+    Corresponds to Issue #8 in GitHub. """
     if os.path.exists(raw_files_parent_dir):
         all_raw_files = [os.path.join(raw_files_parent_dir,rf) for rf in os.listdir(raw_files_parent_dir)]
         append_raw_files_from_list(all_raw_files, suppress_prints=suppress_prints)
@@ -433,7 +435,8 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 
 def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
     """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
-     Takes the directory housing the summary files as an argument. """
+     Takes the directory housing the summary files as an argument.
+      Corresponds to Issue #9  in GitHub: """
     if os.path.exists(summary_files_parent_dir):
         all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir) if af.endswith(".xlsx")]
         summarize_collected_data(all_agg_files, suppress_prints=suppress_prints)
