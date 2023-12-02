@@ -113,6 +113,24 @@ date_of_pull_field = "pull_date"
 gtis_average_field = "gtis_mean"
 
 
+def check_lock_status(file: str):
+    try:
+        with open(file, 'r'):
+            pass
+        return False  # File is not locked
+    except (PermissionError, OSError) as e:
+        # OS errors will capture file does not exist errors...
+        print(e)
+        return True  # File is locked
+
+
+def check_file_lock(outpath: str):
+    while check_lock_status(outpath) is True:
+        # Hold up the process until the lock is released.
+        time.sleep(2)
+    return False
+
+
 def raw_data_appending_prep(raw_gtrends_data_file):
     """ Functions common to both first init setup of raw data cumulative collection and appending new raw data."""
     raw_data_in_df = rc.file_to_df(raw_gtrends_data_file)
@@ -412,10 +430,15 @@ def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=Fal
     allfilscnt = len(list_of_summary_datasets)
     for sd in list_of_summary_datasets:
         # print(os.path.basename(sd))
+        counter = 0
+        while check_file_lock(sd) and counter < 99:
+            # Loop while the file is still locked. Add a failsafe to give it 99 tries.
+            counter += 1
+            pass
         calc_sumstats(sd)
-        counter+=1
+        counter += 1
         if core.string_to_bool(suppress_prints) is not True:
-            print(counter,'/',allfilscnt,"processed:   ",os.path.basename(sd))
+            print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:
         print("---------------------------------------------------------------")
 
