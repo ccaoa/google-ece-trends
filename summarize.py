@@ -118,9 +118,12 @@ def check_lock_status(file: str):
         # Try to rename the file, this will fail if the file is locked
         os.rename(file, file)
         return False  # File is not locked
-    except (PermissionError, FileNotFoundError, OSError) as e:
-        # OS errors will capture file does not exist errors...
-        print(e)
+    # except (PermissionError, FileNotFoundError, OSError) as e:
+    #     # OS errors will capture file does not exist errors...
+    #     print(e)
+    except Exception as e:
+        # Use a broader exception clause because none of the (PermissionError, FileNotFoundError, OSError) are working.
+        print(f"Error checking lock status: {e}")
         return True  # File is locked
 
 
