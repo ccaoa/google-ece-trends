@@ -115,10 +115,10 @@ gtis_average_field = "gtis_mean"
 
 def check_lock_status(file: str):
     try:
-        with open(file, 'r'):
-            pass
+        # Try to rename the file, this will fail if the file is locked
+        os.rename(file, file)
         return False  # File is not locked
-    except (PermissionError, OSError) as e:
+    except (PermissionError, FileNotFoundError, OSError) as e:
         # OS errors will capture file does not exist errors...
         print(e)
         return True  # File is locked
@@ -426,19 +426,23 @@ def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=Fal
     # Could use the above to do this, but use for loop to do some helpful print statements
     if core.string_to_bool(suppress_prints) is not True:
         print("Summarizing files.")
-    counter = 0
+    summarize_counter = 0
     allfilscnt = len(list_of_summary_datasets)
     for sd in list_of_summary_datasets:
         # print(os.path.basename(sd))
-        counter = 0
-        while check_file_lock(sd) and counter < 99:
+        lock_counter = 0
+        while check_file_lock(sd) and lock_counter < 99:
             # Loop while the file is still locked. Add a failsafe to give it 99 tries.
-            counter += 1
+            lock_counter += 1
             pass
+        # TODO Delete this testing print
+        print(os.path.basename(sd), "locked?", str(check_file_lock(sd)))
+        if lock_counter> 0:
+            print(str(lock_counter), 'loops waiting for summary file to unlock:',os.path.basename(sd))
         calc_sumstats(sd)
-        counter += 1
+        summarize_counter += 1
         if core.string_to_bool(suppress_prints) is not True:
-            print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
+            print(summarize_counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:
         print("---------------------------------------------------------------")
 
