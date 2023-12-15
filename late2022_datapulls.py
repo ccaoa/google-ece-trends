@@ -4,9 +4,9 @@ from ccaoa import core
 # from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store, dma, append as ap, summarize as agg
+    from . import pull_data as pull, store_data as store, dma, append as app, summarize as agg
 except ImportError:
-    import pull_data as pull, store_data as store, dma, append as ap, summarize as agg
+    import pull_data as pull, store_data as store, dma, append as app, summarize as agg
 
 storage_path = store.get_storage_path()
 
@@ -354,7 +354,7 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
     # Append the successfully pulled files into the corresponding raw data collection XLSX
-    ap.append_raw_data_from_files(successfully_stored_raw_data_files)# , suppress_prints=False)
+    app.append_raw_data_from_files(successfully_stored_raw_data_files)# , suppress_prints=False)
     print()
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
     # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \

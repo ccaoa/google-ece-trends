@@ -259,7 +259,7 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
         print("---------------------------------------------------------------")
 
 
-def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints=False):
+def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints: bool = False):
     """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
      Takes the directory housing the summary files as an argument.
       Corresponds to Issue #9  in GitHub: """
@@ -436,10 +436,10 @@ if __name__ == '__main__':
     # # simple test with only OR's DMAs.
     # summarize_or_dma_test()
 
-    # # Full run to completely recreate all the summary files!
-    # full_summary_run()
+    # # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
+    # separate_append_summary_test()
 
-    # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
-    separate_append_summary_test()
+    # Full run to completely recreate all the summary files!
+    full_append_and_summary_run()
 
     core.runtime(start)

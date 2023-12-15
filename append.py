@@ -132,7 +132,7 @@ def raw_data_appending_prep(raw_gtrends_data_file: str) -> pd.DataFrame:
     return transposed_sub_df
 
 
-def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFrame:
+def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bool = False) -> dict:#pd.DataFrame:
     """ Append raw Google Trends data stored as individual files to a larger summary collection of all data collected
     for the same given study time period and geography.
     This function will ppend all the raw target files (passed as an argument via a list item) to a collection XLSX.
@@ -142,7 +142,7 @@ def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFra
 
     # Find the summary dataset which to append the data.
     all_datasets_dict = {}  # A dictionary with append_dataset: [list_of_raw_files_to_append]
-    for rf in raw_gtrends_data_files:
+    for rf in raw_gtrends_data_files:  # For raw file in all the raw data files
         target_append_dataset = define_target_append_dataset(rf)
         # Add the connection between raw and append datasets to a dictionary.
         if target_append_dataset not in all_datasets_dict:
@@ -168,9 +168,12 @@ def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFra
             init_setup = False
         # try:
         # Loop through the raw datasets that need to be added to this collection of raw data dataset.
+        non_nulls = 0
         for raw_gtrends_data_file in all_datasets_dict[app_spreadsheet]:
             # Prepare your new raw data
             prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
+            if not suppress_prints:
+                non_nulls += len(prepped_raw_data.dropna(how='all'))
             # Only execute if the item is not the first in its list for an initial setup.
             if (not init_setup or raw_gtrends_data_file != first_raw_entry) and appended_df is not None:
                 # Append the data to the stuff that is already there.
@@ -183,6 +186,8 @@ def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFra
         # del init_setup
 
         # Edit and format the resulting all-raw-data dataframe
+        # # Pull this out of the `for each raw data file` loop b/c this only needs to be done once per append dataset.
+        # # # So do it at the end.
         # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
         appended_df = appended_df.replace(0, np.nan)
         # Sort by date to get the earliest rows on top.
@@ -209,6 +214,9 @@ def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFra
         # Output this data back to its original path.
         # # Do this by hard resetting/overwriting that file; there is no reason we need to update it.
         rc.df_to_file(appended_df, app_spreadsheet, add_to_existing_xlsx=False, sheet_xlsx=raw_data_collection_file_flag, overwrite_old_sheet=True)
+        if not suppress_prints:
+            # non_nulls = len(appended_df.dropna(how='all'))
+            print(f"Added {str(non_nulls)} datasets from {len(all_datasets_dict[app_spreadsheet])} {'raw_gtrends_data_files'.replace('_',' ')} to {os.path.basename(app_spreadsheet)}.")
 
     return all_datasets_dict
 
@@ -218,7 +226,7 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
     Corresponds to Issue #8 in GitHub. """
     if os.path.exists(raw_files_parent_dir):
         all_raw_files = [os.path.join(raw_files_parent_dir,rf) for rf in os.listdir(raw_files_parent_dir)]
-        appfiles_and_their_rawdata = append_raw_data_from_files(all_raw_files) #, suppress_prints=suppress_prints)
+        appfiles_and_their_rawdata = append_raw_data_from_files(all_raw_files, suppress_prints=suppress_prints)
         return appfiles_and_their_rawdata
     else:
         print("Does not exist as a file directory:", raw_files_parent_dir)
