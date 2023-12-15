@@ -273,7 +273,7 @@ def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints: 
         return None
 
 
-def full_append_and_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=app.summary_storage_path(),suppress_prints=False):
+def full_append_and_summary_run(raw_files_dir=store.get_storage_path(), summary_files_dir=app.summary_storage_path(), suppress_prints=False):
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
     This represents a clean workflow that builds all. summary XLSXs from the ground up. """
@@ -301,9 +301,13 @@ def full_append_and_summary_run(raw_files_dir=store.get_storage_path(),summary_f
         suppress_prints = False
 
     # Append all raw GTrends data files' contents to their summary XLSX datasets.
+    if not suppress_prints:
+        print("\nBEGINNING RAW DATA APPENDING...\n")
     app.append_all_raw_files(raw_files_dir, suppress_prints=suppress_prints)
     time.sleep(5)
     # Summarize all those files now.
+    if not suppress_prints:
+        print("\nSUMMARIZING CONSOLIDATED RAW DATA...\n")
     summarize_all_appended_data(summary_files_dir, suppress_prints=suppress_prints)
 
     return
