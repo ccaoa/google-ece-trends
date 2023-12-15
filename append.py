@@ -225,7 +225,7 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
     """ Append the data from all of the raw data files in the directory passed as an argument.
     Corresponds to Issue #8 in GitHub. """
     if os.path.exists(raw_files_parent_dir):
-        all_raw_files = [os.path.join(raw_files_parent_dir,rf) for rf in os.listdir(raw_files_parent_dir)]
+        all_raw_files = [os.path.join(raw_files_parent_dir,rf) for rf in os.listdir(raw_files_parent_dir) if (rf.endswith('.csv') or rf.endswith('.xlsx'))]
         appfiles_and_their_rawdata = append_raw_data_from_files(all_raw_files, suppress_prints=suppress_prints)
         return appfiles_and_their_rawdata
     else:
