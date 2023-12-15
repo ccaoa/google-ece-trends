@@ -213,35 +213,15 @@ def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFra
     return all_datasets_dict
 
 
-def append_raw_files_from_list(raw_files_paths_list: list, suppress_prints=False):
-    """Append all the raw target files (passed as an argument via a list item) to the summary sheets.
-    Corresponds to Issue #8 in GitHub. """
-    # If a summary sheet is not yet set up, it should be created in this process.
-    # [agg.append_raw_data_fromfile(tf) for tf in raw_files_paths_list]
-    # Could use the above to do this, but use for loop to do some helpful print statements
-    # TODO: Develop method where individual data are not repeatedly written to the summary stats xlsx. Instead, store appended DF in-memory, *then* write at the end.
-    if core.string_to_bool(suppress_prints) is not True:
-        print("Appending raw files.")
-    counter = 0
-    allfilscnt = len(raw_files_paths_list)
-    for tf in raw_files_paths_list:
-        append_raw_data_from_file(tf)
-        counter+=1
-        if core.string_to_bool(suppress_prints) is not True:
-            print(counter,'/',allfilscnt,"processed:   ",os.path.basename(tf))
-    if core.string_to_bool(suppress_prints) is not True:
-        print("---------------------------------------------------------------")
-
-
 def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
     """ Append the data from all of the raw data files in the directory passed as an argument.
     Corresponds to Issue #8 in GitHub. """
     if os.path.exists(raw_files_parent_dir):
         all_raw_files = [os.path.join(raw_files_parent_dir,rf) for rf in os.listdir(raw_files_parent_dir)]
-        append_raw_files_from_list(all_raw_files, suppress_prints=suppress_prints)
-        return all_raw_files
+        appfiles_and_their_rawdata = append_raw_data_from_files(all_raw_files) #, suppress_prints=suppress_prints)
+        return appfiles_and_their_rawdata
     else:
-        print("Does not exist as a file directory:",raw_files_parent_dir)
+        print("Does not exist as a file directory:", raw_files_parent_dir)
         print("  Try", store.get_storage_path())
         return store.get_storage_path()
 
