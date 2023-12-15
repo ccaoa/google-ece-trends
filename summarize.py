@@ -259,12 +259,13 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
         print("---------------------------------------------------------------")
 
 
-def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=False):
+def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints=False):
     """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
      Takes the directory housing the summary files as an argument.
       Corresponds to Issue #9  in GitHub: """
     if os.path.exists(summary_files_parent_dir):
-        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir) if af.endswith(".xlsx")]
+        # Filter down to only the append files that hold all the raw data records.
+        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir) if af.endswith(app.raw_data_collection_file_flag + ".xlsx")]
         summarize_collected_data(all_agg_files, suppress_prints=suppress_prints)
         return all_agg_files
     else:
@@ -272,7 +273,7 @@ def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=Fa
         return None
 
 
-def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=app.summary_storage_path(),suppress_prints=False):
+def full_append_and_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=app.summary_storage_path(),suppress_prints=False):
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
     This represents a clean workflow that builds all. summary XLSXs from the ground up. """
@@ -303,7 +304,7 @@ def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=ap
     app.append_all_raw_files(raw_files_dir, suppress_prints=suppress_prints)
     time.sleep(5)
     # Summarize all those files now.
-    summarize_all_summary_data(summary_files_dir, suppress_prints=suppress_prints)
+    summarize_all_appended_data(summary_files_dir, suppress_prints=suppress_prints)
 
     return
 
@@ -412,6 +413,18 @@ if __name__ == '__main__':
             if backup_flag not in sumfil
         ]
 
+    def separate_append_summary_test():
+        """ Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18"""
+        app_fils = [
+            r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\valentines_dma_df_20200214-20210214_raw_data_records.xlsx",
+            r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\mn_time_20200214-20210214_raw_data_records.xlsx"
+        ]
+        # sumtst = summarize_collected_data(app_fils, suppress_prints=False)
+        sumtst = summarize_all_appended_data(sum_data_pth)
+        return sumtst
+
+# -----------------------------------------------------------
+
     # julyfourthtest()
     # backup()
 
@@ -425,5 +438,8 @@ if __name__ == '__main__':
 
     # # Full run to completely recreate all the summary files!
     # full_summary_run()
+
+    # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
+    separate_append_summary_test()
 
     core.runtime(start)
