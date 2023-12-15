@@ -132,55 +132,86 @@ def raw_data_appending_prep(raw_gtrends_data_file: str) -> pd.DataFrame:
     return transposed_sub_df
 
 
-def append_raw_data_from_file(raw_gtrends_data_file: str) -> pd.DataFrame:
+def append_raw_data_from_files(raw_gtrends_data_files: list) -> dict:#pd.DataFrame:
     """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
     for the same given study time period and geography."""
+    # Check if the user only passed one file as a string.
+    raw_gtrends_data_files = [raw_gtrends_data_files] if type(raw_gtrends_data_files) == str else raw_gtrends_data_files
+
     # Find the summary dataset which to append the data.
-    target_append_dataset = define_target_append_dataset(raw_gtrends_data_file)
-    if os.path.exists(target_append_dataset) is False:
-        # Do stuff to setup the summary xlsx with the current raw data as its first entry.
-        setup_file = setup_append_spreadsheet(raw_gtrends_data_file)
-        # Load the entire XLSX that only has the one column.
-        appended_df = rc.file_to_df(setup_file)  # ,raw_data_collection_sheet)
-    else:
-        # Prepare your new raw data
-        prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
-        try:
-            # Append the data to the stuff that is already there.
+    all_datasets_dict = {}  # A dictionary with append_dataset: [list_of_raw_files_to_append]
+    for rf in raw_gtrends_data_files:
+        target_append_dataset = define_target_append_dataset(rf)
+        # Add the connection between raw and append datasets to a dictionary.
+        if target_append_dataset not in all_datasets_dict:
+            # If not, create a new list with the current rf
+            all_datasets_dict[target_append_dataset] = [rf]
+        else:
+            # If it exists, append rf to the existing list
+            all_datasets_dict[target_append_dataset].append(rf)
+
+    # Check if the target append datasets all exist.
+    for app_spreadsheet in all_datasets_dict:
+        first_raw_entry = all_datasets_dict[app_spreadsheet][0]
+        # for each raw data records XLSX:
+        if os.path.exists(app_spreadsheet) is False:
+            # Do stuff to setup the summary xlsx with the current raw data as its first entry.
+            setup_file = setup_append_spreadsheet(first_raw_entry)
+            # Load the entire XLSX that only has the one column.
+            appended_df = rc.file_to_df(setup_file)  # ,raw_data_collection_sheet)
+            init_setup = True
+        else:
             # Pull in the existing raw data records
-            existing_raw_records = rc.file_to_df(target_append_dataset)  # , raw_data_collection_sheet)
-            # # If using indexes: https://stackoverflow.com/a/34236431/15517267
-            # df.loc[["x", "y"]]
-            # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
-            appended_df = pd.concat([existing_raw_records,prepped_raw_data])
-            # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
-            appended_df = appended_df.replace(0, np.nan)
+            appended_df = rc.file_to_df(app_spreadsheet)
+            init_setup = False
+        # try:
+        # Loop through the raw datasets that need to be added to this collection of raw data dataset.
+        for raw_gtrends_data_file in all_datasets_dict[app_spreadsheet]:
+            # Only execute if the item is not the first in its list for an initial setup.
+            if not init_setup or raw_gtrends_data_file != first_raw_entry:
+                # Prepare your new raw data
+                prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
+                # Append the data to the stuff that is already there.
+                # # If using indexes: https://stackoverflow.com/a/34236431/15517267
+                # df.loc[["x", "y"]]
+                # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
+                appended_df = pd.concat([appended_df,prepped_raw_data])
+        # del init_setup
 
-            # Sort by date to get the earliest rows on top.
-            # # This is sorting 2023 early months over 2022 late months. Need the opposite.
-            # # Convert field to datetime
-            appended_df[date_of_pull_field] = pd.to_datetime(appended_df[date_of_pull_field], format='%m/%d/%Y')
-            # # Sort with the most recently added data on top.
-            appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=False)
-            # # Re-convert the date field to a favorable text format for output printing.
-            appended_df[date_of_pull_field] = appended_df[date_of_pull_field].dt.strftime('%m/%d/%Y')
+        # Edit and format the resulting all-raw-data dataframe
+        # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
+        appended_df = appended_df.replace(0, np.nan)
+        # Sort by date to get the earliest rows on top.
+        # # This is sorting 2023 early months over 2022 late months. Need the opposite.
+        # # Convert field to datetime
+        appended_df[date_of_pull_field] = pd.to_datetime(appended_df[date_of_pull_field], format='%m/%d/%Y')
+        # # Sort with the most recently added data on top.
+        appended_df = appended_df.sort_values(by=date_of_pull_field, ascending=False)
+        # # Re-convert the date field to a favorable text format for output printing.
+        appended_df[date_of_pull_field] = appended_df[date_of_pull_field].dt.strftime('%m/%d/%Y')
+        # Drop any rows that are complete duplicates.
+        # # This should keep rows with the same data collection date as long as the values are different.
+        # # This way we could presumably take multiple data measurements on the same day,
+        # # # collect different data, and use them all.
+        # https://stackoverflow.com/questions/23667369/drop-all-duplicate-rows-across-multiple-columns-in-python-pandas
+        appended_df = appended_df.drop_duplicates()
 
-            # Drop any rows that are complete duplicates.
-            # # This should keep rows with the same data collection date as long as the values are different.
-            # # This way we could presumably take multiple data measurements on the same day,
-            # # # collect different data, and use them all.
-            # https://stackoverflow.com/questions/23667369/drop-all-duplicate-rows-across-multiple-columns-in-python-pandas
-            appended_df = appended_df.drop_duplicates()
-        except ValueError or NameError:
-            # While the summary file exists, the raw data tabulation sheet does not.
-            # Create it and set this prepped raw data as the first record in the tab.
-            # setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
-            appended_df = prepped_raw_data  # rc.file_to_df(setup_file, raw_data_collection_sheet)
+        # except ValueError or NameError:
+        #     # While the summary file exists, the raw data tabulation sheet does not.
+        #     # Create it and set this prepped raw data as the first record in the tab.
+        #     # setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
+        #     appended_df = prepped_raw_data  # rc.file_to_df(setup_file, raw_data_collection_sheet)
 
-        # Output this data back into its original tab.
-        rc.df_to_file(appended_df,target_append_dataset, add_to_existing_xlsx=True, sheet_xlsx=raw_data_collection_file_flag, overwrite_old_sheet=True)
+        # Output this data back to its original path.
+        # # Do this by hard resetting/overwriting that file; there is no reason we need to update it.
+        rc.df_to_file(appended_df, app_spreadsheet, add_to_existing_xlsx=False, sheet_xlsx=raw_data_collection_file_flag, overwrite_old_sheet=True)
 
-    return appended_df
+    return all_datasets_dict
+
+
+def append_multiple_raw_data_files():
+    """ """
+    return
 
 
 def append_raw_files_from_list(raw_files_paths_list: list, suppress_prints=False):
@@ -219,5 +250,6 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 if __name__ == '__main__':
     tstfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231214.csv"
     anothertestfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231208.csv"
-    print(define_target_append_dataset(tstfil))
-    ret_df = append_raw_data_from_file(anothertestfil)
+    vtines_list = [r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231212.csv", r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231209.csv"]
+    print(define_target_append_dataset(vtines_list[0]))
+    ret_df = append_raw_data_from_files(vtines_list)
