@@ -1,17 +1,22 @@
 """
 This file will calculate summary statistics for raw google trends data that you pull.
 The results of this file should give you meaningful, reportable results.
+Goal: use the append data columns to calc in a new XLSX with each column's (eg, state, DMA, or date
+(day, week, month, etc whatever the temporal UOA was)) summary stats. Will have the same column headers as append dataset.
+The only difference will be the rows: raw data values collected into one sheet or summary stats of that data.
+Similar (but not identical) to the SSM GD6/7s or map notes.
 """
 
-import os, datetime as dt, time, numpy as np, pandas as pd
-from ccaoa import core, raccoon as rc
+import os, time, numpy as np, pandas as pd
 from pathlib import Path
-#from scipy import stats
+
+from ccaoa import core, raccoon as rc
+
 
 try:
-    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append
+    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as ap
 except ImportError:
-    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append
+    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as ap
 
 
 # Need to Transpose the individual data pull records, append them to the master pull list, and recalc the sum stats.
@@ -23,76 +28,26 @@ except ImportError:
 #   * N
 #   * Coverage Factor
 #   * Expanded Uncertainty
-
-# Depreciating this as this functionality is now included in ccaoa raccoon module.
-# def index_as_first_col(indf, new_col_name):
-#     """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
-#     outdf = indf.copy()
-#     outdf[new_col_name] = outdf.index
-#     # Set new col name for the former IDX as first column
-#     cols = outdf.columns.to_list()
-#     cols = cols[-1:] + cols[:-1]
-#     outdf = outdf[cols]
-#     # Reset the index to be numerical.
-#     outdf = outdf.reset_index(drop=True)
-#     return outdf
+summary_stats_file_flag = "summary_stats"
+date_of_pull_field = ap.date_of_pull_field
+gtis_average_field = ap.gtis_average_field
 
 
-# Goal:
-# FIRST: Get a tab in a summary xlsx sheet to have columns with all UOAs (eg states or DMAs, whatever they may be) or
-# dates (if a temporal DF) & each row is a *pull date* regardless of geog vs temporal dataset.
-# THEN: use the columns to calc in a new, other tab each column's (eg, state, DMA, or date
-# (day, week, month, etc whatever the temporal UOA was)) summary stats. Both tabs will have the same column headers.
-# The only difference will be the rows: raw data values collected into one sheet or summary stats of that data.
-# Similar (but not identical) to the SSM GD6/7s or map notes.
-
-def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
-    """ Define the local path in which you'll store summary result XLSXs. """
-    storage_path = store.get_storage_path()
-    if same_as_raw_storage is True:
-        return storage_path
-    else:
-        parent_dir = os.path.dirname(storage_path)
-        if use_parent_dir is True:
-            return parent_dir
-        else:
-            # Default to sibling directory in this case named "summary_data"
-            name_sibling_dir="summary_data"
-            sibling_dir_path = os.path.join(parent_dir,name_sibling_dir)
-            if os.path.exists(sibling_dir_path) is False:
-                # Create that sibling dir if it does not exist.
-                os.mkdir(sibling_dir_path)
-            return sibling_dir_path
-
-
-
-
-# def append_raw_data_fromdf(raw_gtrends_data_file):
-#     """Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
-#     for the same given study time period and geography."""
-
-
-def check_lock_status(file: str):
-    try:
-        with open(file, 'r'):
-            pass
-        return False  # File is not locked
-    except (PermissionError, OSError) as e:
-        # OS errors will capture file does not exist errors...
-        print(e)
-        return True  # File is locked
-
-
-def check_file_lock(outpath: str):
-    while check_lock_status(outpath) is True:
-        # Hold up the process until the lock is released.
-        time.sleep(2)
-    return False
+def define_target_summary_dataset(raw_data_file: str, out_file_flag: str = summary_stats_file_flag) -> str:
+    """ Use the name of the raw data file to target which summary Xlsx you'll be using. """
+    if os.path.exists(raw_data_file) is False:
+        raise FileNotFoundError(raw_data_file)
+    dataset_name = Path(raw_data_file).stem
+    dataset_name = dataset_name[:dataset_name.rfind("_")]
+    sumstorpath = ap.summary_storage_path()
+    out_file_flag = str(out_file_flag if out_file_flag.startswith('_') else '_' + out_file_flag)
+    summary_dataset_name = dataset_name + out_file_flag + '.xlsx'
+    full_summary_file_path = os.path.join(sumstorpath, summary_dataset_name)
+    return full_summary_file_path
 
 
 def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
     """ First-time setup of data collection and summarizing structure for GTrends data analysis. """
-    basename = os.path.basename(raw_gtrends_data_file)
     target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
     # Check to see if the file already exists
     exists = False
@@ -112,13 +67,6 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
     # # The conditional here may not be necessary
     if exists is False:
         # Create the summary spreadsheet from the raw data.
-
-        # FIRST: We need to setup the raw data records collection sheet. All future raw data will be appended here.
-        # All we need are the UOA column (eg, date, dma, state, etc) and the GTIS.
-        # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
-        prepped_raw_data = append.raw_data_appending_prep(raw_gtrends_data_file)
-        # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
-        rc.df_to_file(prepped_raw_data,target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
 
         # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
         # # After the transpose, the UOA features are now the new columns.
@@ -141,8 +89,6 @@ def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
         return target_summary_dataset
     else:
         return None
-
-
 
 
 def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
@@ -326,7 +272,7 @@ def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=Fa
         return None
 
 
-def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=summary_storage_path(),suppress_prints=False):
+def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=ap.summary_storage_path(),suppress_prints=False):
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
     This represents a clean workflow that builds all. summary XLSXs from the ground up. """

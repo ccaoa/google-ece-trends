@@ -1,11 +1,40 @@
-import os, datetime as dt
+"""
+Goal: Produce an append xlsx sheet with columns with all UOAs (eg states or DMAs, whatever they may be) or
+dates (if a temporal DF) & each row is a *pull date* regardless of geog vs temporal dataset.
+"""
 
+import os, datetime as dt, numpy as np, pandas as pd
+from pathlib import Path
+# from scipy import stats
 from ccaoa import core, raccoon as rc
 
-raw_data_collection_sheet = "raw_data_records"
-summary_stats_sheet="summary_stats"
+try:
+    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc
+except ImportError:
+    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc
+
+raw_data_collection_file_flag = "raw_data_records"
 date_of_pull_field = "pull_date"
 gtis_average_field = "gtis_mean"
+
+
+def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
+    """ Define the local path in which you'll store summary result XLSXs. """
+    storage_path = store.get_storage_path()
+    if same_as_raw_storage is True:
+        return storage_path
+    else:
+        parent_dir = os.path.dirname(storage_path)
+        if use_parent_dir is True:
+            return parent_dir
+        else:
+            # Default to sibling directory in this case named "summary_data"
+            name_sibling_dir="summary_data"
+            sibling_dir_path = os.path.join(parent_dir,name_sibling_dir)
+            if os.path.exists(sibling_dir_path) is False:
+                # Create that sibling dir if it does not exist.
+                os.mkdir(sibling_dir_path)
+            return sibling_dir_path
 
 
 def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
@@ -34,17 +63,47 @@ def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, co
     return work_df
 
 
-def define_target_summary_dataset(raw_data_file):
+def define_target_append_dataset(raw_data_file: str, out_file_flag: str = raw_data_collection_file_flag) -> str:
     """ Use the name of the raw data file to target which summary Xlsx you'll be using. """
     if os.path.exists(raw_data_file) is False:
         raise FileNotFoundError(raw_data_file)
     dataset_name = Path(raw_data_file).stem
     dataset_name = dataset_name[:dataset_name.rfind("_")]
-    # This dataset name will be identical to the summary dataset name
-    sumstorpath=summary_storage_path()
-    summary_dataset_name = dataset_name+'.xlsx'
+    sumstorpath = summary_storage_path()
+    out_file_flag = str(out_file_flag if out_file_flag.startswith('_') else '_' + out_file_flag)
+    summary_dataset_name = dataset_name + out_file_flag + '.xlsx'
     full_summary_file_path = os.path.join(sumstorpath, summary_dataset_name)
     return full_summary_file_path
+
+
+def setup_append_spreadsheet(raw_gtrends_data_file,force=False):
+    """ First-time setup of data collection and summarizing structure for GTrends data analysis. """
+    target_summary_dataset = define_target_append_dataset(raw_gtrends_data_file)
+    # Check to see if the file already exists
+    exists = False
+    if os.path.exists(target_summary_dataset) is True:
+        # The document already exists. Be very careful to not destroy your data!
+        print("The", os.path.basename(target_summary_dataset), 'summary file already exists.')
+        if force is True:
+            # If you're sure........
+            print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
+            os.remove(target_summary_dataset)
+            exists = False
+        else:
+            print("  The summary file will not be removed or refreshed.")
+            exists = True
+
+    # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
+    # # The conditional here may not be necessary
+    if exists is False:
+        # Create the summary spreadsheet from the raw data.
+
+        # FIRST: We need to setup the raw data records collection sheet. All future raw data will be appended here.
+        # All we need are the UOA column (eg, date, dma, state, etc) and the GTIS.
+        # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
+        prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
+        # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
+        rc.df_to_file(prepped_raw_data, target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
 
 
 def raw_data_appending_prep(raw_gtrends_data_file):
@@ -68,7 +127,6 @@ def raw_data_appending_prep(raw_gtrends_data_file):
     transposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True, old_cols_as_index=False,
                                      col_of_oldcolumns_name=date_of_pull_field)
     return transposed_sub_df
-
 
 
 def append_raw_data_fromfile(raw_gtrends_data_file):
@@ -152,3 +210,8 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
         print("Does not exist as a file directory:",raw_files_parent_dir)
         print("  Try", store.get_storage_path())
         return store.get_storage_path()
+
+
+if __name__ == '__main__':
+    tstfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231214.csv"
+    print(define_target_append_dataset(tstfil))
