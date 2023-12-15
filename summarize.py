@@ -14,9 +14,9 @@ from ccaoa import core, raccoon as rc
 
 
 try:
-    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as ap
+    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as app
 except ImportError:
-    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as ap
+    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as app
 
 
 # Need to Transpose the individual data pull records, append them to the master pull list, and recalc the sum stats.
@@ -29,69 +29,71 @@ except ImportError:
 #   * Coverage Factor
 #   * Expanded Uncertainty
 summary_stats_file_flag = "summary_stats"
-date_of_pull_field = ap.date_of_pull_field
-gtis_average_field = ap.gtis_average_field
+date_of_pull_field = app.date_of_pull_field
+gtis_average_field = app.gtis_average_field
 
 
-def define_target_summary_dataset(raw_data_file: str, out_file_flag: str = summary_stats_file_flag) -> str:
+def define_target_summary_dataset(raw_or_append_data_file: str, out_file_flag: str = summary_stats_file_flag) -> str:
     """ Use the name of the raw data file to target which summary Xlsx you'll be using. """
-    if os.path.exists(raw_data_file) is False:
-        raise FileNotFoundError(raw_data_file)
-    dataset_name = Path(raw_data_file).stem
+    if os.path.exists(raw_or_append_data_file) is False:
+        raise FileNotFoundError(raw_or_append_data_file)
+    # Get the input file's basename
+    dataset_name = Path(raw_or_append_data_file).stem
+    # Remove the append file naming convention
+    dataset_name = dataset_name.replace(app.raw_data_collection_file_flag,'')
+    # Replace the file naming flag with the summary stats flag.
     dataset_name = dataset_name[:dataset_name.rfind("_")]
-    sumstorpath = ap.summary_storage_path()
+    sumstorpath = app.summary_storage_path()
     out_file_flag = str(out_file_flag if out_file_flag.startswith('_') else '_' + out_file_flag)
     summary_dataset_name = dataset_name + out_file_flag + '.xlsx'
     full_summary_file_path = os.path.join(sumstorpath, summary_dataset_name)
     return full_summary_file_path
 
 
-def setup_summary_spreadsheet(raw_gtrends_data_file,force=False):
-    """ First-time setup of data collection and summarizing structure for GTrends data analysis. """
-    target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
-    # Check to see if the file already exists
-    exists = False
-    if os.path.exists(target_summary_dataset) is True:
-        # The document already exists. Be very careful to not destroy your data!
-        print("The", os.path.basename(target_summary_dataset), 'summary file already exists.')
-        if force is True:
-            # If you're sure........
-            print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
-            os.remove(target_summary_dataset)
-            exists = False
-        else:
-            print("  The summary file will not be removed or refreshed.")
-            exists = True
-
-    # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
-    # # The conditional here may not be necessary
-    if exists is False:
-        # Create the summary spreadsheet from the raw data.
-
-        # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
-        # # After the transpose, the UOA features are now the new columns.
-        # # They will also become the columns for the summary stats data.
-        # stats_df = transposed_sub_df.copy()
-        # # One way to do it is keep the dates as the columns and add rows:
-        # pd.concat([mnsubsettransposetime, pd.DataFrame(index=["IDXbaby"]), pd.DataFrame(index=['haha'])], axis=0,
-        #           ignore_index=False)
-        # Or, it could revert to dates being rows and the GTIS and error etc are column headers since that's the primary study var for this dataset.
-        stats_df = rc.file_to_df(raw_gtrends_data_file)
-        # We only need the UOA and the GTIS (and maybe keep the DMA ID/state FIPS), nothing else
-        dropcols = ['rank','isPartial']
-        stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
-        # Rename the GTIS field to make it clear that it's the average GTIS, not a single record.
-        stats_df = stats_df.rename(columns={'gtis':gtis_average_field})
-        # The rest of the calcs will be shared by downstream processes, so write function for that.
-        # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
-        rc.df_to_file(stats_df,target_summary_dataset,index=False,sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
-
-        return target_summary_dataset
-    else:
-        return None
+# def setup_summary_spreadsheet(raw_gtrends_data_file: str, force: bool = False) -> str:
+#     """ First-time setup of data collection and summarizing structure for GTrends data analysis. """
+#     target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
+#     # Check to see if the file already exists
+#     exists = False
+#     if os.path.exists(target_summary_dataset) is True:
+#         # The document already exists. Be very careful to not destroy your data!
+#         print("The", os.path.basename(target_summary_dataset), 'summary file already exists.')
+#         if force is True:
+#             # If you're sure........
+#             print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
+#             os.remove(target_summary_dataset)
+#             exists = False
+#         else:
+#             print("  The summary file will not be removed or refreshed.")
+#             exists = True
+#
+#     # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
+#     # # The conditional here may not be necessary
+#     if exists is False:
+#         # Create the summary spreadsheet from the raw data.
+#
+#         # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
+#         # # After the transpose, the UOA features are now the new columns.
+#         # # They will also become the columns for the summary stats data.
+#         # stats_df = transposed_sub_df.copy()
+#         # # One way to do it is keep the dates as the columns and add rows:
+#         # pd.concat([mnsubsettransposetime, pd.DataFrame(index=["IDXbaby"]), pd.DataFrame(index=['haha'])], axis=0,
+#         #           ignore_index=False)
+#         # Or, it could revert to dates being rows and the GTIS and error etc are column headers since that's the primary study var for this dataset.
+#         stats_df = rc.file_to_df(raw_gtrends_data_file)
+#         # We only need the UOA and the GTIS (and maybe keep the DMA ID/state FIPS), nothing else
+#         dropcols = ['rank','isPartial']
+#         stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
+#         # Rename the GTIS field to make it clear that it's the average GTIS, not a single record.
+#         stats_df = stats_df.rename(columns={'gtis':gtis_average_field})
+#         # The rest of the calcs will be shared by downstream processes, so write function for that.
+#         # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
+#         rc.df_to_file(stats_df,target_summary_dataset, index=False, sheet_xlsx=summary_stats_file_flag, add_to_existing_xlsx=True)
+#
+#     return target_summary_dataset
 
 
-def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
+def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
     """
     Calculate the Summary Statistics (top 3 lines from the old GTrends xlsxs):
         * Average
@@ -104,22 +106,29 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
         * Rebased GTIS
     """
     # Get data as it is
-    try:
-        sumstats_df = rc.file_to_df(summary_xlsx,summary_stats_sheet)
-    except ValueError or NameError:
-        # The summary doc that exists does not have the summary_stats_sheet for some reason.
-        # Use an empty working dataframe going forward.
-        sumstats_df = pd.DataFrame()
-        # # After testing for Issue #6, it was determined that the rc.df_to_file() at the end of this function is
-        # # # sufficient to add the summary_stats_sheet as a new sheet to the XLSX, even with `add_to_existing_xlsx=True`
-        # # # and `overwrite_old_sheet=True` arguments.
-        # # So, we don't need to artificially create the sheet here; it'll get handled later.
-        # rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
-    raw_data_df = rc.file_to_df(summary_xlsx, raw_data_collection_sheet)
+
+
+    # # What if we pulled this out of this function to make it a purely mathmatical one?
+    # try:
+    #     sumstats_df = rc.file_to_df(summary_xlsx,summary_stats_sheet)
+    # except ValueError or NameError:
+    #     # The summary doc that exists does not have the summary_stats_sheet for some reason.
+    #     # Use an empty working dataframe going forward.
+    #     sumstats_df = pd.DataFrame()
+    #     # # After testing for Issue #6, it was determined that the rc.df_to_file() at the end of this function is
+    #     # # # sufficient to add the summary_stats_sheet as a new sheet to the XLSX, even with `add_to_existing_xlsx=True`
+    #     # # # and `overwrite_old_sheet=True` arguments.
+    #     # # So, we don't need to artificially create the sheet here; it'll get handled later.
+    #     # rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True)
+    #
+    sumstats_df = pd.DataFrame()
+
+
+    raw_data_df = rc.file_to_df(appended_data_xlsx)#, raw_data_collection_sheet)
     # SumStats Vars not previously defined
     # gtis_average_field  # Previously defined
     # UOA Column. Needs to be dynamic to work with time or geography UOA.
-    uoa_col = (os.path.basename(summary_xlsx)).split("_")[1]# 'dma'
+    uoa_col = (os.path.basename(appended_data_xlsx)).split("_")[1]# 'dma'
     covfactfield='cov_fact_k'
     std_dev_col = 'std_dev'
     xpduncertainfield='expd_uncrt'
@@ -135,7 +144,7 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
-    transposed_sub_df = append.transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
+    transposed_sub_df = app.transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
     sumstats_df[uoa_col] = transposed_sub_df[date_of_pull_field]  # 'pull_date'
     # Add dma_id column if it's a Media Market (DMA) UOA.
     # # This code cannot appear any earlier than here because this is where the UOA's column values are defined,
@@ -222,35 +231,26 @@ def calc_sumstats(summary_xlsx, coverage_factor_k=2, gtis_sort=True):
     # sumstats_df.columns.to_list()
     # print(sumstats_df.columns)
 
-    # Write the results back to the XLSX
-    # # Make sure the "summary_stats" sheet is the first sheet in the output by using the `sheet_is_first_tab` argument.
-    rc.df_to_file(sumstats_df,summary_xlsx, sheet_xlsx=summary_stats_sheet, add_to_existing_xlsx=True,overwrite_old_sheet=True,sheet_is_first_tab=True)
+    # Write the results to the appropriate summary XLSX, separate from the appended raw data since >v0.0.4.
+    summary_xlsx = define_target_summary_dataset(appended_data_xlsx)
+    rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_file_flag, add_to_existing_xlsx=False)
 
     return sumstats_df
 
 # The following functions employ the above to process multiple files simultaneously.
 
 
-
-
-def summarize_collected_data(list_of_summary_datasets: list, suppress_prints=False):
+def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: bool = False):
     """
-    Use a list of summary xlsx datasets representing distinct and unique G Trends instances for which you're collecting
-    samples and summarize all the raw data records already recorded in the summary sheets
+    Use a list of appended xlsx datasets representing distinct and unique G Trends instances for which you're collecting
+    samples and summarize all the raw data records already recorded in the summary sheets.
     """
-    # [agg.calc_sumstats(sd) for sd in list_of_summary_datasets]
-    # Could use the above to do this, but use for loop to do some helpful print statements
     if core.string_to_bool(suppress_prints) is not True:
         print("Summarizing files.")
     counter = 0
-    allfilscnt = len(list_of_summary_datasets)
-    for sd in list_of_summary_datasets:
+    allfilscnt = len(list_of_appended_datasets)
+    for sd in list_of_appended_datasets:
         # print(os.path.basename(sd))
-        counter = 0
-        while check_file_lock(sd) and counter < 99:
-            # Loop while the file is still locked. Add a failsafe to give it 99 tries.
-            counter += 1
-            pass
         calc_sumstats(sd)
         counter += 1
         if core.string_to_bool(suppress_prints) is not True:
@@ -272,15 +272,16 @@ def summarize_all_summary_data(summary_files_parent_dir: str, suppress_prints=Fa
         return None
 
 
-def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=ap.summary_storage_path(),suppress_prints=False):
+def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=app.summary_storage_path(),suppress_prints=False):
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
     This represents a clean workflow that builds all. summary XLSXs from the ground up. """
-
+    # TODO update this comment thread with >v0.0.4 updates
     # This right now represents a first attempt at this function.
     # # However, using the append_all_raw_files() function is highly inefficient.
     # # There are 3.8K raw GTrends files as of 7.7.23, and appending them one-by-one takes a very long time.
     # # Futhermore, I ran into file permission errors while looping through the raw data.
+    # # # Issue #16 https://github.com/ccaoa/google-ece-trends/issues/16
     # Goal: Do the append in-memory one data category (eg 1 of the 23 categories) at a time.
     # # Then, export that to the summary file raw_data tab so it writes only once instead of ~150 times.
     # # Use as many existing functions as possible to do this though!
@@ -299,7 +300,7 @@ def full_summary_run(raw_files_dir=store.get_storage_path(),summary_files_dir=ap
         suppress_prints = False
 
     # Append all raw GTrends data files' contents to their summary XLSX datasets.
-    append.append_all_raw_files(raw_files_dir, suppress_prints=suppress_prints)
+    app.append_all_raw_files(raw_files_dir, suppress_prints=suppress_prints)
     time.sleep(5)
     # Summarize all those files now.
     summarize_all_summary_data(summary_files_dir, suppress_prints=suppress_prints)
@@ -314,7 +315,7 @@ if __name__ == '__main__':
     # base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
     # base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
     raw_data_pth = store.get_storage_path()#os.path.join(base_path,"raw_data")
-    sum_data_pth = summary_storage_path()  # os.path.join(base_path, "summary_data")
+    sum_data_pth = app.summary_storage_path()  # os.path.join(base_path, "summary_data")
 
 
     def og_sumtesting():
@@ -357,7 +358,7 @@ if __name__ == '__main__':
 
         # # Apppend test
         # append_raw_data_fromfile(geogappndpth)
-        append.append_raw_data_fromfile(vtine_dma3)
+        app.append_raw_data_from_files(vtine_dma3)
         # [append_raw_data_fromfile(txf) for txf in tx_rawdata_fils]
         # [append_raw_data_fromfile(rq) for rq in rqz]
         # time.sleep(1)
@@ -391,7 +392,7 @@ if __name__ == '__main__':
         independence_files = [os.path.join(raw_data_pth,f) for f in os.listdir(raw_data_pth) if "20230704" in f]
         # independence_files = [fi.replace("20230704","20230630") for fi in independence_files if "oh_" in fi]
         # [define_target_summary_dataset(fi) for fi in independence_files]
-        append.append_raw_files_from_list(independence_files)
+        app.append_raw_data_from_files(independence_files)
         return independence_files
 
     def backup():
@@ -415,7 +416,7 @@ if __name__ == '__main__':
     # backup()
 
     # Summarize the already-appended data for all summary xlsxs in Summary Data directory.
-    summarize_all_summary_data(sum_data_pth)
+    # summarize_all_summary_data(sum_data_pth)
     # summarize_collected_data([r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\oh_time_20180603-20220910.xlsx",
     #                           r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\or_dma_20200214-20210214.xlsx"])
 
