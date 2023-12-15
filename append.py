@@ -76,21 +76,21 @@ def define_target_append_dataset(raw_data_file: str, out_file_flag: str = raw_da
     return full_summary_file_path
 
 
-def setup_append_spreadsheet(raw_gtrends_data_file,force=False):
+def setup_append_spreadsheet(raw_gtrends_data_file: str, force_refresh: bool = False) -> str:
     """ First-time setup of data collection and summarizing structure for GTrends data analysis. """
-    target_summary_dataset = define_target_append_dataset(raw_gtrends_data_file)
+    target_append_dataset = define_target_append_dataset(raw_gtrends_data_file)
     # Check to see if the file already exists
     exists = False
-    if os.path.exists(target_summary_dataset) is True:
+    if os.path.exists(target_append_dataset) is True:
         # The document already exists. Be very careful to not destroy your data!
-        print("The", os.path.basename(target_summary_dataset), 'summary file already exists.')
-        if force is True:
+        print("The", os.path.basename(target_append_dataset), 'summary file already exists.')
+        if core.string_to_bool(force_refresh) is True:
             # If you're sure........
-            print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
-            os.remove(target_summary_dataset)
+            print("  Refreshing the file and building from scratch in", os.path.dirname(target_append_dataset))
+            os.remove(target_append_dataset)
             exists = False
         else:
-            print("  The summary file will not be removed or refreshed.")
+            print("\tThe summary file will not be removed or refreshed.")
             exists = True
 
     # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
@@ -103,11 +103,14 @@ def setup_append_spreadsheet(raw_gtrends_data_file,force=False):
         # # The UOA col will be the first one b/c of data formatting in `pull_data.py`.
         prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
         # Output the first sheet/tab of the xlsx to = the transposed data & the GTIS.
-        rc.df_to_file(prepped_raw_data, target_summary_dataset,index=False,sheet_xlsx=raw_data_collection_sheet)
+        rc.df_to_file(prepped_raw_data, target_append_dataset, index=False, sheet_xlsx=raw_data_collection_file_flag)
+
+    return target_append_dataset
 
 
-def raw_data_appending_prep(raw_gtrends_data_file):
-    """ Functions common to both first init setup of raw data cumulative collection and appending new raw data."""
+def raw_data_appending_prep(raw_gtrends_data_file: str) -> pd.DataFrame:
+    """ Functions common to both first init setup of raw data cumulative collection and appending new raw data.
+    Returns a transposed version of the input raw data in pd.DataFrame format. """
     raw_data_in_df = rc.file_to_df(raw_gtrends_data_file)
     # Ensure top and rising Qs "value" columns get renamed to 'gtis' for consistency and downstream functionality.
     # # Will not affect DFs without a "value" column.
@@ -129,28 +132,29 @@ def raw_data_appending_prep(raw_gtrends_data_file):
     return transposed_sub_df
 
 
-def append_raw_data_fromfile(raw_gtrends_data_file):
+def append_raw_data_from_file(raw_gtrends_data_file: str) -> pd.DataFrame:
     """ Append raw Google Trends data stored as an individual file to a larger summary collection of all data collected
     for the same given study time period and geography."""
     # Find the summary dataset which to append the data.
-    target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
-    if os.path.exists(target_summary_dataset) is False:
+    target_append_dataset = define_target_append_dataset(raw_gtrends_data_file)
+    if os.path.exists(target_append_dataset) is False:
         # Do stuff to setup the summary xlsx with the current raw data as its first entry.
-        setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
-        appended_df = rc.file_to_df(setup_file,raw_data_collection_sheet)
+        setup_file = setup_append_spreadsheet(raw_gtrends_data_file)
+        # Load the entire XLSX that only has the one column.
+        appended_df = rc.file_to_df(setup_file)  # ,raw_data_collection_sheet)
     else:
         # Prepare your new raw data
         prepped_raw_data = raw_data_appending_prep(raw_gtrends_data_file)
         try:
             # Append the data to the stuff that is already there.
             # Pull in the existing raw data records
-            existing_raw_records = rc.file_to_df(target_summary_dataset, raw_data_collection_sheet)
+            existing_raw_records = rc.file_to_df(target_append_dataset)  # , raw_data_collection_sheet)
             # # If using indexes: https://stackoverflow.com/a/34236431/15517267
             # df.loc[["x", "y"]]
             # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
             appended_df = pd.concat([existing_raw_records,prepped_raw_data])
             # 0s seem to mean something wonky with the data source has gone on. We don't want those. Null out the 0s.
-            appended_df = appended_df.replace(0,np.nan)
+            appended_df = appended_df.replace(0, np.nan)
 
             # Sort by date to get the earliest rows on top.
             # # This is sorting 2023 early months over 2022 late months. Need the opposite.
@@ -171,10 +175,10 @@ def append_raw_data_fromfile(raw_gtrends_data_file):
             # While the summary file exists, the raw data tabulation sheet does not.
             # Create it and set this prepped raw data as the first record in the tab.
             # setup_file = setup_summary_spreadsheet(raw_gtrends_data_file)
-            appended_df = prepped_raw_data #rc.file_to_df(setup_file, raw_data_collection_sheet)
+            appended_df = prepped_raw_data  # rc.file_to_df(setup_file, raw_data_collection_sheet)
 
         # Output this data back into its original tab.
-        rc.df_to_file(appended_df,target_summary_dataset,add_to_existing_xlsx=True,sheet_xlsx=raw_data_collection_sheet,overwrite_old_sheet=True)
+        rc.df_to_file(appended_df,target_append_dataset, add_to_existing_xlsx=True, sheet_xlsx=raw_data_collection_file_flag, overwrite_old_sheet=True)
 
     return appended_df
 
@@ -191,7 +195,7 @@ def append_raw_files_from_list(raw_files_paths_list: list, suppress_prints=False
     counter = 0
     allfilscnt = len(raw_files_paths_list)
     for tf in raw_files_paths_list:
-        append_raw_data_fromfile(tf)
+        append_raw_data_from_file(tf)
         counter+=1
         if core.string_to_bool(suppress_prints) is not True:
             print(counter,'/',allfilscnt,"processed:   ",os.path.basename(tf))
@@ -214,4 +218,6 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 
 if __name__ == '__main__':
     tstfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231214.csv"
+    anothertestfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231208.csv"
     print(define_target_append_dataset(tstfil))
+    ret_df = append_raw_data_from_file(anothertestfil)
