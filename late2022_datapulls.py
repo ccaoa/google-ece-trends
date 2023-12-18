@@ -32,9 +32,8 @@ def full_gtrends_pull(low_search_volume_results=True):
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
     init_late2022_studyperiod = "2018-06-03 2022-09-10"
-    filing_dict[
-        init_late2022_studyperiod
-    ] = []  # Establish dictionary list for downstream filing.
+    # Establish dictionary list for downstream filing.
+    filing_dict[init_late2022_studyperiod] = []
     geog_usa = "US"
     # Build the payload
     usa_payload = pull.payload_builder(
@@ -126,9 +125,8 @@ def full_gtrends_pull(low_search_volume_results=True):
         oh_time,
     ]
     # Add each df collected to the filing dictionary
-    [
-        filing_dict[init_late2022_studyperiod].append(u) for u in u_fil_list
-    ]  # if u not in filing_dict[init_late2022_studyperiod]]  # <- Causes errors https://stackoverflow.com/questions/18548370/pandas-can-only-compare-identically-labeled-dataframe-objects-error
+    [filing_dict[init_late2022_studyperiod].append(u) for u in u_fil_list]
+    # if u not in filing_dict[init_late2022_studyperiod]]  # <- Causes errors https://stackoverflow.com/questions/18548370/pandas-can-only-compare-identically-labeled-dataframe-objects-error
 
     # Also collect Texas data to compare with the data I collected for annual report 2021
     # # to further explore the Cincinnati Problem (The fact that DMAs are inconsistently reported at state level):
@@ -156,9 +154,8 @@ def full_gtrends_pull(low_search_volume_results=True):
     # Also include some data from the classic COVID Valentines' study period.
     # Augment the existing OR & MN data with some national spatial data + get some riding and top keywords.
     valentines_time_period = "2020-02-14 2021-02-14"
-    filing_dict[
-        valentines_time_period
-    ] = []  # Establish dictionary list for downstream filing.
+    # Establish dictionary list for downstream filing.
+    filing_dict[valentines_time_period] = []
     # Build the payload
     valentines_usa_payload = pull.payload_builder(
         valentines_time_period,
@@ -251,20 +248,14 @@ def full_gtrends_pull(low_search_volume_results=True):
 
     # NEXT: Store all the data for all of the dataframes generated here.
     # Storage paths now dynamically set above.
-    print("Data will be stored in", storage_path, ".")
+    # print(f"Data will be stored in '{storage_path}'.")
     # Set the stage for reprocessing previously failed data collection efforts.
     dfs_to_process = 0
     # Count all the DFs to process
     for timeframe in filing_dict:
         dfs_to_process += len(filing_dict[timeframe])
     today = dt.datetime.today().strftime("%Y-%m-%d")
-    print(
-        "Will store",
-        dfs_to_process,
-        "datasets on",today,".\n-----------------------------------------------\n",
-        # "Storage File\tData Time Period\t\tStorage Folder\n",
-        # '------------\t----------------\t\t--------------',
-    )
+    print(f"Will attempt to store {dfs_to_process} datasets on {today} in '{storage_path}'.\n-----------------------------------------------\n")
     # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
     stor_folder_labl = "Storage Folder"
     print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", stor_folder_labl))
