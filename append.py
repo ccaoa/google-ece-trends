@@ -192,7 +192,10 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
                 appended_df = prepped_raw_data
             appcounter += 1
             if not core.string_to_bool(suppress_prints):
-                print(appcounter, '/', allfilscnt, "processed:   ", os.path.basename(raw_gtrends_data_file))
+                # Format appcounter with leading spaces
+                total_width = len(str(allfilscnt))
+                formatted_counter = "{:>{width}}".format(appcounter, width=total_width)
+                print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(raw_gtrends_data_file)}\tadded to {os.path.basename(app_spreadsheet)}")
         # del init_setup
 
         # Edit and format the resulting all-raw-data dataframe
@@ -224,9 +227,9 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
         # Output this data back to its original path.
         # # Do this by hard resetting/overwriting that file; there is no reason we need to update it.
         rc.df_to_file(appended_df, app_spreadsheet, add_to_existing_xlsx=False, sheet_xlsx=raw_data_collection_file_flag, overwrite_old_sheet=True)
-        if not core.string_to_bool(suppress_prints):
-            # non_nulls = len(appended_df.dropna(how='all'))
-            print(f"Added {str(non_nulls)} datasets from {len(all_datasets_dict[app_spreadsheet])} {'raw_gtrends_data_files'.replace('_',' ')} to {os.path.basename(app_spreadsheet)}.")
+        # if not core.string_to_bool(suppress_prints):
+        #     # non_nulls = len(appended_df.dropna(how='all'))
+        #     print(f"Added {str(non_nulls)} datasets from {len(all_datasets_dict[app_spreadsheet])} {'raw_gtrends_data_files'.replace('_',' ')} to {os.path.basename(app_spreadsheet)}.")
 
     if core.string_to_bool(suppress_prints) is not True:
         print("---------------------------------------------------------------")

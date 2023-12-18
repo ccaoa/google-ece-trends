@@ -1,6 +1,6 @@
 import os, datetime as dt
 from ccaoa import core
-# from time import time, sleep
+from time import time, sleep
 # from pathlib import Path
 
 try:
@@ -230,6 +230,7 @@ def full_gtrends_pull(low_search_volume_results=True):
     # # For now, if you try to use 'city' as your region, you'll either get:
     # # # A) an error (DMA as payload geog), or
     # # # B) DMA results (State as payload geog).
+    # # This is a known limitation of the pytrends package as of <v4.9.2
     # eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city', low_volume=low_search_volume_results)
     #
     # Filing dictionary work
@@ -246,9 +247,7 @@ def full_gtrends_pull(low_search_volume_results=True):
         eugene_time,
     ]  # , eugene_city]
     # Add each df collected to the filing dictionary
-    [
-        filing_dict[valentines_time_period].append(v) for v in v_fil_list
-    ]  # if v not in filing_dict[valentines_time_period]]  # # <- Causes errors
+    [filing_dict[valentines_time_period].append(v) for v in v_fil_list]
 
     # NEXT: Store all the data for all of the dataframes generated here.
     # Storage paths now dynamically set above.
@@ -256,8 +255,8 @@ def full_gtrends_pull(low_search_volume_results=True):
     # Set the stage for reprocessing previously failed data collection efforts.
     dfs_to_process = 0
     # Count all the DFs to process
-    for tf in filing_dict:
-        dfs_to_process += len(filing_dict[tf])
+    for timeframe in filing_dict:
+        dfs_to_process += len(filing_dict[timeframe])
     today = dt.datetime.today().strftime("%Y-%m-%d")
     print(
         "Will store",
@@ -271,11 +270,11 @@ def full_gtrends_pull(low_search_volume_results=True):
     print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
 
     dfs_with_data = 0
-    successfully_stored_raw_data_files=[]
-    for tf in filing_dict:
-        for dataframe in filing_dict[tf]:
+    successfully_stored_raw_data_files = []
+    for timeframe in filing_dict:
+        for dataframe in filing_dict[timeframe]:
+            gt_file_name = store.retrieve_variable_name(dataframe)
             if core.check_empty_dataframe(dataframe) is False:
-                gt_file_name = store.retrieve_variable_name(dataframe)
                 short_path = os.path.join(
                     "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
                     os.path.split(os.path.split(storage_path)[0])[1],
@@ -284,20 +283,20 @@ def full_gtrends_pull(low_search_volume_results=True):
                 successfully_stored_raw_data_file = store.store_data(
                     storage_path,
                     dataframe,
-                    tf,
+                    timeframe,
                     gtrends_file_name=gt_file_name,
                     csv_not_xlsx=True,
                     suppress_prints=True
                 )
-                # print(str(gt_file_name)+'\t'+str(tf)+'\t\t'+str(short_path))
+                # print(str(gt_file_name)+'\t'+str(timeframe)+'\t\t'+str(short_path))
                 # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
-                print("{0:30}{1:30}{2}".format(gt_file_name, tf, short_path))
+                print("{0:30}{1:30}{2}".format(gt_file_name, timeframe, short_path))
                 dfs_with_data += 1
                 successfully_stored_raw_data_files.append(successfully_stored_raw_data_file)
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
-                    store.retrieve_variable_name(dataframe),
+                    gt_file_name,
                     "was not captured and will not be stored.",
                 )
     print(
@@ -354,7 +353,8 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
     # Append the successfully pulled files into the corresponding raw data collection XLSX
-    app.append_raw_data_from_files(successfully_stored_raw_data_files)# , suppress_prints=False)
+    app.append_raw_data_from_files(successfully_stored_raw_data_files, suppress_prints=False)
+    sleep(3)
     print()
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
     # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
@@ -366,15 +366,15 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
 
 if __name__ == "__main__":
-    from time import time
+    # from time import time
     start = time()
 
-    # Regular full run: pull data, append it, and summarize it.
-    full_run_gtrends(pull_trends_data=True)
+    # # Regular full run: pull data, append it, and summarize it.
+    # full_run_gtrends(pull_trends_data=True)
 
-    # # Append and summarize already pulled data.
-    # number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
-    # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
+    # Append and summarize already pulled data.
+    number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
+    full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
 
     # # Only summarize the already-appended data:
     # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))

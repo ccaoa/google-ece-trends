@@ -50,49 +50,6 @@ def define_target_summary_dataset(raw_or_append_data_file: str, out_file_flag: s
     return full_summary_file_path
 
 
-# def setup_summary_spreadsheet(raw_gtrends_data_file: str, force: bool = False) -> str:
-#     """ First-time setup of data collection and summarizing structure for GTrends data analysis. """
-#     target_summary_dataset = define_target_summary_dataset(raw_gtrends_data_file)
-#     # Check to see if the file already exists
-#     exists = False
-#     if os.path.exists(target_summary_dataset) is True:
-#         # The document already exists. Be very careful to not destroy your data!
-#         print("The", os.path.basename(target_summary_dataset), 'summary file already exists.')
-#         if force is True:
-#             # If you're sure........
-#             print("  Refreshing the file and building from scratch in", os.path.dirname(target_summary_dataset))
-#             os.remove(target_summary_dataset)
-#             exists = False
-#         else:
-#             print("  The summary file will not be removed or refreshed.")
-#             exists = True
-#
-#     # If the script makes it here, the summary spreadsheet does not yet exit. So create it!
-#     # # The conditional here may not be necessary
-#     if exists is False:
-#         # Create the summary spreadsheet from the raw data.
-#
-#         # SECOND: Setup a second tab/sheet in the xlsx that does mathematical calculations for the raw dataset.
-#         # # After the transpose, the UOA features are now the new columns.
-#         # # They will also become the columns for the summary stats data.
-#         # stats_df = transposed_sub_df.copy()
-#         # # One way to do it is keep the dates as the columns and add rows:
-#         # pd.concat([mnsubsettransposetime, pd.DataFrame(index=["IDXbaby"]), pd.DataFrame(index=['haha'])], axis=0,
-#         #           ignore_index=False)
-#         # Or, it could revert to dates being rows and the GTIS and error etc are column headers since that's the primary study var for this dataset.
-#         stats_df = rc.file_to_df(raw_gtrends_data_file)
-#         # We only need the UOA and the GTIS (and maybe keep the DMA ID/state FIPS), nothing else
-#         dropcols = ['rank','isPartial']
-#         stats_df = stats_df.drop(columns=[c for c in stats_df.columns if c in dropcols])
-#         # Rename the GTIS field to make it clear that it's the average GTIS, not a single record.
-#         stats_df = stats_df.rename(columns={'gtis':gtis_average_field})
-#         # The rest of the calcs will be shared by downstream processes, so write function for that.
-#         # All we need to do now is to setup the basic infrastructure, ie a second tab with a stable tab name.
-#         rc.df_to_file(stats_df,target_summary_dataset, index=False, sheet_xlsx=summary_stats_file_flag, add_to_existing_xlsx=True)
-#
-#     return target_summary_dataset
-
-
 def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
     """
     Calculate the Summary Statistics (top 3 lines from the old GTrends xlsxs):
@@ -247,14 +204,19 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
     """
     if core.string_to_bool(suppress_prints) is not True:
         print("Summarizing files.")
-    counter = 0
+    sumcounter = 0
     allfilscnt = len(list_of_appended_datasets)
     for sd in list_of_appended_datasets:
         # print(os.path.basename(sd))
         calc_sumstats(sd)
-        counter += 1
+        sumcounter += 1
         if core.string_to_bool(suppress_prints) is not True:
-            print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
+            # Format sumcounter with leading spaces
+            total_width = len(str(allfilscnt))
+            formatted_counter = "{:>{width}}".format(sumcounter, width=total_width)
+            sumstats_spreadsheet = define_target_summary_dataset(sd)
+            print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(sd)}\tadded to {os.path.basename(sumstats_spreadsheet)}")
+            # print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:
         print("---------------------------------------------------------------")
 
@@ -277,17 +239,6 @@ def full_append_and_summary_run(raw_files_dir=store.get_storage_path(), summary_
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
     This represents a clean workflow that builds all. summary XLSXs from the ground up. """
-    # TODO update this comment thread with >v0.0.4 updates
-    # This right now represents a first attempt at this function.
-    # # However, using the append_all_raw_files() function is highly inefficient.
-    # # There are 3.8K raw GTrends files as of 7.7.23, and appending them one-by-one takes a very long time.
-    # # Futhermore, I ran into file permission errors while looping through the raw data.
-    # # # Issue #16 https://github.com/ccaoa/google-ece-trends/issues/16
-    # Goal: Do the append in-memory one data category (eg 1 of the 23 categories) at a time.
-    # # Then, export that to the summary file raw_data tab so it writes only once instead of ~150 times.
-    # # Use as many existing functions as possible to do this though!
-    # # Make sure bad rows (all 0s or nulls) are dropped.
-    # Then, hopefully the summarize_all_summary_data() function should run no problem.
 
     # Check the arguments for validity.
     if not os.path.exists(raw_files_dir):
@@ -423,8 +374,8 @@ if __name__ == '__main__':
             r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\valentines_dma_df_20200214-20210214_raw_data_records.xlsx",
             r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\mn_time_20200214-20210214_raw_data_records.xlsx"
         ]
-        # sumtst = summarize_collected_data(app_fils, suppress_prints=False)
-        sumtst = summarize_all_appended_data(sum_data_pth)
+        sumtst = summarize_collected_data(app_fils, suppress_prints=False)
+        # sumtst = summarize_all_appended_data(sum_data_pth)
         return sumtst
 
 # -----------------------------------------------------------
@@ -440,10 +391,10 @@ if __name__ == '__main__':
     # # simple test with only OR's DMAs.
     # summarize_or_dma_test()
 
-    # # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
-    # separate_append_summary_test()
+    # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
+    separate_append_summary_test()
 
     # Full run to completely recreate all the summary files!
-    full_append_and_summary_run()
+    # full_append_and_summary_run()
 
     core.runtime(start)
