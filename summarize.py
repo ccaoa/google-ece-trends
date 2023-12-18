@@ -224,7 +224,7 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
             # print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(sd)}\tadded to {os.path.basename(sumstats_spreadsheet)}")
             # print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:
-        print("---------------------------------------------------------------")
+        print("\n-----------------------------------------------\n")
 
 
 def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints: bool = False):
@@ -265,9 +265,9 @@ def full_append_and_summary_run(raw_files_dir=store.get_storage_path(), summary_
     # Summarize all those files now.
     if not suppress_prints:
         print("\nSUMMARIZING CONSOLIDATED RAW DATA...\n")
-    summarize_all_appended_data(summary_files_dir, suppress_prints=suppress_prints)
+    all_sum_fils = summarize_all_appended_data(summary_files_dir, suppress_prints=suppress_prints)
 
-    return
+    return all_sum_fils
 
 
 if __name__ == '__main__':

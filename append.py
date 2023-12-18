@@ -238,7 +238,7 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
         #     print(f"Added {str(non_nulls)} datasets from {len(all_datasets_dict[app_spreadsheet])} {'raw_gtrends_data_files'.replace('_',' ')} to {os.path.basename(app_spreadsheet)}.")
 
     if core.string_to_bool(suppress_prints) is not True:
-        print("---------------------------------------------------------------")
+        print("\n-----------------------------------------------\n")
 
     return all_datasets_dict
 

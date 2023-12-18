@@ -355,15 +355,14 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
     # Append the successfully pulled files into the corresponding raw data collection XLSX
     raw_data_collection_xlsxs = app.append_raw_data_from_files(successfully_stored_raw_data_files, suppress_prints=False)
-    sleep(3)
-    print()
+    sleep(2.5)
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
     # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
     # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
     targ_aggfiles_listdir = [rdc for rdc in raw_data_collection_xlsxs]
-    agg.summarize_collected_data(targ_aggfiles_listdir, suppress_prints=False)
+    all_sum_fils_for_this_run = agg.summarize_collected_data(targ_aggfiles_listdir, suppress_prints=False)
 
-    return
+    return all_sum_fils_for_this_run
 
 
 if __name__ == "__main__":
