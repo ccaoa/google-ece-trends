@@ -1,18 +1,18 @@
 import os, datetime as dt
 from ccaoa import core
-# from time import time, sleep
+from time import time, sleep
 # from pathlib import Path
 
 try:
-    from . import pull_data as pull, store_data as store, dma, summarize as agg
+    from . import pull_data as pull, store_data as store, dma, append as app, summarize as agg
 except ImportError:
-    import pull_data as pull, store_data as store, dma, summarize as agg
+    import pull_data as pull, store_data as store, dma, append as app, summarize as agg
 
 storage_path = store.get_storage_path()
 
 
 def full_gtrends_pull(low_search_volume_results=True):
-    """Collect custom data for J. A. Cooper (2023) Google Trends publication."""
+    """Collect custom data for J. A. Cooper (2024) Google Trends publication."""
     # Make sure you have a valid storage location before going to the trouble of running all these trends.
     if storage_path is None or storage_path == "":
         # Cancel out of the run early; there's nowhere to store the data, so no use in continuing till you have that.
@@ -32,9 +32,8 @@ def full_gtrends_pull(low_search_volume_results=True):
     # USA pulls
     # # Remember, the payload is where you pass your study time-period argument
     init_late2022_studyperiod = "2018-06-03 2022-09-10"
-    filing_dict[
-        init_late2022_studyperiod
-    ] = []  # Establish dictionary list for downstream filing.
+    # Establish dictionary list for downstream filing.
+    filing_dict[init_late2022_studyperiod] = []
     geog_usa = "US"
     # Build the payload
     usa_payload = pull.payload_builder(
@@ -126,9 +125,8 @@ def full_gtrends_pull(low_search_volume_results=True):
         oh_time,
     ]
     # Add each df collected to the filing dictionary
-    [
-        filing_dict[init_late2022_studyperiod].append(u) for u in u_fil_list
-    ]  # if u not in filing_dict[init_late2022_studyperiod]]  # <- Causes errors https://stackoverflow.com/questions/18548370/pandas-can-only-compare-identically-labeled-dataframe-objects-error
+    [filing_dict[init_late2022_studyperiod].append(u) for u in u_fil_list]
+    # if u not in filing_dict[init_late2022_studyperiod]]  # <- Causes errors https://stackoverflow.com/questions/18548370/pandas-can-only-compare-identically-labeled-dataframe-objects-error
 
     # Also collect Texas data to compare with the data I collected for annual report 2021
     # # to further explore the Cincinnati Problem (The fact that DMAs are inconsistently reported at state level):
@@ -156,9 +154,8 @@ def full_gtrends_pull(low_search_volume_results=True):
     # Also include some data from the classic COVID Valentines' study period.
     # Augment the existing OR & MN data with some national spatial data + get some riding and top keywords.
     valentines_time_period = "2020-02-14 2021-02-14"
-    filing_dict[
-        valentines_time_period
-    ] = []  # Establish dictionary list for downstream filing.
+    # Establish dictionary list for downstream filing.
+    filing_dict[valentines_time_period] = []
     # Build the payload
     valentines_usa_payload = pull.payload_builder(
         valentines_time_period,
@@ -230,6 +227,7 @@ def full_gtrends_pull(low_search_volume_results=True):
     # # For now, if you try to use 'city' as your region, you'll either get:
     # # # A) an error (DMA as payload geog), or
     # # # B) DMA results (State as payload geog).
+    # # This is a known limitation of the pytrends package as of <v4.9.2
     # eugene_city = pull.extract_data_try(payload_item=eugene_payload, spatial_not_temporal=True, region='city', low_volume=low_search_volume_results)
     #
     # Filing dictionary work
@@ -246,36 +244,29 @@ def full_gtrends_pull(low_search_volume_results=True):
         eugene_time,
     ]  # , eugene_city]
     # Add each df collected to the filing dictionary
-    [
-        filing_dict[valentines_time_period].append(v) for v in v_fil_list
-    ]  # if v not in filing_dict[valentines_time_period]]  # # <- Causes errors
+    [filing_dict[valentines_time_period].append(v) for v in v_fil_list]
 
     # NEXT: Store all the data for all of the dataframes generated here.
     # Storage paths now dynamically set above.
-    print("Data will be stored in", storage_path, ".")
+    # print(f"Data will be stored in '{storage_path}'.")
     # Set the stage for reprocessing previously failed data collection efforts.
     dfs_to_process = 0
     # Count all the DFs to process
-    for tf in filing_dict:
-        dfs_to_process += len(filing_dict[tf])
+    for timeframe in filing_dict:
+        dfs_to_process += len(filing_dict[timeframe])
     today = dt.datetime.today().strftime("%Y-%m-%d")
-    print(
-        "Will store",
-        dfs_to_process,
-        "datasets on",today,".\n-----------------------------------------------\n",
-        # "Storage File\tData Time Period\t\tStorage Folder\n",
-        # '------------\t----------------\t\t--------------',
-    )
+    print(f"Will attempt to store {dfs_to_process} datasets on {today} in '{storage_path}'.\n-----------------------------------------------\n")
     # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
-    print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", "Storage Folder"))
-    print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
+    stor_folder_labl = "Storage Folder"
+    print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", stor_folder_labl))
+    print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len(stor_folder_labl)))
 
     dfs_with_data = 0
-    successfully_stored_raw_data_files=[]
-    for tf in filing_dict:
-        for dataframe in filing_dict[tf]:
+    successfully_stored_raw_data_files = []
+    for timeframe in filing_dict:
+        for dataframe in filing_dict[timeframe]:
+            gt_file_name = store.retrieve_variable_name(dataframe)
             if core.check_empty_dataframe(dataframe) is False:
-                gt_file_name = store.retrieve_variable_name(dataframe)
                 short_path = os.path.join(
                     "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
                     os.path.split(os.path.split(storage_path)[0])[1],
@@ -284,20 +275,20 @@ def full_gtrends_pull(low_search_volume_results=True):
                 successfully_stored_raw_data_file = store.store_data(
                     storage_path,
                     dataframe,
-                    tf,
+                    timeframe,
                     gtrends_file_name=gt_file_name,
                     csv_not_xlsx=True,
                     suppress_prints=True
                 )
-                # print(str(gt_file_name)+'\t'+str(tf)+'\t\t'+str(short_path))
+                # print(str(gt_file_name)+'\t'+str(timeframe)+'\t\t'+str(short_path))
                 # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
-                print("{0:30}{1:30}{2}".format(gt_file_name, tf, short_path))
+                print("{0:30}{1:30}{2}".format(gt_file_name, timeframe, short_path))
                 dfs_with_data += 1
                 successfully_stored_raw_data_files.append(successfully_stored_raw_data_file)
             else:
                 # In the future, use some try loop to get all the data that were not collected originally to run again.
                 print(
-                    store.retrieve_variable_name(dataframe),
+                    gt_file_name,
                     "was not captured and will not be stored.",
                 )
     print(
@@ -342,10 +333,10 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
         # Check to make sure they all have the same pull date
         unique_pull_dates = list(set([x[len(x)-12:] for x in successfully_stored_raw_data_files]))
-        if len(unique_pull_dates)>1:
+        if len(unique_pull_dates) > 1:
             print("Raw data files from multiple pull dates selected for summarizing:")
             print(unique_pull_dates)
-        elif len(unique_pull_dates)==0:
+        elif len(unique_pull_dates) == 0:
             print("No raw data files to append")
             exit()
         else:
@@ -354,19 +345,19 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
     # Append the successfully pulled files into the corresponding raw data collection XLSX
-    agg.append_raw_files_from_list(successfully_stored_raw_data_files, suppress_prints=False)
-    print()
+    raw_data_collection_xlsxs = app.append_raw_data_from_files(successfully_stored_raw_data_files, suppress_prints=False)
+    sleep(2.5)
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
     # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
     # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
-    targ_sumfiles_listdir = [agg.define_target_summary_dataset(rds) for rds in successfully_stored_raw_data_files]
-    agg.summarize_collected_data(targ_sumfiles_listdir, suppress_prints=False)
+    targ_aggfiles_listdir = [rdc for rdc in raw_data_collection_xlsxs]
+    all_sum_fils_for_this_run = agg.summarize_collected_data(targ_aggfiles_listdir, suppress_prints=False)
 
-    return
+    return all_sum_fils_for_this_run
 
 
 if __name__ == "__main__":
-    from time import time
+    # from time import time
     start = time()
 
     # Regular full run: pull data, append it, and summarize it.
