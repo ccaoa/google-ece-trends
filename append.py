@@ -137,8 +137,14 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
     for the same given study time period and geography.
     This function will ppend all the raw target files (passed as an argument via a list item) to a collection XLSX.
     Corresponds to Issue #8 in GitHub. """
+    if core.string_to_bool(suppress_prints) is not True:
+        print("Appending raw files.")
+    appcounter = 0
+
     # Check if the user only passed one file as a string.
     raw_gtrends_data_files = [raw_gtrends_data_files] if type(raw_gtrends_data_files) == str else raw_gtrends_data_files
+    # Get the file count of the raw datasets passed
+    allfilscnt = len(raw_gtrends_data_files)
 
     # Find the summary dataset which to append the data.
     all_datasets_dict = {}  # A dictionary with append_dataset: [list_of_raw_files_to_append]
@@ -182,7 +188,11 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
                 # # https://stackoverflow.com/questions/71545135/how-to-append-rows-with-concat-to-a-pandas-dataframe
                 appended_df = pd.concat([appended_df,prepped_raw_data])
             else:
+                # You essentially have the format you need already set up if this is the first record in the append dataset.
                 appended_df = prepped_raw_data
+            appcounter += 1
+            if not core.string_to_bool(suppress_prints):
+                print(appcounter, '/', allfilscnt, "processed:   ", os.path.basename(raw_gtrends_data_file))
         # del init_setup
 
         # Edit and format the resulting all-raw-data dataframe
@@ -214,9 +224,12 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
         # Output this data back to its original path.
         # # Do this by hard resetting/overwriting that file; there is no reason we need to update it.
         rc.df_to_file(appended_df, app_spreadsheet, add_to_existing_xlsx=False, sheet_xlsx=raw_data_collection_file_flag, overwrite_old_sheet=True)
-        if not suppress_prints:
+        if not core.string_to_bool(suppress_prints):
             # non_nulls = len(appended_df.dropna(how='all'))
             print(f"Added {str(non_nulls)} datasets from {len(all_datasets_dict[app_spreadsheet])} {'raw_gtrends_data_files'.replace('_',' ')} to {os.path.basename(app_spreadsheet)}.")
+
+    if core.string_to_bool(suppress_prints) is not True:
+        print("---------------------------------------------------------------")
 
     return all_datasets_dict
 
