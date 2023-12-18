@@ -140,6 +140,10 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
     Corresponds to Issue #8 in GitHub. """
     if core.string_to_bool(suppress_prints) is not True:
         print("Appending raw files.")
+        print()
+        stor_folder_labl = "Raw Data Storage File"
+        print("{0:25}{1:60}{2}".format("Process Counter", "Single Raw Data File", stor_folder_labl))
+        print("{0:25}{1:60}{2}".format("-" * 20, "-" * 45, "-" * int(len(stor_folder_labl) * 1.5)))
     appcounter = 0
 
     # Check if the user only passed one file as a string.
@@ -196,7 +200,8 @@ def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bo
                 # Format appcounter with leading spaces
                 total_width = len(str(allfilscnt))
                 formatted_counter = "{:>{width}}".format(appcounter, width=total_width)
-                print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(raw_gtrends_data_file)}\tadded to {os.path.basename(app_spreadsheet)}")
+                # print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(raw_gtrends_data_file)}\tadded to {os.path.basename(app_spreadsheet)}")
+                print("{0:25}{1:60}{2}".format(f"{formatted_counter} / {allfilscnt} processed:", os.path.basename(raw_gtrends_data_file), os.path.basename(app_spreadsheet)))
         # del init_setup
 
         # Edit and format the resulting all-raw-data dataframe

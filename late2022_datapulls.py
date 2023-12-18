@@ -266,8 +266,9 @@ def full_gtrends_pull(low_search_volume_results=True):
         # '------------\t----------------\t\t--------------',
     )
     # Use formatted prints from https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
-    print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", "Storage Folder"))
-    print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len("Storage Folder")))
+    stor_folder_labl = "Storage Folder"
+    print("{0:30}{1:30}{2}".format("Storage File", "Data Time Period", stor_folder_labl))
+    print("{0:30}{1:30}{2}".format("-" * 25, "-" * 25, "-" * len(stor_folder_labl)))
 
     dfs_with_data = 0
     successfully_stored_raw_data_files = []
