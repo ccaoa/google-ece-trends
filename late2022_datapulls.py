@@ -341,10 +341,10 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
         # Check to make sure they all have the same pull date
         unique_pull_dates = list(set([x[len(x)-12:] for x in successfully_stored_raw_data_files]))
-        if len(unique_pull_dates)>1:
+        if len(unique_pull_dates) > 1:
             print("Raw data files from multiple pull dates selected for summarizing:")
             print(unique_pull_dates)
-        elif len(unique_pull_dates)==0:
+        elif len(unique_pull_dates) == 0:
             print("No raw data files to append")
             exit()
         else:
@@ -353,14 +353,14 @@ def full_run_gtrends(pull_trends_data=True, low_search_volume_results=True, numb
 
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
     # Append the successfully pulled files into the corresponding raw data collection XLSX
-    app.append_raw_data_from_files(successfully_stored_raw_data_files, suppress_prints=False)
+    raw_data_collection_xlsxs = app.append_raw_data_from_files(successfully_stored_raw_data_files, suppress_prints=False)
     sleep(3)
     print()
     # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
     # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
     # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
-    targ_sumfiles_listdir = [agg.define_target_summary_dataset(rds) for rds in successfully_stored_raw_data_files]
-    agg.summarize_collected_data(targ_sumfiles_listdir, suppress_prints=False)
+    targ_aggfiles_listdir = [rdc for rdc in raw_data_collection_xlsxs]
+    agg.summarize_collected_data(targ_aggfiles_listdir, suppress_prints=False)
 
     return
 
@@ -369,12 +369,12 @@ if __name__ == "__main__":
     # from time import time
     start = time()
 
-    # # Regular full run: pull data, append it, and summarize it.
-    # full_run_gtrends(pull_trends_data=True)
+    # Regular full run: pull data, append it, and summarize it.
+    full_run_gtrends(pull_trends_data=True)
 
-    # Append and summarize already pulled data.
-    number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
-    full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
+    # # Append and summarize already pulled data.
+    # number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
+    # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
 
     # # Only summarize the already-appended data:
     # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))

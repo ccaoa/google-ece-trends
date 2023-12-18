@@ -135,7 +135,8 @@ def raw_data_appending_prep(raw_gtrends_data_file: str) -> pd.DataFrame:
 def append_raw_data_from_files(raw_gtrends_data_files: list, suppress_prints: bool = False) -> dict:#pd.DataFrame:
     """ Append raw Google Trends data stored as individual files to a larger summary collection of all data collected
     for the same given study time period and geography.
-    This function will ppend all the raw target files (passed as an argument via a list item) to a collection XLSX.
+    This function will append all the raw target files (passed as an argument via a list item) to a collection XLSX.
+    It will return a dictionary in format {collection XLSX: [list of individual raw target files]}
     Corresponds to Issue #8 in GitHub. """
     if core.string_to_bool(suppress_prints) is not True:
         print("Appending raw files.")
