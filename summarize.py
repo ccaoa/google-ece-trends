@@ -101,7 +101,7 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
-    transposed_sub_df = app.transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
+    transposed_sub_df = rc.transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
     sumstats_df[uoa_col] = transposed_sub_df[date_of_pull_field]  # 'pull_date'
     # Add dma_id column if it's a Media Market (DMA) UOA.
     # # This code cannot appear any earlier than here because this is where the UOA's column values are defined,

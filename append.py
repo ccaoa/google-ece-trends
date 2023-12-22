@@ -37,30 +37,29 @@ def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
             return sibling_dir_path
 
 
-def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
-    """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
-    # TODO: Migrate this function to a more generalizable format in ccaoa.raccoon module. Then call it here.
-    # If the user wanted the first column of the PD DF to function as the column names
-    if core.string_to_bool(first_col_as_new_col_names) is True:
-        # The first column of the raw dataset containing UOA identifiers will be set as the column names of the new DF.
-        first_col = df.columns[0]
-        work_df = df.set_index(first_col).transpose()
-    else:
-        # The first column of the raw dataset containing UOA identifiers will be set as the first row.
-        work_df = df.transpose()
-    # At this point, the old column headers are the new index column, with the old first column as the first record.
-    # # https://stackoverflow.com/a/36013757/15517267
-    if core.string_to_bool(old_cols_as_index) is False:
-        # If the user wants the old columns bounced out into the first row:
-        old_first_column = work_df.columns.name
-        if isinstance(col_of_oldcolumns_name, str) is not True:
-            try:
-                col_of_oldcolumns_name=str(col_of_oldcolumns_name)
-            except:
-                col_of_oldcolumns_name = "old_cols"
-        work_df = rc.index_to_first_column(work_df, col_of_oldcolumns_name)#old_first_column)
-    # Otherwise, the old column names will still be the index of the output DF.
-    return work_df
+# def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
+#     """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
+#     # If the user wanted the first column of the PD DF to function as the column names
+#     if core.string_to_bool(first_col_as_new_col_names) is True:
+#         # The first column of the raw dataset containing UOA identifiers will be set as the column names of the new DF.
+#         first_col = df.columns[0]
+#         work_df = df.set_index(first_col).transpose()
+#     else:
+#         # The first column of the raw dataset containing UOA identifiers will be set as the first row.
+#         work_df = df.transpose()
+#     # At this point, the old column headers are the new index column, with the old first column as the first record.
+#     # # https://stackoverflow.com/a/36013757/15517267
+#     if core.string_to_bool(old_cols_as_index) is False:
+#         # If the user wants the old columns bounced out into the first row:
+#         old_first_column = work_df.columns.name
+#         if isinstance(col_of_oldcolumns_name, str) is not True:
+#             try:
+#                 col_of_oldcolumns_name=str(col_of_oldcolumns_name)
+#             except:
+#                 col_of_oldcolumns_name = "old_cols"
+#         work_df = rc.index_to_first_column(work_df, col_of_oldcolumns_name)#old_first_column)
+#     # Otherwise, the old column names will still be the index of the output DF.
+#     return work_df
 
 
 def define_target_append_dataset(raw_data_file: str, out_file_flag: str = raw_data_collection_file_flag) -> str:
@@ -127,8 +126,8 @@ def raw_data_appending_prep(raw_gtrends_data_file: str) -> pd.DataFrame:
     # Pull the date-of-pull into its own column for easy downstream access?
     # Problem is that lots of UOA access is done by
     # Transpose the subset data for format adhearance downstream.
-    transposed_sub_df = transpose_df(subset_raw_data, first_col_as_new_col_names=True, old_cols_as_index=False,
-                                     col_of_oldcolumns_name=date_of_pull_field)
+    transposed_sub_df = rc.transpose_df(subset_raw_data, first_col_as_new_col_names=True, old_cols_as_index=False,
+                                        col_of_oldcolumns_name=date_of_pull_field)
     return transposed_sub_df
 
 
