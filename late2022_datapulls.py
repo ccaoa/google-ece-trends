@@ -263,9 +263,15 @@ def full_gtrends_pull(low_search_volume_results=True):
 
     dfs_with_data = 0
     successfully_stored_raw_data_files = []
+    # Add the string version of the loop variable to exclude it from retrieve_variable_name().
+    all_names_to_exclude = ["dataframe"]
     for timeframe in filing_dict:
         for dataframe in filing_dict[timeframe]:
-            gt_file_name = store.retrieve_variable_name(dataframe)
+            gt_file_name = store.retrieve_variable_name(dataframe, all_names_to_exclude)
+            # After every name generation, append it to the exclude list.
+            # That way, next time the script runs, it'll exclude variables that have already been named.
+            # see https://github.com/ccaoa/google-ece-trends/issues/3.
+            all_names_to_exclude.append(gt_file_name)
             if core.check_empty_dataframe(dataframe) is False:
                 short_path = os.path.join(
                     "~", os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
