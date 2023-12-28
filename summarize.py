@@ -207,8 +207,8 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
         print()
         source_data_labl = "Raw Data Storage File"
         stor_fil_labl = "Summary Statistics File"
-        print("{0:25}{1:60}{2}".format("Process Counter", source_data_labl, stor_fil_labl))
-        print("{0:25}{1:60}{2}".format("-" * 20, "-" * 45, "-" * int(len(stor_fil_labl) * 1.5)))
+        print("{0:25}{1:65}{2}".format("Process Counter", source_data_labl, stor_fil_labl))
+        print("{0:25}{1:65}{2}".format("-" * 20, "-" * 45, "-" * int(len(stor_fil_labl) * 1.5)))
     sumcounter = 0
     allfilscnt = len(list_of_appended_datasets)
     for sd in list_of_appended_datasets:
@@ -220,7 +220,7 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
             total_width = len(str(allfilscnt))
             formatted_counter = "{:>{width}}".format(sumcounter, width=total_width)
             sumstats_spreadsheet = define_target_summary_dataset(sd)
-            print("{0:25}{1:60}{2}".format(f"{formatted_counter} / {allfilscnt} processed:", os.path.basename(sd), os.path.basename(sumstats_spreadsheet)))
+            print("{0:25}{1:65}{2}".format(f"{formatted_counter} / {allfilscnt} processed:", os.path.basename(sd), os.path.basename(sumstats_spreadsheet)))
             # print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(sd)}\tadded to {os.path.basename(sumstats_spreadsheet)}")
             # print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:

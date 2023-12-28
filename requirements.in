@@ -1,4 +1,4 @@
 pytrends>=4.9.2
-#ccaoa>=2.2
+#ccaoa>=2.2.1
 git+ssh://git@github.com/ccaoa/ccaoa-mapping.git#egg=ccaoa
 pandas
