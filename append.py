@@ -10,14 +10,9 @@ from pathlib import Path
 from ccaoa import core, raccoon as rc
 
 try:
-    from . import (
-        dma,
-        pull_data as pull,
-        store_data as store,
-        trend_calculations as tcalc,
-    )
+    from . import store_data as store
 except ImportError:
-    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc
+    import store_data as store
 
 raw_data_collection_file_flag = "raw_data_records"
 date_of_pull_field = "pull_date"

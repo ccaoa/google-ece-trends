@@ -14,15 +14,9 @@ from ccaoa import core, raccoon as rc
 
 
 try:
-    from . import (
-        dma,
-        pull_data as pull,
-        store_data as store,
-        trend_calculations as tcalc,
-        append as app,
-    )
+    from . import dma, store_data as store, trend_calculations as tcalc, append as app
 except ImportError:
-    import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as app
+    import dma, store_data as store, trend_calculations as tcalc, append as app
 
 
 # Need to Transpose the individual data pull records, append them to the master pull list, and recalc the sum stats.
