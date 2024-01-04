@@ -27,7 +27,7 @@ from sys import executable
 import ensurepip
 
 # Use __file__ if it's defined, otherwise default to the current working directory
-py_venv_dir = Path(__file__).parent if '__file__' in locals() else Path('.')
+py_venv_dir = Path(__file__).parent if "__file__" in locals() else Path(".")
 # Construct the path to the 'venv' directory relative to the script's location
 VENV_PATH = py_venv_dir / "venv"
 VENV_PATH = VENV_PATH.resolve()
@@ -171,7 +171,9 @@ def main() -> None:
     # The requirements.txt file defaults to being located inside the "./py_venv" directory.
     # # This is so that the user can find the full requirements readout after the venv is created,
     # # but it is not confusingly included at the project-level directory.
-    requirements_txt_path = py_venv_dir / "requirements.txt"  # Path("./py_venv/requirements.txt")
+    requirements_txt_path = (
+        py_venv_dir / "requirements.txt"
+    )  # Path("./py_venv/requirements.txt")
     # Search for existing instances of `requirements.txt`
     if not requirements_txt_path.exists():
         # The root directory will become the default location for the requirements.txt whether it exists or not.
@@ -189,7 +191,9 @@ def main() -> None:
         # print(f"\nExecuting venv creation command: {command}")
         run(command)
         # print(f"\nExecuting activate venv command: {activate}\n")
-        run(f"{activate} python -m pip install --upgrade pip setuptools wheel pip-tools")
+        run(
+            f"{activate} python -m pip install --upgrade pip setuptools wheel pip-tools"
+        )
     except subprocess.CalledProcessError:
         # There is an issue establishing the venv.
         # # With ArcGIS Pro base python interpreters, this often has to do with the ensurepip pip wheel.
@@ -208,7 +212,7 @@ def main() -> None:
             f'{activate} python "{whl}"/pip install --upgrade pip setuptools wheel pip-tools'
         )
     # print("Made it to the Activate stage")
-    pip_install_command = f"{activate}python -m pip install -r \"{requirements_in_path}\""
+    pip_install_command = f'{activate}python -m pip install -r "{requirements_in_path}"'
     print(f"\nExecuting pip install command: {pip_install_command}\n")
     run(pip_install_command)
     run(f'{activate} python -m pip freeze > "{requirements_txt_path}"')

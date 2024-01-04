@@ -15,7 +15,15 @@ def retrieve_variable_name(var, exclude_vars: list = None):
     if exclude_vars is None:
         exclude_vars = []
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
-    return [var_name for var_name, var_val in callers_local_vars if (var_val is var and not var_name.startswith('__') and var_name not in exclude_vars)][0]
+    return [
+        var_name
+        for var_name, var_val in callers_local_vars
+        if (
+            var_val is var
+            and not var_name.startswith("__")
+            and var_name not in exclude_vars
+        )
+    ][0]
 
 
 def date_from_searchperiod(search_period_date):
@@ -57,7 +65,7 @@ def store_data(
     search_date_period,
     gtrends_file_name=None,
     csv_not_xlsx=True,
-        suppress_prints=False
+    suppress_prints=False,
 ):
     """Store the GTrends data you just pulled."""
     # Get the name of the variable for downstream storage naming metadata.
@@ -77,11 +85,23 @@ def store_data(
 
     if suppress_prints is not True:
         short_path = os.path.join(
-            "~", os.path.split(os.path.split(os.path.split(storage_directory_file_path)[0])[0])[1],
+            "~",
+            os.path.split(
+                os.path.split(os.path.split(storage_directory_file_path)[0])[0]
+            )[1],
             os.path.split(os.path.split(storage_directory_file_path)[0])[1],
-            os.path.split(storage_directory_file_path)[1]
+            os.path.split(storage_directory_file_path)[1],
         )
         tidy_today = str(dt.datetime.today().strftime("%d %b"))
-        print(dataset_name+ext,"was stored for time period", search_date_period,"on",tidy_today, 'in', short_path, '.')
+        print(
+            dataset_name + ext,
+            "was stored for time period",
+            search_date_period,
+            "on",
+            tidy_today,
+            "in",
+            short_path,
+            ".",
+        )
 
     return file_path

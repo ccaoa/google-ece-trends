@@ -8,7 +8,7 @@ def gtiratio_normalizer(county_gtir, max_gtir_val=55.13899994):
     # max_gtir_val_or = 122.541053772
     # max_gtir_val_usa = 71.4122085571
     # # Switch these if wanting to try the other value.
-    max_gtir_val = max_gtir_val#_usa  # max_gtir_val_or  #
+    max_gtir_val = max_gtir_val  # _usa  # max_gtir_val_or  #
 
     county_gtir_norm = float(county_gtir / max_gtir_val) * 100
 

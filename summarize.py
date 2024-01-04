@@ -14,7 +14,13 @@ from ccaoa import core, raccoon as rc
 
 
 try:
-    from . import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as app
+    from . import (
+        dma,
+        pull_data as pull,
+        store_data as store,
+        trend_calculations as tcalc,
+        append as app,
+    )
 except ImportError:
     import dma, pull_data as pull, store_data as store, trend_calculations as tcalc, append as app
 
@@ -33,19 +39,23 @@ date_of_pull_field = app.date_of_pull_field
 gtis_average_field = app.gtis_average_field
 
 
-def define_target_summary_dataset(raw_or_append_data_file: str, out_file_flag: str = summary_stats_file_flag) -> str:
-    """ Use the name of the raw data file to target which summary Xlsx you'll be using. """
+def define_target_summary_dataset(
+    raw_or_append_data_file: str, out_file_flag: str = summary_stats_file_flag
+) -> str:
+    """Use the name of the raw data file to target which summary Xlsx you'll be using."""
     if os.path.exists(raw_or_append_data_file) is False:
         raise FileNotFoundError(raw_or_append_data_file)
     # Get the input file's basename
     dataset_name = Path(raw_or_append_data_file).stem
     # Remove the append file naming convention
-    dataset_name = dataset_name.replace(app.raw_data_collection_file_flag,'')
+    dataset_name = dataset_name.replace(app.raw_data_collection_file_flag, "")
     # Replace the file naming flag with the summary stats flag.
-    dataset_name = dataset_name[:dataset_name.rfind("_")]
+    dataset_name = dataset_name[: dataset_name.rfind("_")]
     sumstorpath = app.summary_storage_path()
-    out_file_flag = str(out_file_flag if out_file_flag.startswith('_') else '_' + out_file_flag)
-    summary_dataset_name = dataset_name + out_file_flag + '.xlsx'
+    out_file_flag = str(
+        out_file_flag if out_file_flag.startswith("_") else "_" + out_file_flag
+    )
+    summary_dataset_name = dataset_name + out_file_flag + ".xlsx"
     full_summary_file_path = os.path.join(sumstorpath, summary_dataset_name)
     return full_summary_file_path
 
@@ -64,7 +74,6 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
     """
     # Get data as it is
 
-
     # # What if we pulled this out of this function to make it a purely mathmatical one?
     # try:
     #     sumstats_df = rc.file_to_df(summary_xlsx,summary_stats_sheet)
@@ -80,34 +89,51 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
     #
     sumstats_df = pd.DataFrame()
 
-
-    raw_data_df = rc.file_to_df(appended_data_xlsx)#, raw_data_collection_sheet)
+    raw_data_df = rc.file_to_df(appended_data_xlsx)  # , raw_data_collection_sheet)
     # SumStats Vars not previously defined
     # gtis_average_field  # Previously defined
     # UOA Column. Needs to be dynamic to work with time or geography UOA.
-    uoa_col = (os.path.basename(appended_data_xlsx)).split("_")[1]# 'dma'
-    covfactfield='cov_fact_k'
-    std_dev_col = 'std_dev'
-    xpduncertainfield='expd_uncrt'
-    rebase_gtis_field = 'rebse_gtis'
-    n_field = 'n_data_pts'
+    uoa_col = (os.path.basename(appended_data_xlsx)).split("_")[1]  # 'dma'
+    covfactfield = "cov_fact_k"
+    std_dev_col = "std_dev"
+    xpduncertainfield = "expd_uncrt"
+    rebase_gtis_field = "rebse_gtis"
+    n_field = "n_data_pts"
     se_field = "std_err"
     moe_field = "moe_95_pct"
     ci_95_fld = "ci_95_pct"
     ci_95_lowr_fld = "ci_95_lowr"
     ci_95_uppr_fld = "ci_95_uppr"
     # Order the output fields.
-    sumstatvars = [uoa_col,gtis_average_field,n_field, std_dev_col, se_field, moe_field, ci_95_lowr_fld, ci_95_uppr_fld, rebase_gtis_field, covfactfield, xpduncertainfield, ci_95_fld]
+    sumstatvars = [
+        uoa_col,
+        gtis_average_field,
+        n_field,
+        std_dev_col,
+        se_field,
+        moe_field,
+        ci_95_lowr_fld,
+        ci_95_uppr_fld,
+        rebase_gtis_field,
+        covfactfield,
+        xpduncertainfield,
+        ci_95_fld,
+    ]
 
     # CALCULATIONS
     # Ensure the UOA records are all in the sum stats sheet.
-    transposed_sub_df = rc.transpose_df(raw_data_df, first_col_as_new_col_names=True, old_cols_as_index=False, col_of_oldcolumns_name=date_of_pull_field)
+    transposed_sub_df = rc.transpose_df(
+        raw_data_df,
+        first_col_as_new_col_names=True,
+        old_cols_as_index=False,
+        col_of_oldcolumns_name=date_of_pull_field,
+    )
     sumstats_df[uoa_col] = transposed_sub_df[date_of_pull_field]  # 'pull_date'
     # Add dma_id column if it's a Media Market (DMA) UOA.
     # # This code cannot appear any earlier than here because this is where the UOA's column values are defined,
     # # # and that is a prerequisite to assign the correct DMA ID (if it's a DMA UOA).
-    if uoa_col.lower() == 'dma':
-        dma_id_col = 'dma_id'
+    if uoa_col.lower() == "dma":
+        dma_id_col = "dma_id"
         # Add dma_id_col in as a column in the summary DF and fill the column in with the appropriate dma_id value.
         sumstats_df[dma_id_col] = sumstats_df[uoa_col].apply(
             lambda x: dma.dma_id_name_converter(x)
@@ -115,11 +141,15 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
         # Now insert the dma_id_col as the second column in the final formatting of the columns' order.
         sumstatvars.insert(1, "dma_id")
     # Mean/Average
-    sumstats_df[gtis_average_field] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].mean())
+    sumstats_df[gtis_average_field] = sumstats_df[uoa_col].apply(
+        lambda d: raw_data_df[d].mean()
+    )
     # Standard Deviation
-    sumstats_df[std_dev_col] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].std())
+    sumstats_df[std_dev_col] = sumstats_df[uoa_col].apply(
+        lambda d: raw_data_df[d].std()
+    )
     # Count n(Observations)
-    sumstats_df[n_field]=sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].count())
+    sumstats_df[n_field] = sumstats_df[uoa_col].apply(lambda d: raw_data_df[d].count())
     # Confidence Interval
     # # Standard Error first.
     sumstats_df[se_field] = sumstats_df[std_dev_col] / np.sqrt(sumstats_df[n_field])
@@ -132,16 +162,26 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
     factor_moe = 1.96
     sumstats_df[moe_field] = sumstats_df[se_field] * factor_moe
     # # Now, calculate the confidence interval
-    sumstats_df[ci_95_fld] = [(average - moe, average + moe) for average, moe in
-                              zip(sumstats_df[gtis_average_field], sumstats_df[moe_field])]
-    sumstats_df[ci_95_lowr_fld] = sumstats_df[gtis_average_field] - sumstats_df[moe_field]
-    sumstats_df[ci_95_uppr_fld] = sumstats_df[gtis_average_field] + sumstats_df[moe_field]
+    sumstats_df[ci_95_fld] = [
+        (average - moe, average + moe)
+        for average, moe in zip(sumstats_df[gtis_average_field], sumstats_df[moe_field])
+    ]
+    sumstats_df[ci_95_lowr_fld] = (
+        sumstats_df[gtis_average_field] - sumstats_df[moe_field]
+    )
+    sumstats_df[ci_95_uppr_fld] = (
+        sumstats_df[gtis_average_field] + sumstats_df[moe_field]
+    )
     # Coverage Factor
-    sumstats_df[covfactfield]=coverage_factor_k
+    sumstats_df[covfactfield] = coverage_factor_k
     # Expanded Uncertainty
-    sumstats_df[xpduncertainfield]=sumstats_df[uoa_col].apply(lambda d: tcalc.uncertainty_df_field(raw_data_df,d))
+    sumstats_df[xpduncertainfield] = sumstats_df[uoa_col].apply(
+        lambda d: tcalc.uncertainty_df_field(raw_data_df, d)
+    )
     # Rebase the maximum mean GTIS to = 100 to get a more "google trendy" result.
-    sumstats_df[rebase_gtis_field]=sumstats_df[gtis_average_field].apply(lambda m: tcalc.rebase_math(m,sumstats_df[gtis_average_field].max()))
+    sumstats_df[rebase_gtis_field] = sumstats_df[gtis_average_field].apply(
+        lambda m: tcalc.rebase_math(m, sumstats_df[gtis_average_field].max())
+    )
     # Sort to have the most popular on top if the argument passed requests it.
     # # Generally, we'll want to have geography fields (states & DMAs, etc) sorted by GTIS and time sorted by time.
     if gtis_sort:
@@ -150,7 +190,9 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
             sumstats_df = sumstats_df.sort_values(by=uoa_col, ascending=True)
         else:
             # Sort by GTIS if it's a geographic dataset.
-            sumstats_df = sumstats_df.sort_values(by=[gtis_average_field,uoa_col], ascending=[False,True])
+            sumstats_df = sumstats_df.sort_values(
+                by=[gtis_average_field, uoa_col], ascending=[False, True]
+            )
 
     # Now retain only the columns we want + order them in the desired order defined above in the `sumstatvars` variable.
     sumstats_df = sumstats_df[sumstatvars]
@@ -159,20 +201,20 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
     # # Format: # new_column_names = {'old_column_name1': 'new_column_name1','old_column_name2': 'new_column_name2'}
     the_renamed_fields = {}
     temporal_uoa_sumstats_colname = "event_time"
-    all_renames={
+    all_renames = {
         # UOA field renames
         # # No DMA change
         # # States
-        'states': "state",
+        "states": "state",
         # # Query terms
-        "rising":"rising_term",
-        'query':'term',
-        'top':"top_term",
+        "rising": "rising_term",
+        "query": "term",
+        "top": "top_term",
         # # 'temporal'
         # # # Avoids confusion with pull_date vs event time as the UOA Google's measuring.
-        'time': temporal_uoa_sumstats_colname,
-        'temporal': temporal_uoa_sumstats_colname,
-        'date': temporal_uoa_sumstats_colname
+        "time": temporal_uoa_sumstats_colname,
+        "temporal": temporal_uoa_sumstats_colname,
+        "date": temporal_uoa_sumstats_colname
         # No other non-UOA columns need to be renamed until further notice.
     }
     uoalower = uoa_col.lower()
@@ -190,14 +232,22 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
 
     # Write the results to the appropriate summary XLSX, separate from the appended raw data since >v0.0.4.
     summary_xlsx = define_target_summary_dataset(appended_data_xlsx)
-    rc.df_to_file(sumstats_df, summary_xlsx, sheet_xlsx=summary_stats_file_flag, add_to_existing_xlsx=False)
+    rc.df_to_file(
+        sumstats_df,
+        summary_xlsx,
+        sheet_xlsx=summary_stats_file_flag,
+        add_to_existing_xlsx=False,
+    )
 
     return sumstats_df
+
 
 # The following functions employ the above to process multiple files simultaneously.
 
 
-def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: bool = False):
+def summarize_collected_data(
+    list_of_appended_datasets: list, suppress_prints: bool = False
+):
     """
     Use a list of appended xlsx datasets representing distinct and unique G Trends instances for which you're collecting
     samples and summarize all the raw data records already recorded in the summary sheets.
@@ -207,8 +257,14 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
         print()
         source_data_labl = "Raw Data Storage File"
         stor_fil_labl = "Summary Statistics File"
-        print("{0:25}{1:65}{2}".format("Process Counter", source_data_labl, stor_fil_labl))
-        print("{0:25}{1:65}{2}".format("-" * 20, "-" * 45, "-" * int(len(stor_fil_labl) * 1.5)))
+        print(
+            "{0:25}{1:65}{2}".format("Process Counter", source_data_labl, stor_fil_labl)
+        )
+        print(
+            "{0:25}{1:65}{2}".format(
+                "-" * 20, "-" * 45, "-" * int(len(stor_fil_labl) * 1.5)
+            )
+        )
     sumcounter = 0
     allfilscnt = len(list_of_appended_datasets)
     for sd in list_of_appended_datasets:
@@ -220,20 +276,32 @@ def summarize_collected_data(list_of_appended_datasets: list, suppress_prints: b
             total_width = len(str(allfilscnt))
             formatted_counter = "{:>{width}}".format(sumcounter, width=total_width)
             sumstats_spreadsheet = define_target_summary_dataset(sd)
-            print("{0:25}{1:65}{2}".format(f"{formatted_counter} / {allfilscnt} processed:", os.path.basename(sd), os.path.basename(sumstats_spreadsheet)))
+            print(
+                "{0:25}{1:65}{2}".format(
+                    f"{formatted_counter} / {allfilscnt} processed:",
+                    os.path.basename(sd),
+                    os.path.basename(sumstats_spreadsheet),
+                )
+            )
             # print(f"{formatted_counter} / {allfilscnt} processed:\t{os.path.basename(sd)}\tadded to {os.path.basename(sumstats_spreadsheet)}")
             # print(counter, '/', allfilscnt, "processed:   ", os.path.basename(sd))
     if core.string_to_bool(suppress_prints) is not True:
         print("\n-----------------------------------------------\n")
 
 
-def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints: bool = False):
-    """ Summarize all the appended data already added to the summary sheet from all of the raw data files.
-     Takes the directory housing the summary files as an argument.
-      Corresponds to Issue #9  in GitHub: """
+def summarize_all_appended_data(
+    summary_files_parent_dir: str, suppress_prints: bool = False
+):
+    """Summarize all the appended data already added to the summary sheet from all of the raw data files.
+    Takes the directory housing the summary files as an argument.
+     Corresponds to Issue #9  in GitHub:"""
     if os.path.exists(summary_files_parent_dir):
         # Filter down to only the append files that hold all the raw data records.
-        all_agg_files = [os.path.join(summary_files_parent_dir, af) for af in os.listdir(summary_files_parent_dir) if af.endswith(app.raw_data_collection_file_flag + ".xlsx")]
+        all_agg_files = [
+            os.path.join(summary_files_parent_dir, af)
+            for af in os.listdir(summary_files_parent_dir)
+            if af.endswith(app.raw_data_collection_file_flag + ".xlsx")
+        ]
         summarize_collected_data(all_agg_files, suppress_prints=suppress_prints)
         return all_agg_files
     else:
@@ -241,10 +309,14 @@ def summarize_all_appended_data(summary_files_parent_dir: str, suppress_prints: 
         return None
 
 
-def full_append_and_summary_run(raw_files_dir=store.get_storage_path(), summary_files_dir=app.summary_storage_path(), suppress_prints=False):
+def full_append_and_summary_run(
+    raw_files_dir=store.get_storage_path(),
+    summary_files_dir=app.summary_storage_path(),
+    suppress_prints=False,
+):
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
-    This represents a clean workflow that builds all. summary XLSXs from the ground up. """
+    This represents a clean workflow that builds all. summary XLSXs from the ground up."""
 
     # Check the arguments for validity.
     if not os.path.exists(raw_files_dir):
@@ -265,31 +337,38 @@ def full_append_and_summary_run(raw_files_dir=store.get_storage_path(), summary_
     # Summarize all those files now.
     if not suppress_prints:
         print("\nSUMMARIZING CONSOLIDATED RAW DATA...\n")
-    all_sum_fils = summarize_all_appended_data(summary_files_dir, suppress_prints=suppress_prints)
+    all_sum_fils = summarize_all_appended_data(
+        summary_files_dir, suppress_prints=suppress_prints
+    )
 
     return all_sum_fils
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start = time.time()
 
     # # Base path for multi-machine testing.
     # base_path = os.path.expanduser(r"~\Documents\Coding\Git\GitHub\ccaoa_github\gtrends_data")
     # base_path = os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data")
-    raw_data_pth = store.get_storage_path()#os.path.join(base_path,"raw_data")
+    raw_data_pth = store.get_storage_path()  # os.path.join(base_path,"raw_data")
     sum_data_pth = app.summary_storage_path()  # os.path.join(base_path, "summary_data")
-
 
     def og_sumtesting():
         # RAW DATA TESTING FILES
 
         # Minnesota
-        tsttimepath= os.path.join(raw_data_pth, "mn_time_20200214-20210214_20221212.csv")
-        tstgeogpath= os.path.join(raw_data_pth, "mn_dma_20200214-20210214_20221212.csv")
-        geogappndpth= os.path.join(raw_data_pth, "mn_dma_20200214-20210214_20221209.csv")
+        tsttimepath = os.path.join(
+            raw_data_pth, "mn_time_20200214-20210214_20221212.csv"
+        )
+        tstgeogpath = os.path.join(
+            raw_data_pth, "mn_dma_20200214-20210214_20221212.csv"
+        )
+        geogappndpth = os.path.join(
+            raw_data_pth, "mn_dma_20200214-20210214_20221209.csv"
+        )
         # Oregon
-        ordmafil1= os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221210.csv")
-        ordmafil2 =  os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221206.csv")
+        ordmafil1 = os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221210.csv")
+        ordmafil2 = os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221206.csv")
         # orfil1 later pull than ordmafil2
         # Texas
         # txtdmapth1= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221207.csv")
@@ -297,21 +376,27 @@ if __name__ == '__main__':
         # txtdmapth3= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221209.csv")
         # txtdmapth4= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221212.csv")
         # txtimepth2= os.path.join(raw_data_pth, "tx_time_20210321-20210421_20221216.csv")
-        txtdmapth1= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221218.csv")
-        txtdmapth2= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221226.csv")
-        txtdmapth3= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221228.csv")
-        txtdmapth4= os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221229.csv")
-        tx_rawdata_fils=[txtdmapth1,txtdmapth2,txtdmapth3,txtdmapth4]
+        txtdmapth1 = os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221218.csv")
+        txtdmapth2 = os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221226.csv")
+        txtdmapth3 = os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221228.csv")
+        txtdmapth4 = os.path.join(raw_data_pth, "tx_dma_20210321-20210421_20221229.csv")
+        tx_rawdata_fils = [txtdmapth1, txtdmapth2, txtdmapth3, txtdmapth4]
         # Valentines
-        vtine_dma1 = os.path.join(raw_data_pth, "valentines_dma_df_20200214-20210214_20221213.csv")
-        vtine_dma2 = os.path.join(raw_data_pth, "valentines_dma_df_20200214-20210214_20221230.csv")
-        vtine_dma3 = os.path.join(raw_data_pth, "valentines_dma_df_20200214-20210214_20221214.csv")
+        vtine_dma1 = os.path.join(
+            raw_data_pth, "valentines_dma_df_20200214-20210214_20221213.csv"
+        )
+        vtine_dma2 = os.path.join(
+            raw_data_pth, "valentines_dma_df_20200214-20210214_20221230.csv"
+        )
+        vtine_dma3 = os.path.join(
+            raw_data_pth, "valentines_dma_df_20200214-20210214_20221214.csv"
+        )
         # Rising Qs
         rq1 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221214.csv")
         rq2 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221114.csv")
         rq3 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221204.csv")
         rq4 = os.path.join(raw_data_pth, "usa_rising_qs_20180603-20220910_20221104.csv")
-        rqz=[rq1,rq2,rq3,rq4]
+        rqz = [rq1, rq2, rq3, rq4]
 
         # # setup test
         # setup_summary_spreadsheet(tstgeogpath, force=True)
@@ -341,17 +426,20 @@ if __name__ == '__main__':
 
     def summarize_or_dma_test():
         # Oregon
-        ordmafil1= os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221210.csv")
-        ordmafil2 =  os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221206.csv")
+        ordmafil1 = os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221210.csv")
+        ordmafil2 = os.path.join(raw_data_pth, "or_dma_20200214-20210214_20221206.csv")
         # orfil1 later pull than ordmafil2
         # Auto-define which is the summary XLSX for OR.
         ordmasumxlsx = define_target_summary_dataset(ordmafil1)
         # Summarize the data for Oregon's DMAs
         return calc_sumstats(ordmasumxlsx)
 
-
     def julyfourthtest():
-        independence_files = [os.path.join(raw_data_pth,f) for f in os.listdir(raw_data_pth) if "20230704" in f]
+        independence_files = [
+            os.path.join(raw_data_pth, f)
+            for f in os.listdir(raw_data_pth)
+            if "20230704" in f
+        ]
         # independence_files = [fi.replace("20230704","20230630") for fi in independence_files if "oh_" in fi]
         # [define_target_summary_dataset(fi) for fi in independence_files]
         app.append_raw_data_from_files(independence_files)
@@ -375,16 +463,16 @@ if __name__ == '__main__':
         ]
 
     def separate_append_summary_test():
-        """ Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18"""
+        """Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18"""
         app_fils = [
             r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\valentines_dma_df_20200214-20210214_raw_data_records.xlsx",
-            r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\mn_time_20200214-20210214_raw_data_records.xlsx"
+            r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data\mn_time_20200214-20210214_raw_data_records.xlsx",
         ]
         sumtst = summarize_collected_data(app_fils, suppress_prints=False)
         # sumtst = summarize_all_appended_data(sum_data_pth)
         return sumtst
 
-# -----------------------------------------------------------
+    # -----------------------------------------------------------
 
     # julyfourthtest()
     # backup()

@@ -114,7 +114,9 @@ def payload_builder(
             # Else, if two dashes in the geography and the last 3 characters are a valid DMA ID:
             elif (
                 str(geography_broad).count("-") == 2
-                and str(geography_broad[len(geography_broad) - 3 : len(geography_broad)])
+                and str(
+                    geography_broad[len(geography_broad) - 3 : len(geography_broad)]
+                )
                 in dma.dma_id_to_name_dict()  # dma_id_dict()
             ):
                 # A geography with
@@ -155,7 +157,7 @@ def payload_builder(
 
 
 def index_as_first_col(indf, new_col_name):
-    """ Set the index of a pandas data frame as its first column with a new arbitrary index."""
+    """Set the index of a pandas data frame as its first column with a new arbitrary index."""
     outdf = indf.copy()
     outdf[new_col_name] = outdf.index
     # Set new col name for the former IDX as first column
@@ -494,11 +496,19 @@ def extract_data_try(
         )
     except Exception as ex:
         if spatial_not_temporal is True:
-            prt = str(payload_item.geo)+"'s "+region.lower().replace("region", "state") + " regions"
+            prt = (
+                str(payload_item.geo)
+                + "'s "
+                + region.lower().replace("region", "state")
+                + " regions"
+            )
         else:
             # Need to extract the broad geography from the payload item.
-            prt = "temporal trends for "+str(payload_item.geo)+" for timeframe " + str(
-                payload_item.interest_over_time_widget["request"]["time"]
+            prt = (
+                "temporal trends for "
+                + str(payload_item.geo)
+                + " for timeframe "
+                + str(payload_item.interest_over_time_widget["request"]["time"])
             )
         print(
             "Extraction pull for",
@@ -522,10 +532,12 @@ if __name__ == "__main__":
         # https://stackoverflow.com/questions/50571317/pytrends-the-request-failed-google-returned-a-response-with-code-429
         # This should be fixed with the new backoff_factor elements of the payload builder.
         init_late2022_studyperiod = "2018-06-03 2022-09-10"
-        the_payload = payload_builder(timeframe=init_late2022_studyperiod)  # Default args
+        the_payload = payload_builder(
+            timeframe=init_late2022_studyperiod
+        )  # Default args
         # sleep(2)  # 2 second pause to trick the Google API?  # No longer necessary with the backoff_factor applied.
         states_df = extract_data_try(
-            #extract_spatial_data(the_payload, subregion="states")
+            # extract_spatial_data(the_payload, subregion="states")
             the_payload,
             spatial_not_temporal=True,
             region="states",
