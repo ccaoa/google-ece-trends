@@ -479,8 +479,8 @@ if __name__ == "__main__":
     # # simple test with only OR's DMAs.
     # summarize_or_dma_test()
 
-    # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
-    separate_append_summary_test()
+    # # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
+    # separate_append_summary_test()
 
     # Full run to completely recreate all the summary files!
     # full_append_and_summary_run()

@@ -555,6 +555,6 @@ if __name__ == "__main__":
         print(dma_df.head(10))
         print(dma_df.tail(10))
 
-    original_main_testing()
+    # original_main_testing()
 
     core.runtime(start)

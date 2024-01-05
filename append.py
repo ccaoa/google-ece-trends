@@ -324,20 +324,58 @@ def append_all_raw_files(raw_files_parent_dir: str, suppress_prints=False):
 
 
 if __name__ == "__main__":
-    tstfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231214.csv"
-    anothertestfil = r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231208.csv"
-    vtines_list = [
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231212.csv",
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231209.csv",
-    ]
-    additional_vtines = [
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231207.csv",
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231214.csv",
-    ]
-    two_uoas = [
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20231208.csv",
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20231206.csv",
-        r"C:\Users\Jacob.Cooper\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231204.csv",
-    ]
-    print(define_target_append_dataset(two_uoas[0]))
-    ret_df = append_raw_data_from_files(two_uoas)
+    import time
+
+    start = time.time()
+
+    def individual_appends():
+        tstfil = os.path.expanduser(
+            r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231214.csv"
+        )
+        anothertestfil = os.path.expanduser(
+            r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\eugene_time_20200214-20210214_20231208.csv"
+        )
+        vtines_list = [
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231212.csv"
+            ),
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231209.csv"
+            ),
+        ]
+        additional_vtines = [
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231207.csv"
+            ),
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231214.csv"
+            ),
+        ]
+        two_uoas = [
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20231208.csv"
+            ),
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\mn_time_20200214-20210214_20231206.csv"
+            ),
+            os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data\valentines_dma_df_20200214-20210214_20231204.csv"
+            ),
+        ]
+        print(define_target_append_dataset(two_uoas[0]))
+        ret_df = append_raw_data_from_files(two_uoas)
+        return ret_df
+
+    def full_run_test(rawfildir: str = None):
+        """Test the full run appending every file in the directory"""
+        if not rawfildir:
+            rawfildir = os.path.expanduser(
+                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data"
+            )
+        return append_all_raw_files(
+            raw_files_parent_dir=rawfildir, suppress_prints=False
+        )
+
+    # full_run_test()
+
+    core.runtime(start)

@@ -122,26 +122,3 @@ def dmas_all_for_state_dict(state):
     targ_state_dma_dict = states_dmas_dict[state]
     # Return a dict of {ID: DMA,} for <state>
     return targ_state_dma_dict
-
-
-if __name__ == "__main__":
-    # idinq='661'
-    # print(
-    # # list(dma_id_to_name_dict().items())[:3]
-    # # # list(dma_id_dict().items())[:3]
-    # #     dma_id_to_name_dict()['531'],)
-    # # print(dma_id_to_name_dict()['623'])
-    # # print(dma_id_to_name_dict()[idinq])
-    # # print(idinq in dma_id_to_name_dict())
-    # # print(
-    # #     # dma_id_to_name_dict()[531],
-    # # dma_id_name_converter(661),type(dma_id_name_converter(661))
-    # )
-    print("661" in dma_id_to_name_dict())
-    # print(
-    # dma_id_name_converter('Knoxville TN'),
-    # dma_id_name_converter('Wichita Falls TX & Lawton OK'),
-    # dma_id_name_converter('Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vernon IL'),
-    # dma_id_name_converter('531')
-    # )
-    pass
