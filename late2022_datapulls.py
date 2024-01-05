@@ -399,7 +399,7 @@ def get_most_recent_files(path, num_files_to_keep):
 def full_run_gtrends(
     pull_trends_data=True, low_search_volume_results=True, number_of_raw_files=23
 ):
-    """Collect and summarize custom data for J. A. Cooper (2023) Google Trends publication."""
+    """Collect and summarize custom data for J. A. Cooper (2024) Google Trends publication."""
     pull_trends_data = core.string_to_bool(pull_trends_data)
     if pull_trends_data:
         # Collect the Google Trends Data by pulling it with the pytrends unofficial API.

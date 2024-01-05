@@ -5,13 +5,22 @@
 
 ### Unreleased <To become the release notes for the next version>
 [//]: # (tagging git releases https://stackoverflow.com/questions/18216991/create-a-tag-in-a-github-repository)
-* Create a full summary statistics Excel file from scratch.
+* *No future enhancements are planned. Successful and consistent execution of `v0.5` will yield the release of `v1.0`.*
+
+## 0.5
+**5 Jan 2024**
+* Separates out the [append](append.py) and [summarize](summarize.py) workflows into two separate scripts
+that produce two separate output files in the output directory.
+This distinguishes the distinct workflows and nullifies multi-tab output summary XLSX files. 
+* Adds a `full_append_and_summary_run()` function in the [summarize](summarize.py) script
+to create a full summary statistics Excel file from scratch.
+* Enhance and fix bugs in the [2024 paper data collection process](late2022_datapulls.py).
+* Upgrade the [virtual environment creation process](py_venv).
 
 ## 0.4
 **8 Nov 2023**
 * Add ability to mathematically summarize pulled data.
 * Adds a `dma_id_name_converter()` function to convert DMA ID ~ Name data.
-* Move `metadata.xlsx` out of this repository and into the Research Team sharepoint.
 * Sort testing and extra files into the `./extras` subdirectory.
 
 ## 0.3
