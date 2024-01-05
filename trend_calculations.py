@@ -55,15 +55,20 @@ def uncertainty_df_field(
     coverage_factor_k = int(float(coverage_factor_k))
     minimum_observations = int(float(minimum_observations))
 
-    if ((observation_threshold is False) or (
-        observation_threshold is True and non_null_counts >= minimum_observations
-    )) and (
+    if (
+        (observation_threshold is False)
+        or (observation_threshold is True and non_null_counts >= minimum_observations)
+    ) and (
         # Must have a non-0 observation to be valid b/c you can't divide by 0 downstream to calc. uncertainty.
-        non_null_counts > 0
+        non_null_counts
+        > 0
     ):
         # Calculate the uncertainty with a defined coverage factor (K)
         # # =(std_dev/SQRT(COUNT(F7:F1048576)))*2
-        uncertainty = float((float(std_dev) / float(math.sqrt(float(non_null_counts)))) * float(coverage_factor_k))
+        uncertainty = float(
+            (float(std_dev) / float(math.sqrt(float(non_null_counts))))
+            * float(coverage_factor_k)
+        )
         return uncertainty
     else:
         # The minimum records required to calculate uncertainty have not been acquired.

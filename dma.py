@@ -9,10 +9,10 @@ from ccaoa import core
 
 
 def dma_module_directory():
-    """ Finds the current directory of the working file regardless of what interpreter or console is being used.
+    """Finds the current directory of the working file regardless of what interpreter or console is being used.
     This should be used as a model for a function that will be added to `ccaoa.core` module in the future.
     WARNING: This will return the current path of *this* file, the dma module.
-    May need to make more dynamic and take an argument for different paths to be included in `ccaoa.core`. """
+    May need to make more dynamic and take an argument for different paths to be included in `ccaoa.core`."""
     cur_path = os.path.realpath(
         os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0])
     )
@@ -79,7 +79,7 @@ def dma_name_to_id_dict():
 
 def dma_id_name_converter(dma_name_or_id_input_var, suppress_prints=False):
     """Takes an input variable designating a DMA's formal name and returns its DMA ID code in text format
-        OR takes a DMA ID code and returns a DMA name."""
+    OR takes a DMA ID code and returns a DMA name."""
     # All DMA IDs will be in string format, so convert all input variables to str.
     dma_name_or_id_input_var = str(dma_name_or_id_input_var)
     suppress_prints = core.string_to_bool(suppress_prints)
@@ -97,10 +97,13 @@ def dma_id_name_converter(dma_name_or_id_input_var, suppress_prints=False):
     else:
         converted_result = None
         if suppress_prints is not False:
-            print(("'" + dma_name_or_id_input_var + "'"),
-                  "is an invalid entry for ST ~ FIPS conversion. Please re-enter and retry.")
+            print(
+                ("'" + dma_name_or_id_input_var + "'"),
+                "is an invalid entry for ST ~ FIPS conversion. Please re-enter and retry.",
+            )
 
     return converted_result
+
 
 # Note: create a function here that uses dma_id_name_converter() to apply names &/or IDs to Pandas DataFrames.
 # # Multiple downstream files need this DataFrame application of a DMA ID, so function-ize it.
@@ -119,26 +122,3 @@ def dmas_all_for_state_dict(state):
     targ_state_dma_dict = states_dmas_dict[state]
     # Return a dict of {ID: DMA,} for <state>
     return targ_state_dma_dict
-
-
-if __name__ == '__main__':
-    # idinq='661'
-    # print(
-    # # list(dma_id_to_name_dict().items())[:3]
-    # # # list(dma_id_dict().items())[:3]
-    # #     dma_id_to_name_dict()['531'],)
-    # # print(dma_id_to_name_dict()['623'])
-    # # print(dma_id_to_name_dict()[idinq])
-    # # print(idinq in dma_id_to_name_dict())
-    # # print(
-    # #     # dma_id_to_name_dict()[531],
-    # # dma_id_name_converter(661),type(dma_id_name_converter(661))
-    # )
-    print('661' in dma_id_to_name_dict())
-    # print(
-    # dma_id_name_converter('Knoxville TN'),
-    # dma_id_name_converter('Wichita Falls TX & Lawton OK'),
-    # dma_id_name_converter('Paducah KY-Cape Girardeau MO-Harrisburg-Mount Vernon IL'),
-    # dma_id_name_converter('531')
-    # )
-    pass

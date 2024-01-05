@@ -1,7 +1,7 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
-![Generic badge](https://img.shields.io/badge/version-0.0.4-blue.svg)
+![Generic badge](https://img.shields.io/badge/version-0.5.0-blue.svg)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
@@ -41,17 +41,25 @@ This file allows for easy and custom pulls of Google Trends data for different t
 * **`extract_data_try`** - Extract any Google Trends data you want: any time, any place.
     Returns a pandas DataFrame.
     * Note: You MUST provide a payload into this function.
+
 ### [`store_data.py`](store_data.py)
 This file allows for easy storage of already pulled Google Trends data.
 #### Key functions:
 * **`store_data`** - Store trends data in a particular location with specific location and time naming parameters.
     Ensure the output file name includes metadata on the time period of the data, date of data pull, and the dataset's name.
     Data can be stored as `.xlsx` or `.csv` (default).
+
+### [`append.py`](append.py)
+This file produces a single dataset that contains all the previously pulled Google Trends data records per area and time of interest unit.
+#### Key functions:
+* **`append_raw_data_from_files`** - Appends a list of Google trends XLSX datasets into a compiled all-data XLSX 
+in preparation for the calculation of summary statistics.
+* **`append_all_raw_files`** - Wrapper for `append_raw_data_from_files()` that appends all Google trends XLSX datasets
+in a passed directory into a compiled all-data XLSX in preparation for the calculation of summary statistics.
+
 ### [`summarize.py`](summarize.py)
 This file, using `trend_calculations.py` formulas, produces summary files that calculate statistics from previously pulled Google Trends data.
 #### Key functions:
-* **`append_raw_files_from_list`** - Appends a list of trends XLSX datasets into the summary XLSX 
-in preparation for the calculation of summary statistics.
 * **`calc_sumstats`** - Calculates the following statistics for the already-stored xlsx GTrends data:
     * Average Interest Score (GTIS)
     * Std Dev
@@ -63,13 +71,15 @@ in preparation for the calculation of summary statistics.
     * Rebased GTIS
 * **`summarize_collected_data`** - Wrapper for `calc_sumstats()` that summarizes appended data 
 and writes the results to the summary XLSX.
+* **`summarize_collected_data`** - Wrapper for `summarize_collected_data()` that summarizes all already appended data
+in a passed directory and writes the results to the summary XLSX.
 
 ### [`late2022_datapulls.py`](late2022_datapulls.py)
 This file pulls specific pieces of Google Trends ECE data for 23 AOIs in preparation for a publication on this method.
 #### Key functions:
-* **`append_raw_files_from_list`** - Appends a list of trends XLSX datasets into the summary XLSX 
-in preparation for the calculation of summary statistics.
+* **`full_gtrends_pull`** - Runs only the data pull (without summarization) for the 23 specified datasets.
 * **`full_run_gtrends`** - Runs the data pull and summarization for the 23 specified datasets.
+
 #### Other helping files:
 * [`datapulls22.bat`](datapulls22.bat) - Windows Batch file wrapper for executing [`late2022_datapulls.py`](late2022_datapulls.py).
 * [`schedule_gtrends_daily_run.bat`](schedule_gtrends_daily_run.bat) - Schedules a daily execution of [`datapulls22.bat`](datapulls22.bat) for automatic data pulls on Windos OS. 

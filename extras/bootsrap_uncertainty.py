@@ -15,7 +15,48 @@ import numpy as np
 from scipy.stats import scoreatpercentile
 
 # input data
-data = np.array([71, 82, 72, 74, 69, 68, 72, 72, 69, 68, 68, 75, 75, 78, 77, 76, 76, 75, 69, 69, 70, 70, 78, 72, 74, 68, 70, 70, 73, 76, 66, 74, 72, 69, 78, 70, 74, 70])
+data = np.array(
+    [
+        71,
+        82,
+        72,
+        74,
+        69,
+        68,
+        72,
+        72,
+        69,
+        68,
+        68,
+        75,
+        75,
+        78,
+        77,
+        76,
+        76,
+        75,
+        69,
+        69,
+        70,
+        70,
+        78,
+        72,
+        74,
+        68,
+        70,
+        70,
+        73,
+        76,
+        66,
+        74,
+        72,
+        69,
+        78,
+        70,
+        74,
+        70,
+    ]
+)
 
 # number of bootstrap samples
 # np.random.seed() is a function from the NumPy library that sets the random seed for the NumPy random number generator.
@@ -41,4 +82,3 @@ median = np.median(data)
 uncertainty = (upper_ci - lower_ci) / 2
 print(f"Median: {median:.3f}")
 print(f"Median Uncertainty: ±{uncertainty:.3f}")
-
