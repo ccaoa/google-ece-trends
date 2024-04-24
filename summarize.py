@@ -482,6 +482,8 @@ if __name__ == "__main__":
     # # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
     # separate_append_summary_test()
 
+    summarize_all_appended_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+
     # Full run to completely recreate all the summary files!
     # full_append_and_summary_run()
 
