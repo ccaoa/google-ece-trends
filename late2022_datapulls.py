@@ -1,4 +1,4 @@
-import os, datetime as dt
+import os, datetime as dt, re
 from ccaoa import core
 from time import time, sleep
 
@@ -383,7 +383,7 @@ def full_gtrends_pull(low_search_volume_results=True):
     return successfully_stored_raw_data_files
 
 
-def get_most_recent_files(path, num_files_to_keep):
+def get_most_recent_files(path: str, num_files_to_keep: int) -> list:
     # Get a list of all files in the directory
     all_files = [os.path.join(path, filename) for filename in os.listdir(path)]
 
@@ -396,8 +396,62 @@ def get_most_recent_files(path, num_files_to_keep):
     return recent_files
 
 
+def get_raw_files_by_date(target_date: str, path: str = None) -> list:
+    """ Identify raw data files by the custom date input. Doesn't have to be the latest X number of files. """
+    # Ensure right format for input variables
+    if not path:
+        path = storage_path
+    target_date = str(target_date)
+
+    # Define a pattern that matches files ending with a target date in yyyymmdd format
+    date_pattern = re.compile(r".*_" + re.escape(target_date) + r"\.csv$")
+
+    # Get a list of all files in the directory
+    all_files = [os.path.join(path, filename) for filename in os.listdir(path)]
+
+    # Filter files that match the date pattern
+    matching_files = [file for file in all_files if date_pattern.match(file)]
+
+    return matching_files
+
+
+def append_and_summarize(list_of_raw_files: list):
+    # Append the successfully pulled files into the corresponding raw data collection XLSX
+    raw_data_collection_xlsxs = app.append_raw_data_from_files(
+        list_of_raw_files, suppress_prints=False
+    )
+    sleep(2.5)
+    # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
+    # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
+    # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
+    targ_aggfiles_listdir = [rdc for rdc in raw_data_collection_xlsxs]
+    all_sum_fils_for_this_run = agg.summarize_collected_data(
+        targ_aggfiles_listdir, suppress_prints=False
+    )
+    return all_sum_fils_for_this_run
+
+
+def append_summarize_custom_date(custom_date_yyyymmdd, raw_data_pth:str = None):
+    """ Use raw data from a single custom date and append them to the appropriate summary files."""
+    targ_files = get_raw_files_by_date(target_date=custom_date_yyyymmdd, path=raw_data_pth)
+    summed_files = append_and_summarize(targ_files)
+    return summed_files
+
+
+def append_summarize_custom_dates(custom_dates_list_yyyymmdd: list, raw_data_pth:str = None):
+    """ Use raw data from multiple custom dates and append them to the appropriate summary files.
+    This function is better for multiple custom dates because it only summarizes the appeneded data once
+    as opposed to repeatedly doing so iteratively for each custom date."""
+    all_targ_files = []
+    for date in custom_dates_list_yyyymmdd:
+        targ_files = get_raw_files_by_date(target_date=date, path=raw_data_pth)
+        all_targ_files = all_targ_files + targ_files
+    summed_files = append_and_summarize(all_targ_files)
+    return summed_files
+
+
 def full_run_gtrends(
-    pull_trends_data=True, low_search_volume_results=True, number_of_raw_files=23
+    pull_trends_data: bool = True, low_search_volume_results: bool = True, number_of_raw_files: int = 23
 ):
     """Collect and summarize custom data for J. A. Cooper (2024) Google Trends publication."""
     pull_trends_data = core.string_to_bool(pull_trends_data)
@@ -432,18 +486,7 @@ def full_run_gtrends(
             print("Summarizing raw data files pulled on", unique_pull_dates[0])
 
     # Summarize the data you just pulled into the summary XLSX to find overall statistics about your Google Trends data.
-    # Append the successfully pulled files into the corresponding raw data collection XLSX
-    raw_data_collection_xlsxs = app.append_raw_data_from_files(
-        successfully_stored_raw_data_files, suppress_prints=False
-    )
-    sleep(2.5)
-    # # Now re-run the summary statistics for the datasets that were successfully grabbed in this pull.
-    # # # No sense in agg.summarize_all_summary_data() if some of those have no new data due to failures \
-    # # # in the data collection phase. So only get the summary stats xlsx names for the data that did pull correctly.
-    targ_aggfiles_listdir = [rdc for rdc in raw_data_collection_xlsxs]
-    all_sum_fils_for_this_run = agg.summarize_collected_data(
-        targ_aggfiles_listdir, suppress_prints=False
-    )
+    all_sum_fils_for_this_run = append_and_summarize(successfully_stored_raw_data_files)
 
     return all_sum_fils_for_this_run
 
@@ -456,8 +499,14 @@ if __name__ == "__main__":
     full_run_gtrends(pull_trends_data=True)
 
     # # Append and summarize already pulled data.
+    # # # Either identify this by the most recent X number of files:
     # number_raw_files = 23  # 23 files pulled daily as of Aug 2023.
     # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
+    # # # Or, identify raw files by their date if they're not the most recent.
+    # # # # Single custom date.
+    # append_summarize_custom_date(20240505)
+    # # # # Or, multiple custom dates.
+    # append_summarize_custom_dates([20240511])
 
     # # Only summarize the already-appended data:
     # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
