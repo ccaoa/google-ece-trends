@@ -504,11 +504,11 @@ if __name__ == "__main__":
     # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
     # # # Or, identify raw files by their date if they're not the most recent.
     # # # # Single custom date.
-    # append_summarize_custom_date(20240505)
+    # append_summarize_custom_date(20240609)
     # # # # Or, multiple custom dates.
-    # append_summarize_custom_dates([20240511])
+    # append_summarize_custom_dates([20240616])
 
     # # Only summarize the already-appended data:
-    # agg.summarize_all_summary_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+    # agg.summarize_all_appended_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
 
     core.runtime(start=start)
