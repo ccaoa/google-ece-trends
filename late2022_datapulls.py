@@ -71,10 +71,10 @@ def full_gtrends_pull(low_search_volume_results=True):
     )
 
     #
-    # Get related queries
-    usa_top_qs = pull.top_related_queries(usa_payload)
-    # # sleep(11)  # >10 second pause to trick the Google API?
-    usa_rising_qs = pull.rising_related_queries(usa_payload)
+    # # Get related queries
+    # usa_top_qs = pull.top_related_queries(usa_payload)
+    # # # sleep(11)  # >10 second pause to trick the Google API?
+    # usa_rising_qs = pull.rising_related_queries(usa_payload)
 
     # Collect data to highlight the Cincinnati Problem (The fact that DMAs are inconsistently reported at state level):
     geog_ky = "US-KY"
@@ -151,8 +151,8 @@ def full_gtrends_pull(low_search_volume_results=True):
         usa_states_df,
         usa_temporal_df,
         usa_dma_df,
-        usa_top_qs,
-        usa_rising_qs,
+        # usa_top_qs,
+        # usa_rising_qs,
         ky_dma,
         ky_time,
         in_dma,
@@ -227,10 +227,10 @@ def full_gtrends_pull(low_search_volume_results=True):
     )
     # sleep(11)  # >10 second pause to trick the Google API?
     #
-    # Get related queries
-    valentines_top_qs = pull.top_related_queries(valentines_usa_payload)
-    # sleep(11)  # >10 second pause to trick the Google API?
-    valentines_rising_qs = pull.rising_related_queries(valentines_usa_payload)
+    # # Get related queries
+    # valentines_top_qs = pull.top_related_queries(valentines_usa_payload)
+    # # sleep(11)  # >10 second pause to trick the Google API?
+    # valentines_rising_qs = pull.rising_related_queries(valentines_usa_payload)
     #
     # Pull state-level OR & MN data to demonstrate how the Cincy Problem has been resolved by Google
     # # since March - April 2021 when original MN & OR data was collected.
@@ -302,8 +302,8 @@ def full_gtrends_pull(low_search_volume_results=True):
         valentines_states_df,
         valentines_temporal_df,
         valentines_dma_df,
-        valentines_top_qs,
-        valentines_rising_qs,
+        # valentines_top_qs,
+        # valentines_rising_qs,
         mn_dma,
         mn_time,
         or_dma,
