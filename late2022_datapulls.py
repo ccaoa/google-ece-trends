@@ -504,7 +504,7 @@ if __name__ == "__main__":
     # full_run_gtrends(pull_trends_data=False, number_of_raw_files=number_raw_files)
     # # # Or, identify raw files by their date if they're not the most recent.
     # # # # Single custom date.
-    # append_summarize_custom_date(20240609)
+    # append_summarize_custom_date(20240911)
     # # # # Or, multiple custom dates.
     # append_summarize_custom_dates([20240616])
 
