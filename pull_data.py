@@ -17,6 +17,7 @@ except:
 
 ece_topic_code = "%2Fm%2F022hpx".replace("%2F", r"/")
 worker_topic_code = "%2Fg%2F11bc6xhvhf".replace("%2F", r"/")
+prek_topic_code = "%2Fm%2F027wyv".replace("%2F", r"/")
 
 
 def backoff_factor_calculator(retries=2, backoff_factor=0.1):
