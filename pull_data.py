@@ -70,9 +70,9 @@ def connect_to_gtrends(language="en-US", retries=10, backoff_factor=0.1):
 
 
 def payload_builder(
-    timeframe=None,
-    geography_broad="US",
-    search_item=ece_topic_code,
+    timeframe: str = None,
+    geography_broad: str = "US",
+    search_item: str = None,
     connection_item=None,
 ):
     """The payload is the base parameter set that tells Google the broad picture of what you're trying to research:
@@ -97,6 +97,8 @@ def payload_builder(
     # Instead, search for the Child care "Topic", what has been used for initial research.
     # You can search for topics by following this methodology: https://github.com/GeneralMills/pytrends/issues/437
     # It must be translated to (see issue link above):
+    if not search_item:
+        search_item = ece_topic_code
     search_item = search_item.replace("%2F", r"/")
 
     # GEOGRAPHY
@@ -235,18 +237,20 @@ def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     return payload_df
 
 
-def extract_temporal_data(payload=None, time_uoa="date"):
+def extract_temporal_data(payload=None, time_uoa: str = "date", topic_code: str = None) -> pd.DataFrame:
     """Pass a connection item with a built payload into this function to extract meaningful time data from it."""
 
-    if payload is None:
+    if not payload:
         # Thinking defining the timeframe outside of this function will be wise. Too much nesting otherwise.
         payload = payload_builder()
+    if not topic_code:
+        topic_code = ece_topic_code
 
     # Pull the time data for the payload parameters
     time_df = payload.interest_over_time()
-    #
+
     # Format the new DF to make it easier to read
-    time_df = gtis_df_formatter(time_df, ece_topic_code, time_uoa, rank_sort=False)
+    time_df = gtis_df_formatter(time_df, topic_code, time_uoa, rank_sort=False)
 
     return time_df
 
@@ -311,12 +315,14 @@ def subregion_identifier(subregion_input):
     return subregion
 
 
-def extract_spatial_data(payload=None, subregion="REGION", low_volume=True):
+def extract_spatial_data(payload=None, subregion="REGION", low_volume=True, topic_code: str = None) -> pd.DataFrame:
     """Pass a connection item with a built payload into this function to extract meaningful geography data from it.
     This will look at Trends across Sub-Geographies as Units of Analysis (UOAs)"""
 
-    if payload is None:
+    if not payload:
         payload = payload_builder()
+    if not topic_code:
+        topic_code = ece_topic_code
 
     # Determine which subregion is to be examined.
     subregion = subregion_identifier(subregion)
@@ -336,7 +342,7 @@ def extract_spatial_data(payload=None, subregion="REGION", low_volume=True):
         region_column = subregion.lower()
     if region_column == "region":
         region_column = "state"
-    geog_df = gtis_df_formatter(geog_df, ece_topic_code, region_column, rank_sort=True)
+    geog_df = gtis_df_formatter(geog_df, topic_code, region_column, rank_sort=True)
 
     return geog_df
 
@@ -354,7 +360,7 @@ def related_queries_engine(payload_item, top_not_rising=True):
         return
     rqs_dict = payload_item.related_queries()
     search_item = payload_item.kw_list[0]
-    if search_item is None:
+    if not search_item:
         search_item = ece_topic_code
     rqs_dict = rqs_dict[search_item]
     top = rqs_dict["top"]
