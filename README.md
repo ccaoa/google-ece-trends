@@ -1,7 +1,7 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
-![Generic badge](https://img.shields.io/badge/version-0.5.0-blue.svg)
+![Generic badge](https://img.shields.io/badge/version-1.0.0-blue.svg)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
@@ -83,6 +83,34 @@ This file pulls specific pieces of Google Trends ECE data for 23 AOIs in prepara
 #### Other helping files:
 * [`datapulls22.bat`](datapulls22.bat) - Windows Batch file wrapper for executing [`late2022_datapulls.py`](late2022_datapulls.py).
 * [`schedule_gtrends_daily_run.bat`](schedule_gtrends_daily_run.bat) - Schedules a daily execution of [`datapulls22.bat`](datapulls22.bat) for automatic data pulls on Windos OS. 
+
+# Data
+Data were systematically collected with identical query parameters using code from this repository.
+We collected over 400 replicate data extracts for each of 19 different identical query parameter sets
+ from 9 October 2022 to 3 October 2024.
+These query parameters can be found in the table below and correspond to commands in [the data pulls script](late2022_datapulls.py).
+
+| Area of Interest (AOI) | AOI Level | Data Type | Sub-unit | Start: search period | End: search period | n(Samples pulled) |
+|------------------------|-----------|-----------|----------|----------------------|--------------------|-------------------|
+| United States          | Country   | Spatial   | States   | 3 Jun 2018           | 10 Sept 2022       | 429               |
+| United States          | Country   | Spatial   | DMAs     | 3 Jun 2018           | 10 Sept 2022       | 405               |
+| United States          | Country   | Temporal  | Week     | 3 Jun 2018           | 10 Sept 2022       | 402               |
+| Kentucky               | State     | Spatial   | DMAs     | 3 Jun 2018           | 10 Sept 2022       | 405               |
+| Indiana                | State     | Spatial   | DMAs     | 3 Jun 2018           | 10 Sept 2022       | 402               |
+| Ohio                   | State     | Spatial   | DMAs     | 3 Jun 2018           | 10 Sept 2022       | 408               |
+| Kentucky               | State     | Temporal  | Week     | 3 Jun 2018           | 10 Sept 2022       | 406               |
+| Indiana                | State     | Temporal  | Week     | 3 Jun 2018           | 10 Sept 2022       | 399               |
+| Ohio                   | State     | Temporal  | Week     | 3 Jun 2018           | 10 Sept 2022       | 404               |
+| United States          | Country   | Spatial   | States   | 14 Feb 2020          | 14 Feb 2021        | 433               |
+| United States          | Country   | Spatial   | DMAs     | 14 Feb 2020          | 14 Feb 2021        | 409               |
+| United States          | Country   | Temporal  | Week     | 14 Feb 2020          | 14 Feb 2021        | 397               |
+| Minnesota              | State     | Temporal  | Week     | 14 Feb 2020          | 14 Feb 2021        | 419               |
+| Oregon                 | State     | Temporal  | Week     | 14 Feb 2020          | 14 Feb 2021        | 417               |
+| Minnesota              | State     | Spatial   | DMAs     | 14 Feb 2020          | 14 Feb 2021        | 404               |
+| Oregon                 | State     | Spatial   | DMAs     | 14 Feb 2020          | 14 Feb 2021        | 396               |
+| Eugene, OR             | DMA       | Temporal  | Week     | 14 Feb 2020          | 14 Feb 2021        | 422               |
+| Texas                  | State     | Spatial   | DMA      | 21 Mar 2021          | 21 Apr 2021        | 380               |
+| Texas                  | State     | Temporal  | Day      | 21 Mar 2021          | 21 Apr 2021        | 381               |
 
 # Other
 ## Acknowledgements

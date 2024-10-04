@@ -38,7 +38,8 @@ def date_from_searchperiod(search_period_date):
 
 def get_storage_path():
     """Dynamically define the storage path with an external file that you gitignore.
-    Keeps one from having to constantly edit their file paths in-code if working on different machines."""
+    Keeps one from having to constantly edit their file paths in-code if working on different machines.
+    """
     current_directory = dma.dma_module_directory()
     dot_storage_path = os.path.join(current_directory, ".storage_path")
     if not os.path.exists(dot_storage_path):
