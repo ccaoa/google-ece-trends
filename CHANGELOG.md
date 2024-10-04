@@ -7,9 +7,11 @@
 [//]: # (tagging git releases https://stackoverflow.com/questions/18216991/create-a-tag-in-a-github-repository)
 * *No future enhancements are planned. Successful and consistent execution of `v0.5` will yield the release of `v1.0`.*
 
-## ____
-**date**
-* Add ability to append & summarize custom dates' raw data in the [`datapulls.py`](late2022_datapulls.py). 
+## 1.0
+**4 Oct 2024**
+* Add ability to append & summarize custom dates' raw data in the [`datapulls.py`](late2022_datapulls.py).
+* Remove Top and Related Queries pulls in 2022 data pulls because of [`pytrends` Issue #628](https://github.com/GeneralMills/pytrends/issues/628#issuecomment-2378810871)
+* Add data resulting from 2022-2024 data pulls. This dataset is used in the publication for Cooper et al. (2024).
 
 ## 0.5
 **5 Jan 2024**
