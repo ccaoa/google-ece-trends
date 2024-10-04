@@ -397,7 +397,7 @@ def get_most_recent_files(path: str, num_files_to_keep: int) -> list:
 
 
 def get_raw_files_by_date(target_date: str, path: str = None) -> list:
-    """ Identify raw data files by the custom date input. Doesn't have to be the latest X number of files. """
+    """Identify raw data files by the custom date input. Doesn't have to be the latest X number of files."""
     # Ensure right format for input variables
     if not path:
         path = storage_path
@@ -431,15 +431,19 @@ def append_and_summarize(list_of_raw_files: list):
     return all_sum_fils_for_this_run
 
 
-def append_summarize_custom_date(custom_date_yyyymmdd, raw_data_pth:str = None):
-    """ Use raw data from a single custom date and append them to the appropriate summary files."""
-    targ_files = get_raw_files_by_date(target_date=custom_date_yyyymmdd, path=raw_data_pth)
+def append_summarize_custom_date(custom_date_yyyymmdd, raw_data_pth: str = None):
+    """Use raw data from a single custom date and append them to the appropriate summary files."""
+    targ_files = get_raw_files_by_date(
+        target_date=custom_date_yyyymmdd, path=raw_data_pth
+    )
     summed_files = append_and_summarize(targ_files)
     return summed_files
 
 
-def append_summarize_custom_dates(custom_dates_list_yyyymmdd: list, raw_data_pth:str = None):
-    """ Use raw data from multiple custom dates and append them to the appropriate summary files.
+def append_summarize_custom_dates(
+    custom_dates_list_yyyymmdd: list, raw_data_pth: str = None
+):
+    """Use raw data from multiple custom dates and append them to the appropriate summary files.
     This function is better for multiple custom dates because it only summarizes the appeneded data once
     as opposed to repeatedly doing so iteratively for each custom date."""
     all_targ_files = []
@@ -451,7 +455,9 @@ def append_summarize_custom_dates(custom_dates_list_yyyymmdd: list, raw_data_pth
 
 
 def full_run_gtrends(
-    pull_trends_data: bool = True, low_search_volume_results: bool = True, number_of_raw_files: int = 23
+    pull_trends_data: bool = True,
+    low_search_volume_results: bool = True,
+    number_of_raw_files: int = 23,
 ):
     """Collect and summarize custom data for J. A. Cooper (2024) Google Trends publication."""
     pull_trends_data = core.string_to_bool(pull_trends_data)

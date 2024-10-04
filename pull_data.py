@@ -46,7 +46,8 @@ def backoff_factor_calculator(retries=2, backoff_factor=0.1):
 
 def connect_to_gtrends(language="en-US", retries=10, backoff_factor=0.1):
     """This is a shell function for pytrends.request.TrendReq().
-    That function takes several arguments, but until they are better understood, the defaults will be used."""
+    That function takes several arguments, but until they are better understood, the defaults will be used.
+    """
 
     # LANGUAGE
     # Likely will need to flesh out this argument to dynamically select more than US English, but start with that.
@@ -79,7 +80,8 @@ def payload_builder(
     the 'What, Where, & When' of GTrends data pulls.
     The 'When' is likely to be the most variable for CCAoA. Formatting this argument will likely take its own function.
     What = the child care topic.
-    Where = USA (while state specific searches could be used, you run the risk of the Cincinnati Problem)."""
+    Where = USA (while state specific searches could be used, you run the risk of the Cincinnati Problem).
+    """
 
     # TIMEFRAME
     # https://github.com/GeneralMills/pytrends#interest-by-region:~:text=is%20%27360%27-,timeframe,-Date%20to%20start
@@ -237,7 +239,9 @@ def gtis_df_formatter(payload_df, search_term, uoa, rank_sort=True):
     return payload_df
 
 
-def extract_temporal_data(payload=None, time_uoa: str = "date", topic_code: str = None) -> pd.DataFrame:
+def extract_temporal_data(
+    payload=None, time_uoa: str = "date", topic_code: str = None
+) -> pd.DataFrame:
     """Pass a connection item with a built payload into this function to extract meaningful time data from it."""
 
     if not payload:
@@ -315,7 +319,9 @@ def subregion_identifier(subregion_input):
     return subregion
 
 
-def extract_spatial_data(payload=None, subregion="REGION", low_volume=True, topic_code: str = None) -> pd.DataFrame:
+def extract_spatial_data(
+    payload=None, subregion="REGION", low_volume=True, topic_code: str = None
+) -> pd.DataFrame:
     """Pass a connection item with a built payload into this function to extract meaningful geography data from it.
     This will look at Trends across Sub-Geographies as Units of Analysis (UOAs)"""
 
@@ -350,7 +356,8 @@ def extract_spatial_data(payload=None, subregion="REGION", low_volume=True, topi
 def related_queries_engine(payload_item, top_not_rising=True):
     """Extract any Google Trends data you want: any time, any place.
     Note: You MUST provide a payload into this function.
-    It is not intended to continuously re-create a payload and will not function that way."""
+    It is not intended to continuously re-create a payload and will not function that way.
+    """
     if isinstance(payload_item, pytrends.request.TrendReq) is False:
         print(
             "You did not pass a valid payload item into this function. \n"
@@ -390,7 +397,8 @@ def related_queries_engine(payload_item, top_not_rising=True):
 def top_related_queries(payload_item):
     """Extract any Google Trends data you want: any time, any place.
     Note: You MUST provide a payload into this function.
-    It is not intended to continuously re-create a payload and will not function that way."""
+    It is not intended to continuously re-create a payload and will not function that way.
+    """
     if isinstance(payload_item, pytrends.request.TrendReq) is False:
         print(
             "You did not pass a valid payload item into this function. \n"
@@ -405,7 +413,8 @@ def top_related_queries(payload_item):
 def rising_related_queries(payload_item):
     """Extract any Google Trends data you want: any time, any place.
     Note: You MUST provide a payload into this function.
-    It is not intended to continuously re-create a payload and will not function that way."""
+    It is not intended to continuously re-create a payload and will not function that way.
+    """
     if isinstance(payload_item, pytrends.request.TrendReq) is False:
         print(
             "You did not pass a valid payload item into this function. \n"

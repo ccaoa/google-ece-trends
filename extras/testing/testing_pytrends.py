@@ -130,6 +130,8 @@ ranked_region_df.head(10)
 # GEOGRAPHY - DMAs
 dma_uoa_label = "DMA"
 dma_df = ptrend.interest_by_region(resolution=dma_uoa_label, inc_low_vol=True)
+
+
 # Try to functionize the downstream manipulation of the region DF
 def gtis_df_formatter(payload_region_df, gtis_field, uoa):
     """Generates a clean DF with a formatted GTIS column + a ranking column for each UOA region."""

@@ -12,7 +12,8 @@ def dma_module_directory():
     """Finds the current directory of the working file regardless of what interpreter or console is being used.
     This should be used as a model for a function that will be added to `ccaoa.core` module in the future.
     WARNING: This will return the current path of *this* file, the dma module.
-    May need to make more dynamic and take an argument for different paths to be included in `ccaoa.core`."""
+    May need to make more dynamic and take an argument for different paths to be included in `ccaoa.core`.
+    """
     cur_path = os.path.realpath(
         os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0])
     )

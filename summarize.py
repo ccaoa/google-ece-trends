@@ -208,7 +208,7 @@ def calc_sumstats(appended_data_xlsx: str, coverage_factor_k=2, gtis_sort=True):
         # # # Avoids confusion with pull_date vs event time as the UOA Google's measuring.
         "time": temporal_uoa_sumstats_colname,
         "temporal": temporal_uoa_sumstats_colname,
-        "date": temporal_uoa_sumstats_colname
+        "date": temporal_uoa_sumstats_colname,
         # No other non-UOA columns need to be renamed until further notice.
     }
     uoalower = uoa_col.lower()
@@ -310,7 +310,8 @@ def full_append_and_summary_run(
 ):
     """Using ALL of the files stored in the `raw_files_dir`, append them ALL to their summary.xlsx.
     Then, summarize the statistics of all of these raw datasets.
-    This represents a clean workflow that builds all. summary XLSXs from the ground up."""
+    This represents a clean workflow that builds all. summary XLSXs from the ground up.
+    """
 
     # Check the arguments for validity.
     if not os.path.exists(raw_files_dir):
@@ -482,7 +483,11 @@ if __name__ == "__main__":
     # # Test the functionality of the append / summary work split re. https://github.com/ccaoa/google-ece-trends/issues/18
     # separate_append_summary_test()
 
-    summarize_all_appended_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+    summarize_all_appended_data(
+        os.path.expanduser(
+            r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"
+        )
+    )
 
     # Full run to completely recreate all the summary files!
     # full_append_and_summary_run()

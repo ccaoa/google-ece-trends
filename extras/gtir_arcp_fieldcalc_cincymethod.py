@@ -2,6 +2,7 @@
 # # See the gitr_arcpy_fieldcalc.py for the function version of this
 # (!gtis_us_avg! *!ccadmdnorm! )/!ccadmdnorm_dma_all!
 
+
 # GTIR based on DMA_GTIS_StOnly_Cincy
 # # !! Select only counties in target state for this calc !!
 def gtiratio_calculator(
