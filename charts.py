@@ -53,5 +53,49 @@ def geog_rsv_histogram(dma_only: bool = True, national_only: bool = False):
     plt.show()
 
 
+def plot_temporal_rsv():
+    """ Plot temporal RSV data with confidence intervals for each temporal dataset."""
+
+    # Search for Excel files with 'temporal' or 'time' in the filename
+    excel_files = glob.glob(os.path.join(sum_data_pth, '*temporal*.xlsx')) + glob.glob(os.path.join(sum_data_pth, '*time*.xlsx'))
+    excel_files = [f for f in excel_files if '_qs_' not in f and "_raw_data_records" not in f]
+    # Iterate over each file to read and plot 'gtis_mean' data
+    plt.figure(figsize=(12, 8))
+    et = "event_time"
+    for file in excel_files:
+        label = os.path.basename(file).split('.')[0].replace("_temporal_", "_").replace("_df_", "_").replace(
+            "_summary_stats", '').replace('valentines', 'usa').replace('_', " ").upper()
+        df = pd.read_excel(file)
+        if 'gtis_mean' in df.columns and et in df.columns:
+            # Extract columns for plotting
+            df[et] = pd.to_datetime(df[et], errors='coerce')
+            df = df.sort_values(by=et)
+            event_time = df[et]
+            gtis_mean = df['gtis_mean']
+            ci_lower = df['ci_95_lowr'] if 'ci_95_lowr' in df.columns else df['ci_95_pct'].apply(lambda x: x[0] if pd.notna(x) else None)
+            ci_upper = df['ci_95_uppr'] if 'ci_95_uppr' in df.columns else df['ci_95_pct'].apply(lambda x: x[1] if pd.notna(x) else None)
+
+            # Plot the mean values as a line
+            plt.plot(event_time, gtis_mean, color="black", label="Mean RSV")
+
+            # Plot the confidence interval as a shaded area
+            plt.fill_between(event_time, ci_lower, ci_upper, alpha=0.6, color="gray",label='95% Confidence Interval')
+        else:
+            print(label, 'not valid.')
+
+        # Set plot labels and title
+        plt.xlabel('Search Period')
+        plt.ylabel('Average Relative Search Volume')
+        plt.title('Temporal RSV Data: '+label)
+
+        # plt.suptitle(label)
+        plt.legend()
+
+        # Show the plot
+        plt.tight_layout()
+        plt.show()
+
+
 if __name__ == '__main__':
-    geog_rsv_histogram(dma_only=True,national_only=False)
+    # geog_rsv_histogram(dma_only=True,national_only=False)
+    plot_temporal_rsv()
