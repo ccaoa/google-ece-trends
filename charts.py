@@ -1,5 +1,6 @@
-import os, time, numpy as np, pandas as pd
-import glob, matplotlib.pyplot as plt, seaborn as sns
+import os, re, numpy as np, pandas as pd
+from datetime import datetime
+import glob, matplotlib.pyplot as plt, matplotlib.dates as mdates, seaborn as sns
 
 from ccaoa import core, raccoon as rc
 
@@ -10,6 +11,31 @@ except ImportError:
 
 
 sum_data_pth = app.summary_storage_path()
+
+
+def reformat_dates_in_string(input_str: str) -> str:
+    """
+    Reformat date values in the format YYYYMMDD to 'DD Mon YYYY'.
+
+    Parameters:
+    input_str (str): The input string containing date values in the format YYYYMMDD.
+
+    Returns:
+    str: The input string with reformatted date values.
+    """
+    # Define the regex pattern to match YYYYMMDD date values
+    date_pattern = r'\b(\d{4})(\d{2})(\d{2})\b'
+
+    # Function to replace the matched date with the desired format
+    def replace_date(match):
+        year, month, day = match.groups()
+        date_obj = datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d")
+        return date_obj.strftime("%d %b %Y")
+
+    # Use re.sub to replace all occurrences of the pattern in the input string
+    reformatted_str = re.sub(date_pattern, replace_date, input_str)
+
+    return reformatted_str
 
 
 def geog_rsv_histogram(dma_only: bool = True, national_only: bool = False):
@@ -53,18 +79,29 @@ def geog_rsv_histogram(dma_only: bool = True, national_only: bool = False):
     plt.show()
 
 
-def plot_temporal_rsv():
+def plot_temporal_rsv(save: bool = False):
     """ Plot temporal RSV data with confidence intervals for each temporal dataset."""
-
+    et = "event_time"
     # Search for Excel files with 'temporal' or 'time' in the filename
     excel_files = glob.glob(os.path.join(sum_data_pth, '*temporal*.xlsx')) + glob.glob(os.path.join(sum_data_pth, '*time*.xlsx'))
     excel_files = [f for f in excel_files if '_qs_' not in f and "_raw_data_records" not in f]
+
     # Iterate over each file to read and plot 'gtis_mean' data
-    plt.figure(figsize=(12, 8))
-    et = "event_time"
     for file in excel_files:
-        label = os.path.basename(file).split('.')[0].replace("_temporal_", "_").replace("_df_", "_").replace(
-            "_summary_stats", '').replace('valentines', 'usa').replace('_', " ").upper()
+        # Prepare the graph
+        # Clear the figure before creating the next plot
+        plt.clf()
+        plt.figure(figsize=(12, 8))
+
+        # Format the label
+        label = os.path.basename(file).split('.')[0].replace("_temporal_", "_").replace("_time_","_").replace("_df_", "_").replace(
+            "_summary_stats", '').replace('valentines', 'usa').replace('_', ", ").upper().replace("EUGENE","Eugene, OR").replace('-',' — ')
+        label = reformat_dates_in_string(label)
+        if label[:2] in core.statedict():
+            label = core.stabv2fulllen(label[:2]) + label[2:]
+        print(label)
+
+        # Process the data
         df = pd.read_excel(file)
         if 'gtis_mean' in df.columns and et in df.columns:
             # Extract columns for plotting
@@ -85,7 +122,7 @@ def plot_temporal_rsv():
 
         # Set plot labels and title
         plt.xlabel('Search Period')
-        plt.ylabel('Average Relative Search Volume')
+        plt.ylabel('Relative Search Volume (RSV)')
         plt.title('Temporal RSV Data: '+label)
 
         # plt.suptitle(label)
@@ -93,9 +130,14 @@ def plot_temporal_rsv():
 
         # Show the plot
         plt.tight_layout()
-        plt.show()
+        if core.string_to_bool(save):
+            # Save the plot as an image instead of displaying it
+            filename = os.path.join(os.path.expanduser("~/Downloads"),f'graph_{label}.png')
+            plt.savefig(filename, dpi=300)  # Save the plot with a resolution of 300 DPI
+        else:
+            plt.show()
 
 
 if __name__ == '__main__':
     # geog_rsv_histogram(dma_only=True,national_only=False)
-    plot_temporal_rsv()
+    plot_temporal_rsv(save=True)
