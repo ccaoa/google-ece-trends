@@ -1,8 +1,6 @@
 import os, datetime as dt, re
-from ccaoa import core
+from ccaoa import core, raccoon as rc
 from time import time, sleep
-
-# from pathlib import Path
 
 try:
     from . import (
@@ -343,7 +341,7 @@ def full_gtrends_pull(low_search_volume_results=True):
             # That way, next time the script runs, it'll exclude variables that have already been named.
             # see https://github.com/ccaoa/google-ece-trends/issues/3.
             all_names_to_exclude.append(gt_file_name)
-            if core.check_empty_dataframe(dataframe) is False:
+            if rc.check_empty_dataframe(dataframe) is False:
                 short_path = os.path.join(
                     "~",
                     os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],

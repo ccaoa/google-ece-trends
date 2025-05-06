@@ -11,7 +11,7 @@
 **4 Oct 2024**
 * Add ability to append & summarize custom dates' raw data in the [`datapulls.py`](late2022_datapulls.py).
 * Remove Top and Related Queries pulls in 2022 data pulls because of [`pytrends` Issue #628](https://github.com/GeneralMills/pytrends/issues/628#issuecomment-2378810871)
-* Add data resulting from 2022-2024 data pulls. This dataset is used in the publication for Cooper et al. (2024).
+* Add data resulting from 2022-2024 data pulls. This dataset is used in the publication for Cooper et al. (2025).
 
 ## 0.5
 **5 Jan 2024**

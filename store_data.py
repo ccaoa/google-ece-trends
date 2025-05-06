@@ -1,6 +1,6 @@
 import inspect, datetime as dt, os
 from pathlib import Path
-from ccaoa import core
+from ccaoa import raccoon as rc
 
 try:
     from . import dma
@@ -82,7 +82,7 @@ def store_data(
         ext = ".xlsx"
     file_name = dataset_name + "_" + date_range + "_" + today + ext
     file_path = os.path.join(storage_directory_file_path, file_name)
-    core.df_to_file(gtrends_data, file_path)
+    rc.df_to_file(gtrends_data, file_path)
 
     if suppress_prints is not True:
         short_path = os.path.join(

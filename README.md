@@ -3,7 +3,6 @@
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
 [![Version](https://img.shields.io/badge/version-1.0.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
 [![Python versions](https://img.shields.io/badge/python-3.7-E6BD29.svg)](https://www.python.org/)
-[![ccaoa package version](https://img.shields.io/badge/ccaoa-2.2.1-D12828.svg)](https://github.com/ccaoa/ccaoa-mapping) 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io/)
 ---
 This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
