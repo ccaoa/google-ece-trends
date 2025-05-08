@@ -1,2 +1,8 @@
 pytrends>=4.9.2
+xlsxwriter
+openpyxl
+numpy
 pandas
+# Anchor UrlLib3 & Requests to avoid https://github.com/GeneralMills/pytrends/issues/591
+urllib3~=1.26.12
+requests~=2.28.1
