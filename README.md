@@ -1,13 +1,15 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
-[![Version](https://img.shields.io/badge/version-1.0.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
+[![Version](https://img.shields.io/badge/version-1.1.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
 [![Python versions](https://img.shields.io/badge/python-3.7-E6BD29.svg)](https://www.python.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io/)
 ---
-This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
+This is a repository that utilizes an [unofficial python API for Google Trends, *pytrends*,](https://github.com/GeneralMills/pytrends) 
 to systematically pull Google search intensity data about the topic of "child care" for use as a proxy for ECE demand data.
 Code here automates data pulls one might otherwise have to access through [Google's Trends GUI](https://trends.google.com). 
+
+Please see this [important note](#pytrends) on using this repository in or after 2025.
 
 ## Concept
 CCAoA's Research Team has been collecting Google Trends data on the topic of "child care" since 2021
@@ -114,6 +116,17 @@ These query parameters can be found in the table below and correspond to command
 | Texas                  | State     | Temporal  | Day      | 21 Mar 2021          | 21 Apr 2021        | 381               |
 
 # Other
+## *pytrends*
+A note that [`pytrends`](https://github.com/GeneralMills/pytrends) was archived in February of 2025 
+by its longtime maintainer at `v4.9.2`.
+Read the [note here](https://github.com/GeneralMills/pytrends/issues/636).
+This means that there will no longer be any development on the package, 
+so the key engine behind this repository won't be kept updated 
+or be able to respond to Google's constant changes to its API endpoints.
+**So, this code** that was confirmed to be executable last in October 2024 **may not be executable in and beyond 2025.**
+If any future development is needed on this child care demand project, 
+consider using an alternative like [`trendspy`](https://github.com/sdil87/trendspy) or a fork of the General Mills repo.
+
 ## Acknowledgements
 Thanks to Jacob Schneider for his consultation on this work 
 and for providing a spatial shapefile for the Designated Market Areas (DMAs) of the USA. 
