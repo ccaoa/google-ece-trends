@@ -33,6 +33,18 @@ and the spatial variation across a geographic subunit of the broader geography (
 a [media market](https://www.nielsen.com/dma-regions/), a major city).
 
 ## Usage
+### `.storage_path`
+This is a required file that you should create within the cloned repository
+that tells the program where to download your raw data files. 
+Based on this location, a sibling directory will be specified to store summary statistics of all your data.
+
+```plaintext
+Top_Level_Directory/
+│
+├── Custom_Raw_Data_Dir/      # Place this path in the `.storage_path` file
+├── summary_data/             # Contains summary data files; generated automatically
+```
+
 ### [`pull_data.py`](pull_data.py)
 This file allows for easy and custom pulls of Google Trends data for different times and places.
 #### Key functions:
