@@ -23,7 +23,7 @@ def check_empty_dataframe(df2check: pd.DataFrame) -> bool:
     return result
 
 
-def make_valid_colname(col_name: str)->str:
+def make_valid_colname(col_name: str) -> str:
     """Transform col_name into a valid pandas column name"""
     if col_name is None:
         col_name = "None"
@@ -51,7 +51,7 @@ def make_valid_colname(col_name: str)->str:
     return col_name
 
 
-def move_column_to_beginning(df: pd.DataFrame, target_col: str)->pd.DataFrame:
+def move_column_to_beginning(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
     """Move a specified column to the beginning (left-hand side) of the dataframe."""
     columns = df.columns.to_list()
     # Check to make sure the column is actually in the dataframe.
@@ -83,10 +83,10 @@ def move_column_to_beginning(df: pd.DataFrame, target_col: str)->pd.DataFrame:
 # This is from Google Trends. Need to generalize this function before deploying it!!!
 def transpose_df(
     df: pd.DataFrame,
-    first_col_as_new_col_names:bool=True,
-    old_cols_as_index:bool=True,
-    col_of_oldcolumns_name:str="old_cols",
-)->pd.DataFrame:
+    first_col_as_new_col_names: bool = True,
+    old_cols_as_index: bool = True,
+    col_of_oldcolumns_name: str = "old_cols",
+) -> pd.DataFrame:
     """Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
     # NOTE: Migrate this function to a more generalizable format in ccaoa.core.raccoon module. Then call it here.
     # If the user wanted the first column of the PD DF to function as the column names
@@ -114,7 +114,7 @@ def transpose_df(
     return work_df
 
 
-def index_to_first_column(df: pd.DataFrame, new_index_name="index")->pd.DataFrame:
+def index_to_first_column(df: pd.DataFrame, new_index_name="index") -> pd.DataFrame:
     """Add the index of a dataframe as the first column of that dataframe."""
     # Get the name of the old index.
     name_of_existing_idx = df.index.name
@@ -137,7 +137,7 @@ def index_to_first_column(df: pd.DataFrame, new_index_name="index")->pd.DataFram
 
 def file_to_df(
     inputfil: str,
-    xlsxsheet = 0,
+    xlsxsheet=0,
     indexcolumn=None,
     engine: str = None,
     skip_rows: int = None,
@@ -198,11 +198,12 @@ def df_to_file(
     sheet_xlsx=None,
     add_to_existing_xlsx: bool = False,
     overwrite_old_sheet: bool = False,
-    sheet_is_first_tab: bool = False
+    sheet_is_first_tab: bool = False,
 ):
     """Function inherited from the geocoding workflow that dictates the output preferences for the pandas dataframes.
     Only XLSX and CSV outputs possible. No XLS functionality. Potential for SQL or Dump files in future.
-    A copy now lives in raccoon module. Remove the function here at the next major version release."""
+    A copy now lives in raccoon module. Remove the function here at the next major version release.
+    """
 
     # Maybe in the future you output to different sheet in same input xlsx? idk. make a togglable action.
     # # Hard code for now :(
