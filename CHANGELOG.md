@@ -7,6 +7,10 @@
 [//]: # (tagging git releases https://stackoverflow.com/questions/18216991/create-a-tag-in-a-github-repository)
 * *No future enhancements are planned. Successful and consistent execution of `v0.5` will yield the release of `v1.0`.*
 
+## 1.1
+**__ May 2025**
+* Open-source the code by removing requirements based on proprietary dependencies.
+
 ## 1.0
 **4 Oct 2024**
 * Add ability to append & summarize custom dates' raw data in the [`datapulls.py`](late2022_datapulls.py).
