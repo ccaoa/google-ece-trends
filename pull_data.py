@@ -6,9 +6,11 @@ Heavily inspired by:
 """
 
 import pandas as pd
-from ccaoa import core
+
 import pytrends
 from pytrends.request import TrendReq
+
+from ccaoa import core
 
 try:
     from . import dma
@@ -538,7 +540,7 @@ def extract_data_try(
 
 
 if __name__ == "__main__":
-    from time import time, sleep
+    from time import time
 
     start = time()
 

@@ -1,6 +1,9 @@
-import os, datetime as dt, re
-from ccaoa import core, raccoon as rc
+import os
+import datetime as dt
+import re
 from time import time, sleep
+
+from ccaoa import core, raccoon as rc
 
 try:
     from . import (
@@ -513,6 +516,6 @@ if __name__ == "__main__":
     # append_summarize_custom_dates([20240616])
 
     # # Only summarize the already-appended data:
-    # agg.summarize_all_appended_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+    # agg.summarize_all_appended_data(app.summary_storage_path())
 
     core.runtime(start=start)

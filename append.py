@@ -3,10 +3,13 @@ Goal: Produce an append xlsx sheet with columns with all UOAs (eg states or DMAs
 dates (if a temporal DF) & each row is a *pull date* regardless of geog vs temporal dataset.
 """
 
-import os, datetime as dt, numpy as np, pandas as pd
+import os
+import datetime as dt
 from pathlib import Path
 
-# from scipy import stats
+import numpy as np
+import pandas as pd
+
 from ccaoa import core, raccoon as rc
 
 try:
@@ -303,11 +306,7 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    def individual_appends(raw_data_dir: str = None):
-        if not raw_data_dir:
-            raw_data_dir = os.path.expanduser(
-                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data"
-            )
+    def individual_appends(raw_data_dir: str):
 
         tstfil = os.path.join(
             raw_data_dir, "eugene_time_20200214-20210214_20231214.csv"
@@ -347,16 +346,13 @@ if __name__ == "__main__":
         ret_df = append_raw_data_from_files(epiphany)
         return ret_df
 
-    def full_run_test(rawfildir: str = None):
+    def full_run_test(rawfildir: str):
         """Test the full run appending every file in the directory"""
-        if not rawfildir:
-            rawfildir = os.path.expanduser(
-                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data"
-            )
         return append_all_raw_files(
             raw_files_parent_dir=rawfildir, suppress_prints=False
         )
 
-    individual_appends()
+    raw_data_dir = summary_storage_path()
+    individual_appends(raw_data_dir)
 
     core.runtime(start)

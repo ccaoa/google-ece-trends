@@ -25,12 +25,12 @@ echo Starting Google Trends data pull.
 :: You can now create automated runs of this batch file by using schtasks.
 ::  See https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks
 :: Creation ex:
-::schtasks /create /sc DAILY /tn gtrends /st 13:23 /tr "C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\coding\google-ece-pytrends\datapulls22.bat"
+::schtasks /create /sc DAILY /tn gtrends /st 13:23 /tr "PATH"
 :: Edit ex:
 ::schtasks /change /tn gtrends /st 14:34
 :: NOTE: You may need to format your windows paths with a space like this to get it to work.
 :: :: https://stackoverflow.com/a/3845970/15517267
-::schtasks /change /tn gtrends -tr "\"C:\Users\Jacob.Cooper\OneDrive - NACCRRA\Documents\ArcGIS\Projects\GoogleTrends_Demand_HomeDir\coding\google-ece-pytrends\datapulls22.bat""
+::schtasks /change /tn gtrends -tr "\"PATH""
 :: --------------------------------------------------
 :: REPORTING
 :: The data are being stored in the log.txt, but we can print that to the console in a schtasks too.
