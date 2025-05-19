@@ -5,10 +5,10 @@
 
 ### Unreleased <To become the release notes for the next version>
 [//]: # (tagging git releases https://stackoverflow.com/questions/18216991/create-a-tag-in-a-github-repository)
-* *No future enhancements are planned. Successful and consistent execution of `v0.5` will yield the release of `v1.0`.*
+* *No future enhancements are planned. See the [note in the README](README.md#pytrends) regarding the code's stability.*
 
 ## 1.1
-**__ May 2025**
+**19 May 2025**
 * Open-source the code by removing requirements based on proprietary dependencies.
 
 ## 1.0
