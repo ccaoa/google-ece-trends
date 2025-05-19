@@ -1,14 +1,15 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
-[![Version](https://img.shields.io/badge/version-1.0.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
+[![Version](https://img.shields.io/badge/version-1.1.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
 [![Python versions](https://img.shields.io/badge/python-3.7-E6BD29.svg)](https://www.python.org/)
-[![ccaoa package version](https://img.shields.io/badge/ccaoa-2.2.1-D12828.svg)](https://github.com/ccaoa/ccaoa-mapping) 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io/)
 ---
-This is a repository that utilizes the [unofficial python API for Google Trends](https://github.com/GeneralMills/pytrends) 
+This is a repository that utilizes an [unofficial python API for Google Trends, *pytrends*,](https://github.com/GeneralMills/pytrends) 
 to systematically pull Google search intensity data about the topic of "child care" for use as a proxy for ECE demand data.
 Code here automates data pulls one might otherwise have to access through [Google's Trends GUI](https://trends.google.com). 
+
+Please see this [important note](#pytrends) on using this repository in or after 2025.
 
 ## Concept
 CCAoA's Research Team has been collecting Google Trends data on the topic of "child care" since 2021
@@ -32,6 +33,18 @@ and the spatial variation across a geographic subunit of the broader geography (
 a [media market](https://www.nielsen.com/dma-regions/), a major city).
 
 ## Usage
+### `.storage_path`
+This is a required file that you should create within the cloned repository
+that tells the program where to download your raw data files. 
+Based on this location, a sibling directory will be specified to store summary statistics of all your data.
+
+```plaintext
+Top_Level_Directory/
+│
+├── Custom_Raw_Data_Dir/      # Place this path in the `.storage_path` file
+├── summary_data/             # Contains summary data files; generated automatically
+```
+
 ### [`pull_data.py`](pull_data.py)
 This file allows for easy and custom pulls of Google Trends data for different times and places.
 #### Key functions:
@@ -115,6 +128,17 @@ These query parameters can be found in the table below and correspond to command
 | Texas                  | State     | Temporal  | Day      | 21 Mar 2021          | 21 Apr 2021        | 381               |
 
 # Other
+## *pytrends*
+A note that [`pytrends`](https://github.com/GeneralMills/pytrends) was archived in February of 2025 
+by its longtime maintainer at `v4.9.2`.
+Read the [note here](https://github.com/GeneralMills/pytrends/issues/636).
+This means that there will no longer be any development on the package, 
+so the key engine behind this repository won't be kept updated 
+or be able to respond to Google's constant changes to its API endpoints.
+**So, this code** that was confirmed to be executable last in October 2024 **may not be executable in and beyond 2025.**
+If any future development is needed on this child care demand project, 
+consider using an alternative like [`trendspy`](https://github.com/sdil87/trendspy) or a fork of the General Mills repo.
+
 ## Acknowledgements
 Thanks to Jacob Schneider for his consultation on this work 
 and for providing a spatial shapefile for the Designated Market Areas (DMAs) of the USA. 
@@ -123,39 +147,18 @@ See more on [his website](https://sites.google.com/view/jacob-schneider/resource
 ## Virtual Environments
 If you would like to use direct executable modules from this package as scripts, 
 you can create a virtual python environment (venv) to ensure no dependency conflicts. 
-To do this, this repository includes a tool to aid in setting up the venv on Windows operating systems. 
-
-### Windows `py_venv` Tool
-The [`py_venv`](py_venv) subdirectory includes setup files that can create your venv for you. 
-
-To do this, first open the [`.\py_venv\set_python_path.bat`](py_venv/set_python_path.bat) in a text editor.
-Set the `PYTHON_PATH` variable to the base interpreter off of which you want the venv to be built.
-
-* Recommended: use your interpreter that was included in your ArcGIS Pro installation. 
-This will ensure you will have all geoprocessing functions accessible in your venv.
-
-Then, execute the following in a **Windows command prompt** with the current directory set to the root of this repo:
-
-```
-.\py_venv\setup.bat
+To do this, execute the following in a command prompt (e.g., WSL)
+```bash
+python -m venv venv
 ```
 
-This batch file will install a virtual python environment for you in the [`py_venv` subdirectory](py_venv) 
-based on the specifications in the [`.\requirements.in` file](requirements.in). 
+Then, referencing your new interpreter, install the packages specified in the [`.\requirements.in` file](requirements.in). 
 
-The [`.\py_venv\requirements.txt` file](py_venv/requirements.txt) is generated at the time of the venv setup.
+```bash
+.\venv\Scripts\python.exe -m pip install -r requirements.in
+```
+
+The [`.\requirements.txt` file](requirements.txt) is a full `pip freeze` of the development environment.
 It indicates the most recent development environment in which this repository was developed. 
-It is a full `pip freeze` of the development environment.
-If you have any package dependency issues, you can reference the [`.\py_venv\requirements.txt`](py_venv/requirements.txt)
- file to compare with your current environment. 
-
-Remember to reference the newly created venv as your new python interpreter. 
-This will be located at `.\py_venv\venv\Scripts\python.exe`.
-
-To activate the venv directly in the Windows command prompt, enter
-```
-.\py_venv\venv\Scripts\activate
-```
-
-Warning: housing venvs in locations with excessively long paths may cause errors in installing or importing packages.
-Make sure to `git clone` the repository into a folder without a long file path.
+If you have any package dependency issues, you can reference the [`.\requirements.txt` file](requirements.txt)
+ to compare with your current environment. 

@@ -3,10 +3,13 @@ Goal: Produce an append xlsx sheet with columns with all UOAs (eg states or DMAs
 dates (if a temporal DF) & each row is a *pull date* regardless of geog vs temporal dataset.
 """
 
-import os, datetime as dt, numpy as np, pandas as pd
+import os
+import datetime as dt
 from pathlib import Path
 
-# from scipy import stats
+import numpy as np
+import pandas as pd
+
 from ccaoa import core, raccoon as rc
 
 try:
@@ -36,31 +39,6 @@ def summary_storage_path(same_as_raw_storage=False, use_parent_dir=False):
                 # Create that sibling dir if it does not exist.
                 os.mkdir(sibling_dir_path)
             return sibling_dir_path
-
-
-# def transpose_df(df, first_col_as_new_col_names=True, old_cols_as_index=True, col_of_oldcolumns_name="old_cols"):
-#     """ Transpose a dataframe with specific index manipulation to fit this Google Trends project."""
-#     # If the user wanted the first column of the PD DF to function as the column names
-#     if core.string_to_bool(first_col_as_new_col_names) is True:
-#         # The first column of the raw dataset containing UOA identifiers will be set as the column names of the new DF.
-#         first_col = df.columns[0]
-#         work_df = df.set_index(first_col).transpose()
-#     else:
-#         # The first column of the raw dataset containing UOA identifiers will be set as the first row.
-#         work_df = df.transpose()
-#     # At this point, the old column headers are the new index column, with the old first column as the first record.
-#     # # https://stackoverflow.com/a/36013757/15517267
-#     if core.string_to_bool(old_cols_as_index) is False:
-#         # If the user wants the old columns bounced out into the first row:
-#         old_first_column = work_df.columns.name
-#         if isinstance(col_of_oldcolumns_name, str) is not True:
-#             try:
-#                 col_of_oldcolumns_name=str(col_of_oldcolumns_name)
-#             except:
-#                 col_of_oldcolumns_name = "old_cols"
-#         work_df = rc.index_to_first_column(work_df, col_of_oldcolumns_name)#old_first_column)
-#     # Otherwise, the old column names will still be the index of the output DF.
-#     return work_df
 
 
 def define_target_append_dataset(
@@ -328,11 +306,7 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    def individual_appends(raw_data_dir: str = None):
-        if not raw_data_dir:
-            raw_data_dir = os.path.expanduser(
-                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data"
-            )
+    def individual_appends(raw_data_dir: str):
 
         tstfil = os.path.join(
             raw_data_dir, "eugene_time_20200214-20210214_20231214.csv"
@@ -372,16 +346,13 @@ if __name__ == "__main__":
         ret_df = append_raw_data_from_files(epiphany)
         return ret_df
 
-    def full_run_test(rawfildir: str = None):
+    def full_run_test(rawfildir: str):
         """Test the full run appending every file in the directory"""
-        if not rawfildir:
-            rawfildir = os.path.expanduser(
-                r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\raw_data"
-            )
         return append_all_raw_files(
             raw_files_parent_dir=rawfildir, suppress_prints=False
         )
 
-    individual_appends()
+    raw_data_dir = summary_storage_path()
+    individual_appends(raw_data_dir)
 
     core.runtime(start)

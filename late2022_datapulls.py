@@ -1,8 +1,9 @@
-import os, datetime as dt, re
-from ccaoa import core
+import os
+import datetime as dt
+import re
 from time import time, sleep
 
-# from pathlib import Path
+from ccaoa import core, raccoon as rc
 
 try:
     from . import (
@@ -343,7 +344,7 @@ def full_gtrends_pull(low_search_volume_results=True):
             # That way, next time the script runs, it'll exclude variables that have already been named.
             # see https://github.com/ccaoa/google-ece-trends/issues/3.
             all_names_to_exclude.append(gt_file_name)
-            if core.check_empty_dataframe(dataframe) is False:
+            if rc.check_empty_dataframe(dataframe) is False:
                 short_path = os.path.join(
                     "~",
                     os.path.split(os.path.split(os.path.split(storage_path)[0])[0])[1],
@@ -515,6 +516,6 @@ if __name__ == "__main__":
     # append_summarize_custom_dates([20240616])
 
     # # Only summarize the already-appended data:
-    # agg.summarize_all_appended_data(os.path.expanduser(r"~\NACCRRA\Research Team - Documents\Mapping\google_trends\gtrends_data\summary_data"))
+    # agg.summarize_all_appended_data(app.summary_storage_path())
 
     core.runtime(start=start)
