@@ -1,0 +1,376 @@
+---
+title: "Google Trends Analysis"
+output: html_notebook
+---
+
+```{r}
+## Load the necessary libraries
+## Load in the necessary packages
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(sf)
+library(maps)
+library(tidycensus)
+library(tidyverse)
+library(readxl)
+library(moments)
+library(boot)
+
+## Read in the functions file for this project
+source("./google_trends_functions.R")
+```
+
+
+
+
+
+## United States Example
+
+This data has the same collection range as the United States data. It was collected roughly daily from October 2022 to January 2024. The time period for this data collection ranges from June 3rd, 2018 to September 4th, 2022
+
+```{r}
+## Plot the average relative search volume for the entire US
+ggplot(data = time_data %>% filter(source == "US"), aes(x = time, y = average, group = source)) + 
+  geom_line(aes(color = source)) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = source), alpha = 0.6) + 
+  ggtitle("Average RSV - United States") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Relative Search Volume") +
+  xlab("Date") +
+  #theme(legend.title=element_blank()) +
+  labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+```
+
+In the graph above we can see a peak around the time when lockdowns started in the United States. Since that time period is captured in the data that will serve as the benchmark for greatest search intensity for childcare and will be converted to a score of 100. There was a sharp drop after this point and a small rise and return to normalcy towards the start of 2021. There is also an obvious seasonality in the trends for searching for child care that we should be cognizant of. Around the start of the holiday season there is a drop in the searches for child care and then a sharp spike after the start of the new year as people transition back into their regular working schedules. Searches increase at the start of summer when children are out of school but then drop as the summer wears on. What we are seeing above is an average of all of the data pools across the study period. There are also some consistent dips around November and December times when school lets out for the holidays and parents have those holidays off to watch their children.
+
+In the US graph above we are using data for the entire collection time period, which is 243 data extractions. Based on Cebrian 2024, we know that if we limit the number of days that we average the sample, we can see different trends that don't reflect a consistent measurement from Google Trends.
+
+Let's plot several iterations of this dataset by excluding parts of the sample and slowly building back up to the full sample.
+
+```{r}
+## Pull one random sample from the data
+one_sample <- us_raw %>% sample_n(1) %>% get_descriptive_stats_time() %>% add_date_column()
+one_sample$source <- "One Sample"
+
+two_samples <- us_raw %>% sample_n(2) %>% get_descriptive_stats_time() %>% add_date_column()
+one_sample$source <- "Two Samples"
+
+## Pull five random samples
+five_samples <- us_raw %>% sample_n(5) %>% get_descriptive_stats_time() %>% add_date_column()
+five_samples$source <- "Five Samples"
+
+## Pull ten random samples
+ten_samples <- us_raw %>% sample_n(10) %>% get_descriptive_stats_time() %>% add_date_column()
+ten_samples$source <- "Ten Samples"
+
+## Pull 20 random samples
+twenty_samples <- us_raw %>% sample_n(20) %>% get_descriptive_stats_time() %>% add_date_column()
+twenty_samples$source <- "Twenty Samples"
+
+## Pull 50 random samples
+fifty_samples <- us_raw %>% sample_n(50) %>% get_descriptive_stats_time() %>% add_date_column()
+fifty_samples$source <- "Fifty Samples"
+
+## Pull 100 random samples
+hundred_samples <- us_raw %>% sample_n(100) %>% get_descriptive_stats_time() %>% add_date_column()
+hundred_samples$source <- "Hundred Samples"
+
+## Now plot all of these alongside the national level data
+ggplot(data = us_descriptive, aes(x = time, y = average, group = source)) + 
+  geom_line(aes(color = source)) +
+  geom_line(data = one_sample, aes(x = time, y = average, group = source, color = source)) +
+  geom_line(data = five_samples, aes(x = time, y = average, group = source, color = source)) +
+  geom_line(data = ten_samples, aes(x = time, y = average, group = source, color = source)) +
+  geom_line(data = twenty_samples, aes(x = time, y = average, group = source, color = source)) +
+  geom_line(data = fifty_samples, aes(x = time, y = average, group = source, color = source)) +
+  geom_line(data = hundred_samples, aes(x = time, y = average, group = source, color = source))
+#ggplot(data = ten_samples, aes(x = time, y = average, group = 1)) + geom_line()
+```
+
+I need to restrict this sample to be the same time frame as the states. So it should be between 2020-02-09 to 2021-02-14.
+
+```{r}
+us_plot <- create_sample_average_plot(us_raw, us_descriptive)
+us_plot + ggtitle("Varied Number of Samples - United States")
+```
+
+Now run the code that creates replicates for each of the examples shown above so I can have a confidence interval for them.
+
+```{r}
+## Run the bootstrap replicate function
+average_rsv_us <- boot_rsv(us_raw)
+
+ggplot(data = average_rsv_us, aes(x = names, y = averages, group = names))
+```
+
+
+
+From what you can see above, when using the US data as a whole the data is pretty tight to the averages when we use the full 223 days in the data set. Using just a small sample of the extractions does a decent job of fitting the "true" value. We are going to quantify this further by:
+
+* Taking the mean of the standard deviations for the number of extractions. This can be done by simple using the mean command on the standard deviation column in the processed data.
+* Calculate the MAPE to show the level of inconsistency associated with the data based on the number of extractions.
+
+```{r}
+## Get the popularity score and mape for five samples
+get_popularity(five_samples)
+get_mape(us_descriptive, five_samples)
+get_theoretical_mape(get_popularity(five_samples),5)
+get_samples(us_raw, 5)
+```
+
+```{r}
+## Get the expected number of extractions for the data
+## Not totally sure this works yet. Right now it is just returning what I put in. This may be because the US data does not need very many extractions for the data to be good. I need to do more testing with this when I do the different geographies.
+get_expected_extractions(one_sample)
+get_expected_extractions(two_samples)
+get_expected_extractions(five_samples)
+get_expected_extractions(ten_samples)
+get_expected_extractions(twenty_samples)
+get_expected_extractions(fifty_samples)
+get_expected_extractions(hundred_samples)
+```
+
+
+
+```{r}
+## Holder vectors to create a dataframe afterward
+pop_scores <- c()
+mapes <- c()
+t_mapes <- c() ## theoretical mapes
+names <- c()
+
+for (i in c(1,2,5,10,20,50,100)) {
+  ## Get the samples
+  s <- get_samples(us_raw, i)
+  
+  ## get the popularity score
+  pop_score <- get_popularity(s)
+  
+  ## get the mape
+  mape <- get_mape(us_descriptive, s)
+  
+  ## get the theoretical map based on Cebrian 2024
+  t_mape <- get_theoretical_mape(pop_score,i)
+  
+  ## get the label so it can be added to the new dataframe
+  name <- unique(s$source)
+  
+  ## append them to the appropriate lists
+  pop_scores <- c(pop_scores, pop_score)
+  mapes <- c(mapes, mape)
+  t_mapes <- c(t_mapes, t_mape)
+  names <- c(names, name)
+}
+
+## Build a dataframe from the data for plotting
+comparison_df <- data.frame(pop_scores, mapes, t_mapes, names)
+
+## Order the names so it prints coherently in the x-axis when plotted
+comparison_df$names <- factor(comparison_df$names, levels = c("1 Samples", "2 Samples", "5 Samples", "10 Samples", "20 Samples", "50 Samples", "100 Samples"))
+
+## colors so the plots look good
+comparison_df$mape_color <- "Empirical"
+comparison_df$tmapes_color <- "Theoretical"
+```
+
+
+Get the expected number of extractions
+
+```{r}
+us_extractions_df <- suppressWarnings(expected_extractions(us_raw))
+```
+
+```{r}
+ggplot(data = us_extractions_df, aes(x = names, y = mean_extractions, group = 1)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = ci_lowers, ymax = ci_uppers), alpha = 0.6) +
+  ggtitle("Average Expected Extractions - United States") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Expected Number of Extractions") +
+  xlab("Number of Samples") +
+  #labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+  #geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color))
+```
+
+
+
+```{r}
+## Run the comparison df function for the US data
+comparison_df_us <- suppressWarnings(create_comparison_df(us_raw, us_descriptive))
+
+```
+
+
+```{r}
+## Plot the data from the code block above
+ggplot(data = comparison_df_us, aes(x = names, y = mapes, group = mape_color)) +
+  geom_ribbon(aes(ymin = ci_lowers, ymax = ci_uppers, fill = mape_color), alpha = 0.6) +
+  geom_line(aes(color = mape_color)) +
+  geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color)) +
+  ggtitle("Empirical Versus Theoretical MAPE - United States") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("MAPE") +
+  xlab("Number of Samples") +
+  theme(legend.title=element_blank()) +
+  #labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+
+# ggplot(data = comparison_df_us) +
+#   geom_line(aes(x = names, y = mapes, group = 1, color = mape_color)) +
+#   geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color))
+```
+
+From the graph above, you can see that the US data, which has abundant and diverse sample size performs pretty well even with 1 to 5 extractions. Meaning that you can generally trust that you are at least getting a consistent Google Trends estimate when working at the country geographic level in the US. I am now going to try this with various other geographic levels to see how they behave.
+
+
+
+
+
+## Oregon Example
+
+This data is different thatn the previous 3 examples because it was collected on a truncated period. The pull dates are still the same but the time period for each pull ranges from February 16th, 2020 to February 14th, 2021 (so about a year).
+
+```{r}
+## Plot the average relative search volume for the entire US
+ggplot(data = time_data %>% filter(source == "Oregon"), aes(x = time, y = average, group = source)) + 
+  geom_line(aes(color = source)) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = source), alpha = 0.6) +
+  ggtitle("Average RSV - Oregon") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Relative Search Volume") +
+  xlab("Date") +
+  #theme(legend.title=element_blank()) +
+  labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+## Create the comparison of extractions on averages
+oregon_plot <- create_sample_average_plot(oregon_time, oregon_time_descriptive)
+oregon_plot + ggtitle("Varied Number of Samples - Oregon")
+```
+
+Get the expected number of extractions
+
+```{r}
+oregon_extractions_df <- suppressWarnings(expected_extractions(oregon_time))
+```
+
+```{r}
+ggplot(data = oregon_extractions_df, aes(x = names, y = mean_extractions, group = 1)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = ci_lowers, ymax = ci_uppers), alpha = 0.6) +
+  ggtitle("Average Expected Extractions - Oregon") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Expected Number of Extractions") +
+  xlab("Number of Samples") +
+  #labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+  #geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color))
+```
+
+```{r}
+## Create comparison df for Indiana
+comparison_df_oregon <- suppressWarnings(create_comparison_df(oregon_time, oregon_time_descriptive))
+```
+
+
+
+```{r}
+## Plot the data from the code block above
+ggplot(data = comparison_df_oregon, aes(x = names, y = mapes, group = mape_color)) +
+  geom_line(aes(color = mape_color)) +
+  geom_ribbon(aes(ymin = ci_lowers, ymax = ci_uppers, fill = mape_color), alpha = 0.6) +
+  geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color)) +
+  ggtitle("Empirical Versus Theoretical MAPE - Oregon") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("MAPE") +
+  xlab("Number of Samples") +
+  theme(legend.title=element_blank()) +
+  #labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+```
+
+
+
+
+
+## Eugene Example
+
+This data is different than the previous 3 examples because it was collected on a truncated period. The pull dates are still the same but the time period for each pull ranges from February 16th, 2020 to February 14th, 2021 (so about a year).
+
+Eugene is an example where there isn't a uniform day when the average of one day equals 100, so it must be rescaled.
+
+```{r}
+## Plot the average relative search volume for the entire US
+## Need to move the confidence intervals for this
+ggplot(data = eugene_time_descriptive, aes(x = time, y = average, group = source)) + 
+  geom_line(aes(color = source)) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = source), alpha = 0.6) +
+  ggtitle("Average RSV - Eugene Metro") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Relative Search Volume") +
+  xlab("Date") +
+  #theme(legend.title=element_blank()) +
+  labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+## rescale the Eugene data as per Cebrian 2024
+eugene_time_descriptive$average <- eugene_time_descriptive$average * (100/max(eugene_time_descriptive$average))
+```
+
+
+```{r}
+## Create the comparison of extractions on averages
+eugene_plot <- create_sample_average_plot(eugene_time, eugene_time_descriptive)
+eugene_plot + ggtitle("Varied Number of Samples - Eugene Metro")
+```
+
+
+Get the expected number of extractions
+
+```{r}
+eugene_extractions_df <- suppressWarnings(expected_extractions(eugene_time))
+```
+
+```{r}
+ggplot(data = eugene_extractions_df, aes(x = names, y = mean_extractions, group = 1)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = ci_lowers, ymax = ci_uppers), alpha = 0.6) +
+  ggtitle("Average Expected Extractions - Eugene Metro") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Expected Number of Extractions") +
+  xlab("Number of Samples") +
+  #labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+  #geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color))
+```
+
+```{r}
+## Create comparison df for Indiana
+comparison_df_eugene <- suppressWarnings(create_comparison_df(eugene_time, eugene_time_descriptive))
+```
+
+
+
+```{r}
+## Plot the data from the code block above
+ggplot(data = comparison_df_eugene, aes(x = names, y = mapes, group = mape_color)) +
+  geom_line(aes(color = mape_color)) +
+  geom_ribbon(aes(ymin = ci_lowers, ymax = ci_uppers, fill = mape_color), alpha = 0.6) +
+  geom_line(aes(x = names, y = t_mapes, group = 1, color = tmapes_color)) +
+  ggtitle("Empirical Versus Theoretical MAPE - Eugene Metro") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("MAPE") +
+  xlab("Number of Samples") +
+  theme(legend.title=element_blank()) +
+  #labs(fill = "Geographic Area", color = "Geographic Area") +
+  theme(legend.position = "bottom")
+```
+

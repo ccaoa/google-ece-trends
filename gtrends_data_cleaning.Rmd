@@ -1,0 +1,395 @@
+---
+title: "Google Trends Work"
+output: html_notebook
+---
+
+This document will detail the data cleaning for the Google Trends project that is being led in large part by Alex Cooper based on his work at Child care aware of America.
+
+This work was submitted and presented at the Symposium on Spatiotemporal Data Science in Washington DC in July of 2025. The work has been submitted and accepted for a paper presentation in July of 2025. The paper is currently under review in the journal "Papers in Applied Geography".
+
+
+First we have to load the necessary packages and load in the data needed for the analysis. The data comes from pulls from pytrends. Please see the .readme in the github repsoitory for more information.
+
+```{r}
+## Load in the necessary packages
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(sf)
+library(maps)
+library(tidycensus)
+library(tidyverse)
+library(readxl)
+library(moments)
+
+## Read in the functions file for this project
+source("./google_trends_functions.R")
+```
+
+
+
+## United States
+
+Let's first take a look at data for the entire United States. There are several files associated with this US data.
+
+1. Summary file
+2. Time dataset
+
+These files are available at various geographic levels
+
+1. Entire country
+2. States
+3. DMA
+
+We are going to take a look at this data and the variability across the datasets across time and by geography
+
+### National Level data
+
+```{r}
+## Load in the data
+us_raw <- read_excel("./data/usa_temporal_df_20180603-20220910_raw_data_records.xlsx")
+```
+
+What are the descriptive statistics that we are going to calculate?
+* Mean
+* Standard Deviation
+* Variance
+* Min & Max
+* Skewness
+* Kurtosis
+
+```{r}
+## Some quick data cleaning
+
+## convert strings to dates
+# us_summary$event_time <- as.Date(us_summary$event_time)
+us_raw$pull_date <- as.Date(us_raw$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+us_raw <- na.omit(us_raw) # Really only need this because there are dates that are missing and the dataframe won't build. I removed it from the other code chunks
+```
+
+
+```{r}
+## Generate some descriptive statistics for the national level data
+
+us_descriptive <- get_descriptive_stats_time(us_raw)
+
+## add time column
+us_descriptive <- add_date_column(us_descriptive)
+```
+
+
+
+### State Level Data
+
+```{r}
+## Load in the data
+us_state_raw <- read_excel("./data/usa_states_df_20180603-20220910_raw_data_records.xlsx")
+# us_state_summary <- read_excel("/Users/seanreid/Library/CloudStorage/Box-Box/google_trends/data/googletrendsdatasetsasofjanuary222024/usa_temporal_df_20180603-20220910_raw_data_records.xlsx")
+```
+
+```{r}
+## Some quick data cleaning
+
+## convert strings to dates
+# us_state_summary$event_time <- as.Date(us_state_summary$event_time)
+us_state_raw$pull_date <- as.Date(us_state_raw$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+# us_state_raw <- na.omit(us_state_raw)
+```
+
+```{r}
+## Get descriptive stats for each of the states
+us_state_descriptive <- get_descriptive_stats_time(us_state_raw)
+
+## Add a geography column
+us_state_descriptive <- add_geog_column(us_state_descriptive)
+```
+
+
+
+
+### DMA Level Data
+
+```{r}
+## Load in the data
+
+us_raw_dma <- read_excel("./data/usa_dma_df_20180603-20220910_raw_data_records.xlsx")
+```
+
+```{r}
+## some quick data cleaning
+
+## Convert strings to dates
+us_raw_dma$pull_date <- as.Date(us_raw_dma$pull_date, format = "%m/%d/%Y")
+
+## Remove NA values
+## Hmmm this isn't working and is zeroing out all the values
+# us_raw_dma <- na.omit(us_raw_dma) # Commenting this out for now
+```
+
+```{r}
+## Get descriptive stats for each of the DMA areas
+us_dma_descriptive <- get_descriptive_stats_time(us_raw_dma)
+
+## Add geog column
+us_dma_descriptive <- add_geog_column(us_dma_descriptive)
+```
+
+
+
+
+
+
+## Oregon
+
+```{r}
+oregon_raw <- read_excel("./data/or_dma_20200214-20210214_raw_data_records.xlsx")
+oregon_time <- read_excel("./data/or_time_20200214-20210214_raw_data_records.xlsx")
+# oregon_summary <- read_excel("/Users/seanreid/Library/CloudStorage/Box-Box/google_trends/data/googletrendsdatasetsasofjanuary222024/or_dma_20200214-20210214_summary_stats.xlsx")
+
+eugene_time <- read_excel("./data/eugene_time_20200214-20210214_raw_data_records.xlsx")
+```
+
+```{r}
+## Do a little bit of data cleaning
+
+oregon_time$pull_date <- as.Date(oregon_time$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+# oregon_time <- na.omit(oregon_time)
+
+## Get the descriptive stats
+oregon_time_descriptive <- get_descriptive_stats_time(oregon_time)
+
+## Add the time column
+oregon_time_descriptive <- add_date_column(oregon_time_descriptive)
+```
+
+```{r}
+## Do the same thing for the raw level data. Remember, you don't have to do the na.omit command here
+
+oregon_raw$pull_date <- as.Date(oregon_raw$pull_date, format = "%m/%d/%Y")
+
+## Get the descriptive statistics
+oregon_raw_descriptive <- get_descriptive_stats_time(oregon_raw)
+
+## Add a geog column
+oregon_raw_descriptive <- add_geog_column(oregon_raw_descriptive)
+```
+
+```{r}
+## Clean up the Eugene data
+
+## Format the date column correclty
+eugene_time$pull_date <- as.Date(eugene_time$pull_date, format = "%m/%d/%Y")
+
+## Omit missing days
+# eugene_time <- na.omit(eugene_time)
+
+## Get descriptives
+eugene_time_descriptive <- get_descriptive_stats_time(eugene_time)
+
+## Add a time column
+eugene_time_descriptive <- add_date_column(eugene_time_descriptive)
+```
+
+
+## Indiana
+
+```{r}
+## Load in the data
+indiana_time <- read_excel("./data/in_time_20180603-20220910_raw_data_records.xlsx")
+indiana_dma <- read_excel("./data/in_dma_20180603-20220910_raw_data_records.xlsx")
+```
+
+```{r}
+## Do a little bit of data cleaning
+
+indiana_time$pull_date <- as.Date(indiana_time$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+# indiana_time <- na.omit(indiana_time)
+
+## Get the descriptive stats
+indiana_time_descriptive <- get_descriptive_stats_time(indiana_time)
+
+## Add the time column
+indiana_time_descriptive <- add_date_column(indiana_time_descriptive)
+
+indiana_dma$pull_date <- as.Date(indiana_dma$pull_date, format = "%m/%d/%Y")
+
+## Get the descriptive statistics
+indiana_dma_descriptive <- get_descriptive_stats_time(indiana_dma)
+
+## Add a geog column
+indiana_dma_descriptive <- add_geog_column(indiana_dma_descriptive)
+```
+
+
+
+## Minnesota
+
+```{r}
+## Load in the data
+mn_dma <- read_excel("./data/mn_dma_20200214-20210214_raw_data_records.xlsx")
+mn_time <- read_excel("./data/mn_time_20200214-20210214_raw_data_records.xlsx")
+```
+
+
+```{r}
+## Do a little bit of data cleaning
+
+mn_time$pull_date <- as.Date(mn_time$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+# mn_time <- na.omit(mn_time)
+
+## Get the descriptive stats
+mn_time_descriptive <- get_descriptive_stats_time(mn_time)
+
+## Add the time column
+mn_time_descriptive <- add_date_column(mn_time_descriptive)
+
+
+
+mn_dma$pull_date <- as.Date(mn_dma$pull_date, format = "%m/%d/%Y")
+
+## Get the descriptive statistics
+mn_dma_descriptive <- get_descriptive_stats_time(mn_dma)
+
+## Add a geog column
+mn_dma_descriptive <- add_geog_column(mn_dma_descriptive)
+```
+
+
+## Ohio
+
+```{r}
+## Load in the data
+oh_dma <- read_excel("./data/oh_dma_20180603-20220910_raw_data_records.xlsx")
+oh_time <- read_excel("./data/oh_time_20180603-20220910_raw_data_records.xlsx")
+```
+
+```{r}
+## Do a little bit of data cleaning
+
+oh_time$pull_date <- as.Date(oh_time$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+# oh_time <- na.omit(oh_time)
+
+## Get the descriptive stats
+oh_time_descriptive <- get_descriptive_stats_time(oh_time)
+
+## Add the time column
+oh_time_descriptive <- add_date_column(oh_time_descriptive)
+
+
+
+oh_dma$pull_date <- as.Date(oh_dma$pull_date, format = "%m/%d/%Y")
+
+## Get the descriptive statistics
+oh_dma_descriptive <- get_descriptive_stats_time(oh_dma)
+
+## Add a geog column
+oh_dma_descriptive <- add_geog_column(oh_dma_descriptive)
+```
+
+
+## Kentucky
+
+```{r}
+## Load in the data
+ky_time <- read_excel("./data/ky_time_20180603-20220910_raw_data_records.xlsx")
+```
+
+```{r}
+ky_time$pull_date <- as.Date(ky_time$pull_date, format = "%m/%d/%Y")
+
+## Get the descriptive stats
+ky_time_descriptive <- get_descriptive_stats_time(ky_time)
+
+## Add the time column
+ky_time_descriptive <- add_date_column(ky_time_descriptive)
+
+```
+
+
+
+## Texas
+
+```{r}
+## Load in the data
+tx_dma <- read_excel("./data/tx_dma_20210321-20210421_raw_data_records.xlsx")
+tx_time <- read_excel("./data/tx_time_20210321-20210421_raw_data_records.xlsx")
+```
+
+```{r}
+## Do a little bit of data cleaning
+
+tx_time$pull_date <- as.Date(tx_time$pull_date, format = "%m/%d/%Y")
+
+## Remove the NA values
+# tx_time <- na.omit(tx_time)
+
+## Get the descriptive stats
+tx_time_descriptive <- get_descriptive_stats_time(tx_time)
+
+## Add the time column
+tx_time_descriptive <- add_date_column(tx_time_descriptive)
+
+
+
+
+tx_dma$pull_date <- as.Date(tx_dma$pull_date, format = "%m/%d/%Y")
+
+## Get the descriptive statistics
+tx_dma_descriptive <- get_descriptive_stats_time(tx_dma)
+
+## Add a geog column
+tx_dma_descriptive <- add_geog_column(tx_dma_descriptive)
+```
+
+
+
+## Plotting the data
+
+To effectively plot how the data is different over time based on geography I am going to combine all the time data into the same dataframe so it's easier to work with
+
+```{r}
+## Reset the index values for the dataframes
+row.names(us_descriptive) <- NULL
+row.names(oregon_time_descriptive) <- NULL
+row.names(eugene_time_descriptive) <- NULL
+row.names(mn_time_descriptive) <- NULL
+row.names(oh_time_descriptive) <- NULL
+row.names(indiana_time_descriptive) <- NULL
+row.names(tx_time_descriptive) <- NULL
+row.names(ky_time_descriptive) <- NULL
+
+## Add a column to each of the dataframes so I know the geography they are coming from
+us_descriptive$source <- "US"
+oregon_time_descriptive$source <- "Oregon"
+eugene_time_descriptive$source <- "Eugene"
+mn_time_descriptive$source <- "Minnesota"
+oh_time_descriptive$source <- "Ohio"
+indiana_time_descriptive$source <- "Indiana"
+tx_time_descriptive$source <- "Texas"
+ky_time_descriptive$source <- "Kentucky"
+
+## Bind the 3 dataframes together
+time_data <- rbind(us_descriptive, oregon_time_descriptive, eugene_time_descriptive, mn_time_descriptive, oh_time_descriptive, indiana_time_descriptive, tx_time_descriptive, ky_time_descriptive)
+
+## Pinch the data so that it's on the same time scale
+# time_data <- filter(time_data, time %in% oh_time_descriptive$time)
+```
+
+
+At this point the data cleaning is complete and we are ready to run the analysis. Move to the google_trends_analysis.Rmd file to complete the next steps!
+
+
+
+
