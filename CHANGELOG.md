@@ -7,6 +7,15 @@
 [//]: # (tagging git releases https://stackoverflow.com/questions/18216991/create-a-tag-in-a-github-repository)
 * *No future enhancements are planned. See the [note in the README](README.md#pytrends) regarding the code's stability.*
 
+## 1.2
+**27 Jun 2025**
+* Add R, R Markdown, and Jupyter Notebook HTML exports with the bootstrapping and graph-making workflows to the repository.
+  * [google_trends_analysis.nb.html](google_trends_analysis.nb.html)
+  * [google_trends_analysis.Rmd](google_trends_analysis.Rmd)
+  * [google_trends_functions.R](google_trends_functions.R)
+  * [gtrends_data_cleaning.nb.html](gtrends_data_cleaning.nb.html)
+  * [gtrends_data_cleaning.Rmd](gtrends_data_cleaning.Rmd)
+
 ## 1.1
 **19 May 2025**
 * Open-source the code by removing requirements based on proprietary dependencies.

@@ -1,7 +1,7 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
-[![Version](https://img.shields.io/badge/version-1.1.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
+[![Version](https://img.shields.io/badge/version-1.2.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
 [![Python versions](https://img.shields.io/badge/python-3.7-E6BD29.svg)](https://www.python.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io/)
 ---
@@ -97,7 +97,13 @@ This file pulls specific pieces of Google Trends ECE data for 23 AOIs in prepara
 
 #### Other helping files:
 * [`datapulls22.bat`](datapulls22.bat) - Windows Batch file wrapper for executing [`late2022_datapulls.py`](late2022_datapulls.py).
-* [`schedule_gtrends_daily_run.bat`](schedule_gtrends_daily_run.bat) - Schedules a daily execution of [`datapulls22.bat`](datapulls22.bat) for automatic data pulls on Windos OS. 
+* [`schedule_gtrends_daily_run.bat`](schedule_gtrends_daily_run.bat) - Schedules a daily execution of [`datapulls22.bat`](datapulls22.bat) for automatic data pulls on Windos OS.
+* These files were used in the bootstrapping model and creating the temporal graphs showing trends over time:
+  * [google_trends_analysis.nb.html](google_trends_analysis.nb.html)
+  * [google_trends_analysis.Rmd](google_trends_analysis.Rmd)
+  * [google_trends_functions.R](google_trends_functions.R)
+  * [gtrends_data_cleaning.nb.html](gtrends_data_cleaning.nb.html)
+  * [gtrends_data_cleaning.Rmd](gtrends_data_cleaning.Rmd)
 
 # Data
 Data were systematically collected with identical query parameters using code from this repository.
