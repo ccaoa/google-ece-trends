@@ -389,7 +389,3 @@ time_data <- rbind(us_descriptive, oregon_time_descriptive, eugene_time_descript
 
 
 At this point the data cleaning is complete and we are ready to run the analysis. Move to the google_trends_analysis.Rmd file to complete the next steps!
-
-
-
-
