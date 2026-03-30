@@ -1,7 +1,7 @@
 # Google Trends of Child Care
 
 [//]: # (Embedding badges: https://naereen.github.io/badges/) 
-[![Version](https://img.shields.io/badge/version-1.2.0-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
+[![Version](https://img.shields.io/badge/version-1.2.1-1C3563.svg)](https://github.com/ccaoa/google-ece-trends)
 [![Python versions](https://img.shields.io/badge/python-3.7-E6BD29.svg)](https://www.python.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io/)
 ---
@@ -12,7 +12,12 @@ Code here automates data pulls one might otherwise have to access through [Googl
 Please see this [important note](#pytrends) on using this repository in or after 2025.
 
 ## Concept
-CCAoA's Research Team has been collecting Google Trends data on the topic of "child care" since 2021
+
+> Cooper, J. A. & Sean C. Reid. 2026. "Exploring the Spatiotemporal Dynamics of Google Trends Data: 
+An Application in Exploring Internet Search Interest and Child Care Demand." *Spatial Demography*. Forthcoming; accepted with minor revisions.
+
+
+Child Care Aware® of America's (CCAoA's) Research Team has been collecting Google Trends data on the topic of "child care" since 2021
 with the idea that search interest for child care can function as a proxy for child care demand,
 a notoriously difficult idea to quantify.
 
